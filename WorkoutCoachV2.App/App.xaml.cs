@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
+using System.Windows;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Windows;
+using WorkoutCoachV2.App.ViewModels;
 using WorkoutCoachV2.Model.Data;
-using WorkoutCoachV2.Model.Data.Seed;   
+using WorkoutCoachV2.Model.Data.Seed;
 using WorkoutCoachV2.Model.Identity;
 
 namespace WorkoutCoachV2.App
@@ -26,19 +28,21 @@ namespace WorkoutCoachV2.App
                 {
                     var cs = ctx.Configuration.GetConnectionString("Default")
                              ?? throw new InvalidOperationException("Missing connstring 'Default'.");
-
                     services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(cs));
 
-                    services.AddIdentityCore<AppUser>(o =>
-                    {
-                        o.User.RequireUniqueEmail = true;
-                    })
-                    .AddRoles<IdentityRole>()
-                    .AddEntityFrameworkStores<AppDbContext>();
+                    services.AddIdentityCore<AppUser>(o => { o.User.RequireUniqueEmail = true; })
+                            .AddRoles<IdentityRole>()
+                            .AddEntityFrameworkStores<AppDbContext>();
 
                     services.AddTransient<DbSeeder>();
 
+                    
+                    services.AddSingleton<MainViewModel>();
+                    services.AddTransient<LoginViewModel>();
+
+                     
                     services.AddSingleton<MainWindow>();
+                    services.AddTransient<LoginWindow>();
                 })
                 .Build();
         }
@@ -53,8 +57,8 @@ namespace WorkoutCoachV2.App
                 await seeder.SeedAsync();
             }
 
-            var shell = HostApp.Services.GetRequiredService<MainWindow>();
-            shell.Show();
+            var login = HostApp.Services.GetRequiredService<LoginWindow>();
+            login.Show();
 
             base.OnStartup(e);
         }
