@@ -20,4 +20,10 @@
     <ProjectReference Include="..\WorkoutCoachV2.Model\WorkoutCoachV2.Model.csproj" />
   </ItemGroup>
 
+	{
+	"ConnectionStrings": {
+	"Default": "Server=(localdb)\\MSSQLLocalDB;Database=WorkoutCoachV2Db;Trusted_Connection=True;MultipleActiveResultSets=true"
+	}
+	}
+
 </Project>
