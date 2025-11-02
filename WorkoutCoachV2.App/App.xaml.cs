@@ -1,61 +1,69 @@
-﻿using System.Windows;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Windows;
 using WorkoutCoachV2.Model.Data;
-using WorkoutCoachV2.Model.Data.Seed;
+using WorkoutCoachV2.Model.Data.Seed;   
 using WorkoutCoachV2.Model.Identity;
 
-namespace WorkoutCoachV2.App;
-
-public partial class App : Application
+namespace WorkoutCoachV2.App
 {
-    private IHost? _host;
-
-    protected override async void OnStartup(StartupEventArgs e)
+    public partial class App : Application
     {
-        base.OnStartup(e);
+        public static IHost HostApp { get; private set; } = default!;
 
-        _host = Host.CreateDefaultBuilder()
-            .ConfigureAppConfiguration(cfg =>
-            {
-                cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                cfg.AddEnvironmentVariables();
-            })
-            .ConfigureServices((ctx, services) =>
-            {
-                var conn = ctx.Configuration.GetConnectionString("Default")
-                           ?? @"Server=(localdb)\MSSQLLocalDB;Database=WorkoutCoachV2Db;Trusted_Connection=True;MultipleActiveResultSets=true";
-
-                services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(conn));
-
-                services.AddIdentityCore<AppUser>(o =>
+        public App()
+        {
+            HostApp = Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration((ctx, cfg) =>
                 {
-                    o.Password.RequiredLength = 6;
-                    o.Password.RequireNonAlphanumeric = false;
-                    o.Password.RequireUppercase = false;
+                    cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                       .AddEnvironmentVariables();
                 })
-                .AddRoles<Microsoft.AspNetCore.Identity.IdentityRole>()
-                .AddEntityFrameworkStores<AppDbContext>();
+                .ConfigureServices((ctx, services) =>
+                {
+                    var cs = ctx.Configuration.GetConnectionString("Default")
+                             ?? throw new InvalidOperationException("Missing connstring 'Default'.");
 
-                services.AddTransient<MainWindow>();
-            })
-            .Build();
+                    services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(cs));
 
-        await _host.StartAsync();
-        await DbSeeder.SeedAsync(_host.Services);
+                    services.AddIdentityCore<AppUser>(o =>
+                    {
+                        o.User.RequireUniqueEmail = true;
+                    })
+                    .AddRoles<IdentityRole>()
+                    .AddEntityFrameworkStores<AppDbContext>();
 
-        var main = _host.Services.GetRequiredService<MainWindow>();
-        main.Show();
-    }
+                    services.AddTransient<DbSeeder>();
 
-    protected override async void OnExit(ExitEventArgs e)
-    {
-        if (_host is not null)
-            await _host.StopAsync();
+                    services.AddSingleton<MainWindow>();
+                })
+                .Build();
+        }
 
-        _host?.Dispose();
-        base.OnExit(e);
+        protected override async void OnStartup(StartupEventArgs e)
+        {
+            await HostApp.StartAsync();
+
+            using (var scope = HostApp.Services.CreateScope())
+            {
+                var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
+                await seeder.SeedAsync();
+            }
+
+            var shell = HostApp.Services.GetRequiredService<MainWindow>();
+            shell.Show();
+
+            base.OnStartup(e);
+        }
+
+        protected override async void OnExit(ExitEventArgs e)
+        {
+            await HostApp.StopAsync();
+            HostApp.Dispose();
+            base.OnExit(e);
+        }
     }
 }
