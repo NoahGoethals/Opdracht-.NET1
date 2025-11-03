@@ -1,0 +1,29 @@
+﻿<Window x:Class="WorkoutCoachV2.App.View.AddWorkoutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Workout" Height="200" Width="400"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Titel:"/>
+        <TextBox   Grid.Row="0" Grid.Column="1" x:Name="TitleBox" Margin="6,0,0,8"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Datum:"/>
+        <DatePicker Grid.Row="1" Grid.Column="1" x:Name="DatePick" Margin="6,0,0,8"/>
+
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Width="100" Margin="0,8,8,0" Content="Bewaar" Click="Ok_Click"/>
+            <Button Width="100" Margin="0,8,0,0"  Content="Annuleer" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
