@@ -1,9 +1,14 @@
-﻿namespace WorkoutCoachV2.Model.Models;
+﻿using System;
 
-public abstract class BaseEntity
+namespace WorkoutCoachV2.Model.Models
 {
-    public int Id { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; } = false;
+    public abstract class BaseEntity
+    {
+        public int Id { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
+    }
 }

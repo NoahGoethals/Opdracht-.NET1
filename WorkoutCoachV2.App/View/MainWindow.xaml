@@ -11,5 +11,8 @@
         <TabItem Header="Workouts">
             <v:WorkoutsView/>
         </TabItem>
+        <TabItem Header="Sessions">
+            <v:SessionsView/>
+        </TabItem>
     </TabControl>
 </Window>

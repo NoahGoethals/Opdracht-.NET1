@@ -1,14 +1,16 @@
-﻿namespace WorkoutCoachV2.Model.Models;
-
-public class WorkoutExercise : BaseEntity
+﻿namespace WorkoutCoachV2.Model.Models
 {
-    public int WorkoutId { get; set; }
-    public Workout? Workout { get; set; }
+    public class WorkoutExercise
+    {
+        public int WorkoutId { get; set; }
+        public Workout Workout { get; set; } = default!;
 
-    public int ExerciseId { get; set; }
-    public Exercise? Exercise { get; set; }
+        public int ExerciseId { get; set; }
+        public Exercise Exercise { get; set; } = default!;
 
-    public int Sets { get; set; }
-    public int Reps { get; set; }
-    public string? Notes { get; set; }
+        public int? Order { get; set; }
+        public int Sets { get; set; }
+        public int Reps { get; set; }
+        public string? Notes { get; set; }
+    }
 }

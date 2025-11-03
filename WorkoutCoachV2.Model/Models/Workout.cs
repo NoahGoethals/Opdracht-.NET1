@@ -1,10 +1,15 @@
-﻿namespace WorkoutCoachV2.Model.Models;
+﻿using System;
+using System.Collections.Generic;
 
-public class Workout : BaseEntity
+namespace WorkoutCoachV2.Model.Models
 {
-    public string Title { get; set; } = "";
-    public DateTime ScheduledOn { get; set; } = DateTime.Today;
-    public string? Notes { get; set; }
+    public class Workout : BaseEntity
+    {
+        public string Title { get; set; } = "";
+        public DateTime? ScheduledOn { get; set; }
 
-    public ICollection<WorkoutExercise> WorkoutExercises { get; set; } = new List<WorkoutExercise>();
+        public ICollection<WorkoutExercise> Exercises { get; set; } = new List<WorkoutExercise>();
+
+        public ICollection<Session> Sessions { get; set; } = new List<Session>();
+    }
 }

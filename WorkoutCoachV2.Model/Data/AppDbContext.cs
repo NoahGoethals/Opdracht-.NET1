@@ -1,68 +1,56 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WorkoutCoachV2.Model.Identity;
 using WorkoutCoachV2.Model.Models;
 
-namespace WorkoutCoachV2.Model.Data;
-
-public class AppDbContext : IdentityDbContext<AppUser, IdentityRole, string>
+namespace WorkoutCoachV2.Model.Data
 {
-    public DbSet<Exercise> Exercises => Set<Exercise>();
-    public DbSet<Workout> Workouts => Set<Workout>();
-    public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
-
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    protected override void OnModelCreating(ModelBuilder b)
+    public class AppDbContext : IdentityDbContext<AppUser>
     {
-        base.OnModelCreating(b);
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        b.Entity<Exercise>().HasQueryFilter(e => !e.IsDeleted);
-        b.Entity<Workout>().HasQueryFilter(e => !e.IsDeleted);
-        b.Entity<WorkoutExercise>().HasQueryFilter(e => !e.IsDeleted);
+        public DbSet<Exercise> Exercises => Set<Exercise>();
+        public DbSet<Workout> Workouts => Set<Workout>();
+        public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
 
-        b.Entity<WorkoutExercise>()
-            .HasOne(we => we.Workout)
-            .WithMany(w => w.WorkoutExercises)
-            .HasForeignKey(we => we.WorkoutId)
-            .OnDelete(DeleteBehavior.Restrict);
+        public DbSet<Session> Sessions => Set<Session>();
+        public DbSet<SessionSet> SessionSets => Set<SessionSet>();
 
-        b.Entity<WorkoutExercise>()
-            .HasOne(we => we.Exercise)
-            .WithMany(e => e.WorkoutExercises)
-            .HasForeignKey(we => we.ExerciseId)
-            .OnDelete(DeleteBehavior.Restrict);
-    }
-
-    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
-    {
-        ApplyTimestamps();
-        return base.SaveChangesAsync(ct);
-    }
-
-    public override int SaveChanges()
-    {
-        ApplyTimestamps();
-        return base.SaveChanges();
-    }
-
-    private void ApplyTimestamps()
-    {
-        var entries = ChangeTracker.Entries<BaseEntity>();
-        var now = DateTime.UtcNow;
-
-        foreach (var e in entries)
+        protected override void OnModelCreating(ModelBuilder b)
         {
-            if (e.State == EntityState.Added)
-            {
-                e.Entity.CreatedAt = now;
-                e.Entity.UpdatedAt = null;
-            }
-            else if (e.State == EntityState.Modified)
-            {
-                e.Entity.UpdatedAt = now;
-            }
+            base.OnModelCreating(b);
+
+            b.Entity<WorkoutExercise>()
+                .HasKey(x => new { x.WorkoutId, x.ExerciseId });
+
+            b.Entity<WorkoutExercise>()
+                .HasOne(x => x.Workout)
+                .WithMany(x => x.Exercises)
+                .HasForeignKey(x => x.WorkoutId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.Entity<WorkoutExercise>()
+                .HasOne(x => x.Exercise)
+                .WithMany(x => x.InWorkouts)
+                .HasForeignKey(x => x.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.Entity<SessionSet>()
+                .HasOne(s => s.Session)
+                .WithMany(s => s.Sets)
+                .HasForeignKey(s => s.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.Entity<SessionSet>()
+                .HasOne(s => s.Exercise)
+                .WithMany(e => e.SessionSets)
+                .HasForeignKey(s => s.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.Entity<Exercise>().HasQueryFilter(e => !e.IsDeleted);
+            b.Entity<Workout>().HasQueryFilter(e => !e.IsDeleted);
+            b.Entity<Session>().HasQueryFilter(e => !e.IsDeleted);
+            b.Entity<SessionSet>().HasQueryFilter(e => !e.IsDeleted);
         }
     }
 }

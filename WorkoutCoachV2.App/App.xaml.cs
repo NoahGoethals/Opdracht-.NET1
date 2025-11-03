@@ -19,26 +19,34 @@ namespace WorkoutCoachV2.App
 
         public App()
         {
+            ShutdownMode = ShutdownMode.OnLastWindowClose;
+
             HostApp = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((ctx, cfg) =>
                 {
                     cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                        .AddEnvironmentVariables();
+                    
                 })
                 .ConfigureServices((ctx, services) =>
                 {
                     var cs = ctx.Configuration.GetConnectionString("Default")
                              ?? throw new InvalidOperationException(
-                                 "Missing connection string 'Default' (appsettings.json of User Secrets).");
+                                 "Missing connection string 'Default' in appsettings.json of User Secrets.");
 
-                    services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(cs));
+                    services.AddDbContext<AppDbContext>(opt =>
+                        opt.UseSqlServer(cs, sql =>
+                        {
+                            sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                        }));
 
-                    services.AddIdentityCore<AppUser>(opt =>
-                    {
-                        opt.User.RequireUniqueEmail = true;
-                    })
-                    .AddRoles<IdentityRole>()
-                    .AddEntityFrameworkStores<AppDbContext>();
+                    services
+                        .AddIdentityCore<AppUser>(opt =>
+                        {
+                            opt.User.RequireUniqueEmail = true;
+                        })
+                        .AddRoles<IdentityRole>()
+                        .AddEntityFrameworkStores<AppDbContext>();
 
                     services.AddTransient<DbSeeder>();
 
@@ -46,11 +54,23 @@ namespace WorkoutCoachV2.App
                     services.AddTransient<LoginViewModel>();
                     services.AddTransient<ExercisesViewModel>();
                     services.AddTransient<WorkoutsViewModel>();
+                    services.AddTransient<SessionsViewModel>();
 
                     services.AddSingleton<MainWindow>();
                     services.AddTransient<LoginWindow>();
                 })
                 .Build();
+
+            this.DispatcherUnhandledException += (s, e) =>
+            {
+                MessageBox.Show(e.Exception.Message, "Onverwachte fout", MessageBoxButton.OK, MessageBoxImage.Error);
+                e.Handled = true;
+            };
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                if (e.ExceptionObject is Exception ex)
+                    MessageBox.Show(ex.Message, "Onverwachte fout (background)", MessageBoxButton.OK, MessageBoxImage.Error);
+            };
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -65,8 +85,7 @@ namespace WorkoutCoachV2.App
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    "Seeding mislukte: " + ex.Message,
+                MessageBox.Show("Seeding mislukte: " + ex.Message,
                     "Initialisatie", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -86,7 +105,6 @@ namespace WorkoutCoachV2.App
             {
                 HostApp.Dispose();
             }
-
             base.OnExit(e);
         }
     }
