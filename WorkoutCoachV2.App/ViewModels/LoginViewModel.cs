@@ -19,7 +19,7 @@ namespace WorkoutCoachV2.App.ViewModels
             _userManager = userManager;
             _provider = provider;
 
-            LoginCommand = new RelayCommand(async () => await LoginAsync(), () => !IsBusy);
+            LoginCommand = new RelayCommand(async _ => await LoginAsync(), _ => !IsBusy);
         }
 
         private string _userNameOrEmail = "";
@@ -44,14 +44,14 @@ namespace WorkoutCoachV2.App.ViewModels
         }
 
         public ICommand LoginCommand { get; }
-
         public event Action? RequestClose;
 
         private async Task LoginAsync()
         {
             if (string.IsNullOrWhiteSpace(UserNameOrEmail) || string.IsNullOrWhiteSpace(Password))
             {
-                MessageBox.Show("Vul gebruikersnaam/e-mail en wachtwoord in.", "Login", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Vul gebruikersnaam/e-mail en wachtwoord in.", "Login",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -64,7 +64,8 @@ namespace WorkoutCoachV2.App.ViewModels
 
                 if (user == null || !await _userManager.CheckPasswordAsync(user, Password))
                 {
-                    MessageBox.Show("Ongeldige login.", "Login", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Ongeldige login.", "Login",
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 

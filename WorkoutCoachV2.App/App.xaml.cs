@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WorkoutCoachV2.App.ViewModels;
+using WorkoutCoachV2.App.View;             // <— voor LoginWindow / MainWindow
+using WorkoutCoachV2.App.ViewModels;       // <— voor MainViewModel / ExercisesViewModel / WorkoutsViewModel
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Data.Seed;
 using WorkoutCoachV2.Model.Identity;
@@ -28,21 +29,25 @@ namespace WorkoutCoachV2.App
                 {
                     var cs = ctx.Configuration.GetConnectionString("Default")
                              ?? throw new InvalidOperationException("Missing connstring 'Default'.");
+
                     services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(cs));
 
-                    services.AddIdentityCore<AppUser>(o => { o.User.RequireUniqueEmail = true; })
-                            .AddRoles<IdentityRole>()
-                            .AddEntityFrameworkStores<AppDbContext>();
+                    services.AddIdentityCore<AppUser>(o =>
+                    {
+                        o.User.RequireUniqueEmail = true;
+                    })
+                    .AddRoles<IdentityRole>()
+                    .AddEntityFrameworkStores<AppDbContext>();
 
                     services.AddTransient<DbSeeder>();
 
-                    
+                  
                     services.AddSingleton<MainViewModel>();
-                    services.AddTransient<LoginViewModel>();
+                    services.AddTransient<ExercisesViewModel>();
+                    services.AddTransient<WorkoutsViewModel>();
 
-                     
-                    services.AddSingleton<MainWindow>();
-                    services.AddTransient<LoginWindow>();
+                    services.AddTransient<LoginWindow>();  
+                    services.AddSingleton<MainWindow>();    
                 })
                 .Build();
         }

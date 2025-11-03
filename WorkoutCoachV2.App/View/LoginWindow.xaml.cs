@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV2.App.ViewModels;
 
 namespace WorkoutCoachV2.App
@@ -8,10 +9,10 @@ namespace WorkoutCoachV2.App
     {
         private readonly LoginViewModel _vm;
 
-        public LoginWindow(LoginViewModel vm)
+        public LoginWindow()
         {
             InitializeComponent();
-            _vm = vm;
+            _vm = App.HostApp.Services.GetRequiredService<LoginViewModel>();
             DataContext = _vm;
             _vm.RequestClose += () => this.Close();
         }
@@ -20,9 +21,10 @@ namespace WorkoutCoachV2.App
         {
             _vm.UserNameOrEmail = UserBox.Text;
             _vm.Password = PwdBox.Password;
-
             if (_vm.LoginCommand.CanExecute(null))
                 _vm.LoginCommand.Execute(null);
         }
+
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

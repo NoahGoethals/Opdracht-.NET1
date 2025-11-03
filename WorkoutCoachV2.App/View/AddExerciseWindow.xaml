@@ -1,0 +1,30 @@
+﻿<Window x:Class="WorkoutCoachV2.App.View.AddExerciseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Exercise" Height="220" Width="360"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Vertical">
+            <TextBlock Text="Naam" Margin="0,0,0,4"/>
+            <TextBox x:Name="NameBox"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Vertical">
+            <TextBlock Text="Categorie" Margin="0,0,0,4"/>
+            <TextBox x:Name="CatBox"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Bewaar" Width="90" Margin="0,0,8,0" Click="Ok_Click"/>
+            <Button Content="Annuleer" Width="90" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
