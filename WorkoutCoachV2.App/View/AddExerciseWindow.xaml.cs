@@ -7,14 +7,14 @@ namespace WorkoutCoachV2.App.View
     {
         public Exercise? Result { get; private set; }
 
-        public AddExerciseWindow(Exercise? model = null)
+        public AddExerciseWindow(Exercise? existing = null)
         {
             InitializeComponent();
-            if (model != null)
+            if (existing != null)
             {
-                NameBox.Text = model.Name;
-                CatBox.Text = model.Category;
-                Result = new Exercise { Id = model.Id }; 
+                NameBox.Text = existing.Name;
+                CatBox.Text = existing.Category;
+                Result = new Exercise { Id = existing.Id }; 
             }
         }
 
@@ -23,15 +23,9 @@ namespace WorkoutCoachV2.App.View
             Result ??= new Exercise();
             Result.Name = NameBox.Text.Trim();
             Result.Category = string.IsNullOrWhiteSpace(CatBox.Text) ? null : CatBox.Text.Trim();
-
             DialogResult = true;
-            Close();
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
-        }
+        private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

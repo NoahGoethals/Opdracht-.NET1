@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -16,11 +15,31 @@ namespace WorkoutCoachV2.App.ViewModels
         private readonly IServiceScopeFactory _scopeFactory;
 
         public ObservableCollection<Exercise> Items { get; } = new();
+
         private Exercise? _selected;
-        public Exercise? Selected { get => _selected; set => Set(ref _selected, value); }
+        public Exercise? Selected
+        {
+            get => _selected;
+            set
+            {
+                if (SetProperty(ref _selected, value))
+                {
+                    EditCmd.RaiseCanExecuteChanged();
+                    DeleteCmd.RaiseCanExecuteChanged();
+                }
+            }
+        }
 
         private string _search = "";
-        public string Search { get => _search; set { if (value != _search) { _search = value; Raise(); _ = LoadAsync(); } } }
+        public string Search
+        {
+            get => _search;
+            set
+            {
+                if (SetProperty(ref _search, value))
+                    _ = LoadAsync();
+            }
+        }
 
         public RelayCommand AddCmd { get; }
         public RelayCommand EditCmd { get; }
@@ -35,6 +54,8 @@ namespace WorkoutCoachV2.App.ViewModels
             EditCmd = new RelayCommand(_ => Edit(), _ => Selected != null);
             DeleteCmd = new RelayCommand(_ => DeleteAsync(), _ => Selected != null);
             RefreshCmd = new RelayCommand(_ => _ = LoadAsync());
+
+            _ = LoadAsync();
         }
 
         public async Task LoadAsync()
@@ -43,6 +64,7 @@ namespace WorkoutCoachV2.App.ViewModels
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             var q = db.Exercises.AsNoTracking().Where(e => !e.IsDeleted);
+
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 var term = Search.Trim();
@@ -50,17 +72,16 @@ namespace WorkoutCoachV2.App.ViewModels
             }
 
             var list = await q.OrderBy(e => e.Name).ToListAsync();
+
             Items.Clear();
             foreach (var e in list) Items.Add(e);
         }
 
         private void Add()
         {
-            var win = new View.AddExerciseWindow(); 
+            var win = new View.AddExerciseWindow();
             if (win.ShowDialog() == true && win.Result is Exercise e)
-            {
                 _ = SaveNewAsync(e);
-            }
         }
 
         private async Task SaveNewAsync(Exercise e)
@@ -75,12 +96,17 @@ namespace WorkoutCoachV2.App.ViewModels
         private void Edit()
         {
             if (Selected is null) return;
-            var copy = new Exercise { Id = Selected.Id, Name = Selected.Name, Category = Selected.Category };
+
+            var copy = new Exercise
+            {
+                Id = Selected.Id,
+                Name = Selected.Name,
+                Category = Selected.Category
+            };
+
             var win = new View.AddExerciseWindow(copy);
             if (win.ShowDialog() == true && win.Result is Exercise updated)
-            {
                 _ = SaveEditAsync(updated);
-            }
         }
 
         private async Task SaveEditAsync(Exercise updated)
@@ -97,8 +123,10 @@ namespace WorkoutCoachV2.App.ViewModels
         private async void DeleteAsync()
         {
             if (Selected is null) return;
+
             if (MessageBox.Show($"Verwijder '{Selected.Name}'?", "Bevestigen",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
 
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

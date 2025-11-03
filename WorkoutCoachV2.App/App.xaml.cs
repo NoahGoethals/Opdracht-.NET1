@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WorkoutCoachV2.App.View;           
-using WorkoutCoachV2.App.ViewModels;       
-using WorkoutCoachV2.Model.Data;          
-using WorkoutCoachV2.Model.Data.Seed;      
-using WorkoutCoachV2.Model.Identity;       
+using WorkoutCoachV2.App.View;
+using WorkoutCoachV2.App.ViewModels;
+using WorkoutCoachV2.Model.Data;
+using WorkoutCoachV2.Model.Data.Seed;
+using WorkoutCoachV2.Model.Identity;
 
 namespace WorkoutCoachV2.App
 {
@@ -28,12 +28,14 @@ namespace WorkoutCoachV2.App
                 .ConfigureServices((ctx, services) =>
                 {
                     var cs = ctx.Configuration.GetConnectionString("Default")
-                             ?? throw new InvalidOperationException("Missing connstring 'Default' in appsettings.json or user secrets.");
+                             ?? throw new InvalidOperationException(
+                                 "Missing connection string 'Default' (appsettings.json of User Secrets).");
+
                     services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(cs));
 
-                    services.AddIdentityCore<AppUser>(o =>
+                    services.AddIdentityCore<AppUser>(opt =>
                     {
-                        o.User.RequireUniqueEmail = true;
+                        opt.User.RequireUniqueEmail = true;
                     })
                     .AddRoles<IdentityRole>()
                     .AddEntityFrameworkStores<AppDbContext>();
@@ -46,7 +48,7 @@ namespace WorkoutCoachV2.App
                     services.AddTransient<WorkoutsViewModel>();
 
                     services.AddSingleton<MainWindow>();
-                    services.AddTransient<LoginWindow>();      
+                    services.AddTransient<LoginWindow>();
                 })
                 .Build();
         }
@@ -55,10 +57,17 @@ namespace WorkoutCoachV2.App
         {
             await HostApp.StartAsync();
 
-            using (var scope = HostApp.Services.CreateScope())
+            try
             {
+                using var scope = HostApp.Services.CreateScope();
                 var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
                 await seeder.SeedAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Seeding mislukte: " + ex.Message,
+                    "Initialisatie", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
             var login = HostApp.Services.GetRequiredService<LoginWindow>();
@@ -69,8 +78,15 @@ namespace WorkoutCoachV2.App
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            await HostApp.StopAsync();
-            HostApp.Dispose();
+            try
+            {
+                await HostApp.StopAsync();
+            }
+            finally
+            {
+                HostApp.Dispose();
+            }
+
             base.OnExit(e);
         }
     }
