@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using WorkoutCoachV2.App.Helpers;        // voor BaseViewModel/RelayCommand
-using WorkoutCoachV2.Model.Data;         // voor AppDbContext
+using WorkoutCoachV2.App.Helpers;
+using WorkoutCoachV2.Model.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WorkoutCoachV2.App.ViewModels
 {
-    public class SessionsViewModel : BaseViewModel
+    public partial class SessionsViewModel : BaseViewModel
     {
         private readonly IServiceScopeFactory _scopeFactory;
 
@@ -18,12 +19,20 @@ namespace WorkoutCoachV2.App.ViewModels
         public SessionListItem? Selected { get => _selected; set => SetProperty(ref _selected, value); }
 
         public RelayCommand RefreshCmd { get; }
+        public RelayCommand RefreshStatsCmd { get; }  
 
         public SessionsViewModel(IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory;
+
+            DateFrom = DateTime.Today.AddDays(-6);
+            DateTo = DateTime.Today;
+
             RefreshCmd = new RelayCommand(_ => _ = LoadAsync());
-            _ = LoadAsync(); // eerste keer automatisch laden
+            RefreshStatsCmd = new RelayCommand(_ => _ = LoadStatsAsync());
+
+            _ = LoadAsync();
+            _ = LoadStatsAsync();
         }
 
         public async Task LoadAsync()

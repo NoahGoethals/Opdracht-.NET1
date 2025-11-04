@@ -3,17 +3,63 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel Margin="12">
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Content="Vernieuwen" Width="110" Command="{Binding RefreshCmd}" />
+            <Button Content="Vernieuwen" Width="110" Margin="0,0,8,0"
+                    Command="{Binding RefreshCmd}" />
+            <Button Content="Export Sessions" Padding="12,6" Margin="0,0,8,0"
+                    Command="{Binding ExportSessionsCommand}" />
+            <Button Content="Import Sessions" Padding="12,6"
+                    Command="{Binding ImportSessionsCommand}" />
         </StackPanel>
 
-        <DataGrid ItemsSource="{Binding Items}"
-              SelectedItem="{Binding Selected}"
-              AutoGenerateColumns="False" IsReadOnly="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Titel" Binding="{Binding Title}" />
-                <DataGridTextColumn Header="Datum" Binding="{Binding Date}" />
-                <DataGridTextColumn Header="Sets"  Binding="{Binding SetCount}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="360"/>
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding Items}"
+                      SelectedItem="{Binding Selected}"
+                      AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,8,0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Titel" Binding="{Binding Title}" />
+                    <DataGridTextColumn Header="Datum" Binding="{Binding Date}" />
+                    <DataGridTextColumn Header="Sets"  Binding="{Binding SetCount}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1" Padding="12" BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Statistiek" FontWeight="Bold" FontSize="16" Margin="0,0,0,8"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <StackPanel Margin="0,0,8,0">
+                            <TextBlock Text="Van:"/>
+                            <DatePicker SelectedDate="{Binding DateFrom, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Tot:"/>
+                            <DatePicker SelectedDate="{Binding DateTo, Mode=TwoWay}" />
+                        </StackPanel>
+                        <Button Content="Bereken" Margin="8,18,0,0" Padding="12,4"
+                                Command="{Binding RefreshStatsCmd}" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding WeekVolume, StringFormat=Weekvolume: {0:N0}}"
+                               Margin="0,0,0,8" />
+
+                    <DataGrid ItemsSource="{Binding BestSets}"
+                              AutoGenerateColumns="False" IsReadOnly="True" Height="220">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Oefening" Binding="{Binding ExerciseName}" Width="*" />
+                            <DataGridTextColumn Header="Gewicht" Binding="{Binding Weight}" Width="Auto" />
+                            <DataGridTextColumn Header="Reps" Binding="{Binding Reps}" Width="Auto" />
+                            <DataGridTextColumn Header="Datum" Binding="{Binding Date}" Width="Auto" />
+                            <DataGridCheckBoxColumn Header="PR" Binding="{Binding IsNewPr}" Width="Auto" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

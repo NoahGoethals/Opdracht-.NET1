@@ -32,7 +32,19 @@
                     Content="Verwijderen" Command="{Binding DeleteCmd}"/>
         </Grid>
 
-        <DataGrid Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True"
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Export Exercises"
+                    Padding="12,6"
+                    Margin="0,0,8,0"
+                    Command="{Binding ExportExercisesCommand}" />
+            <Button Content="Import Exercises"
+                    Padding="12,6"
+                    Command="{Binding ImportExercisesCommand}" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
                   ItemsSource="{Binding Items}"
                   SelectedItem="{Binding Selected, Mode=TwoWay}">
             <DataGrid.Columns>

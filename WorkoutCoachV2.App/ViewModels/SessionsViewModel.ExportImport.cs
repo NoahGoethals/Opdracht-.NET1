@@ -8,29 +8,29 @@ using WorkoutCoachV2.App.Utils;
 
 namespace WorkoutCoachV2.App.ViewModels
 {
-    public partial class ExercisesViewModel
+    public partial class SessionsViewModel
     {
         private ExportImportService? _exportSvc;
         private ExportImportService ExportSvc =>
             _exportSvc ??= new ExportImportService(_scopeFactory);
 
-        private ICommand? _exportExercisesCommand, _importExercisesCommand;
-        public ICommand ExportExercisesCommand => _exportExercisesCommand ??= new AsyncRelayCommand(ExportExercisesAsync);
-        public ICommand ImportExercisesCommand => _importExercisesCommand ??= new AsyncRelayCommand(ImportExercisesAsync);
+        private ICommand? _exportSessionsCommand, _importSessionsCommand;
+        public ICommand ExportSessionsCommand => _exportSessionsCommand ??= new AsyncRelayCommand(ExportSessionsAsync);
+        public ICommand ImportSessionsCommand => _importSessionsCommand ??= new AsyncRelayCommand(ImportSessionsAsync);
 
-        private async Task ExportExercisesAsync()
+        private async Task ExportSessionsAsync()
         {
             try
             {
                 var dlg = new SaveFileDialog
                 {
-                    Filter = "JSON (*.json)|*.json|CSV (*.csv)|*.csv",
-                    FileName = $"exercises_{DateTime.Now:yyyyMMdd}.json"
+                    Filter = "JSON (*.json)|*.json",
+                    FileName = $"sessions_{DateTime.Now:yyyyMMdd}.json"
                 };
                 if (dlg.ShowDialog() != true) return;
 
-                var count = await ExportSvc.ExportExercisesAsync(dlg.FileName);
-                MessageBox.Show($"Export klaar: {count} oefening(en).", "Export",
+                var count = await ExportSvc.ExportSessionsAsync(dlg.FileName);
+                MessageBox.Show($"Export klaar: {count} sessie(s).", "Export",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -40,21 +40,21 @@ namespace WorkoutCoachV2.App.ViewModels
             }
         }
 
-        private async Task ImportExercisesAsync()
+        private async Task ImportSessionsAsync()
         {
             try
             {
                 var dlg = new OpenFileDialog
                 {
-                    Filter = "JSON/CSV (*.json;*.csv)|*.json;*.csv|JSON (*.json)|*.json|CSV (*.csv)|*.csv"
+                    Filter = "JSON (*.json)|*.json"
                 };
                 if (dlg.ShowDialog() != true) return;
 
-                var created = await ExportSvc.ImportExercisesAsync(dlg.FileName);
-                MessageBox.Show($"Import klaar. Nieuwe items: {created}.", "Import",
+                var created = await ExportSvc.ImportSessionsAsync(dlg.FileName);
+                MessageBox.Show($"Import klaar. Nieuwe sessies: {created}.", "Import",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                await LoadAsync();
+                await LoadAsync(); 
             }
             catch (Exception ex)
             {
