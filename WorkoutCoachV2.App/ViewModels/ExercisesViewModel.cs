@@ -10,7 +10,7 @@ using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.App.ViewModels
 {
-    public class ExercisesViewModel : BaseViewModel
+    public partial class ExercisesViewModel : BaseViewModel
     {
         private readonly IServiceScopeFactory _scopeFactory;
 
