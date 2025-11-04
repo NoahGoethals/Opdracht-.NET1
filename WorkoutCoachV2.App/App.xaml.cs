@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WorkoutCoachV2.App.View;
 using WorkoutCoachV2.App.ViewModels;
+using WorkoutCoachV2.App.Services;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Data.Seed;
 using WorkoutCoachV2.Model.Identity;
@@ -26,7 +27,6 @@ namespace WorkoutCoachV2.App
                 {
                     cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                        .AddEnvironmentVariables();
-                    
                 })
                 .ConfigureServices((ctx, services) =>
                 {
@@ -40,15 +40,16 @@ namespace WorkoutCoachV2.App
                             sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
                         }));
 
-                    services
-                        .AddIdentityCore<AppUser>(opt =>
-                        {
-                            opt.User.RequireUniqueEmail = true;
-                        })
-                        .AddRoles<IdentityRole>()
-                        .AddEntityFrameworkStores<AppDbContext>();
+                    services.AddIdentityCore<AppUser>(opt =>
+                    {
+                        opt.User.RequireUniqueEmail = true;
+                    })
+                    .AddRoles<IdentityRole>()
+                    .AddEntityFrameworkStores<AppDbContext>();
 
                     services.AddTransient<DbSeeder>();
+
+                    services.AddSingleton<AuthState>();
 
                     services.AddSingleton<MainViewModel>();
                     services.AddTransient<LoginViewModel>();

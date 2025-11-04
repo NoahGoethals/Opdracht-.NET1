@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV2.App.ViewModels;
 
 namespace WorkoutCoachV2.App
@@ -18,6 +19,15 @@ namespace WorkoutCoachV2.App
         {
             await vm.Exercises.LoadAsync();
             await vm.Workouts.LoadAsync();
+            await vm.Sessions.LoadAsync();
+        }
+
+        private void Logout_Click(object sender, RoutedEventArgs e)
+        {
+            var login = App.HostApp.Services.GetRequiredService<LoginWindow>();
+
+            login.Show();
+            Close();
         }
     }
 }

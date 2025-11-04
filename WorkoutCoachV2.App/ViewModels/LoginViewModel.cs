@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq; // <— toevoegen
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV2.App.Helpers;
+using WorkoutCoachV2.App.Services;
 using WorkoutCoachV2.Model.Identity;
 
 namespace WorkoutCoachV2.App.ViewModels
@@ -13,11 +15,13 @@ namespace WorkoutCoachV2.App.ViewModels
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IServiceProvider _provider;
+        private readonly AuthState _auth;
 
-        public LoginViewModel(UserManager<AppUser> userManager, IServiceProvider provider)
+        public LoginViewModel(UserManager<AppUser> userManager, IServiceProvider provider, AuthState auth)
         {
             _userManager = userManager;
             _provider = provider;
+            _auth = auth;
 
             LoginCommand = new RelayCommand(async _ => await LoginAsync(), _ => !IsBusy);
         }
@@ -68,6 +72,10 @@ namespace WorkoutCoachV2.App.ViewModels
                                     MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
+                var roles = await _userManager.GetRolesAsync(user);
+                _auth.User = user;
+                _auth.Roles = roles.ToList(); // <— fix: IList -> List (IReadOnlyList)
 
                 var shell = _provider.GetRequiredService<MainWindow>();
                 shell.Show();
