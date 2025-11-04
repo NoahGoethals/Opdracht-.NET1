@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WorkoutCoachV2.Model.Data;
 
@@ -11,9 +12,11 @@ using WorkoutCoachV2.Model.Data;
 namespace WorkoutCoachV2.Model.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104102806_AddNotesAndSessions")]
+    partial class AddNotesAndSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -266,15 +269,14 @@ namespace WorkoutCoachV2.Model.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
+                    b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("PerformedOn")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -445,9 +447,11 @@ namespace WorkoutCoachV2.Model.Migrations
 
             modelBuilder.Entity("WorkoutCoachV2.Model.Models.Session", b =>
                 {
-                    b.HasOne("WorkoutCoachV2.Model.Models.Workout", null)
+                    b.HasOne("WorkoutCoachV2.Model.Models.Workout", "Workout")
                         .WithMany("Sessions")
                         .HasForeignKey("WorkoutId");
+
+                    b.Navigation("Workout");
                 });
 
             modelBuilder.Entity("WorkoutCoachV2.Model.Models.SessionSet", b =>

@@ -5,11 +5,9 @@ namespace WorkoutCoachV2.Model.Models
 {
     public class Session : BaseEntity
     {
-        public DateTime PerformedOn { get; set; } = DateTime.Today;
-        public string? Notes { get; set; }
+        public string Title { get; set; } = "";
 
-        public int? WorkoutId { get; set; }
-        public Workout? Workout { get; set; }
+        public DateTime Date { get; set; } = DateTime.Today;
 
         public ICollection<SessionSet> Sets { get; set; } = new List<SessionSet>();
     }

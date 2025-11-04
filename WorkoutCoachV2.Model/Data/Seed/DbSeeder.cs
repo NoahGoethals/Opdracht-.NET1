@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Identity;
 using WorkoutCoachV2.Model.Models;
 
@@ -10,6 +11,10 @@ namespace WorkoutCoachV2.Model.Data.Seed
         private readonly AppDbContext _ctx;
         private readonly RoleManager<IdentityRole> _roles;
         private readonly UserManager<AppUser> _users;
+
+        private static readonly string[] DefaultRoles = { "Admin", "Coach", "Member" };
+        private const string AdminEmail = "admin@local";
+        private const string AdminPassword = "Admin!12345";
 
         public DbSeeder(AppDbContext ctx, RoleManager<IdentityRole> roles, UserManager<AppUser> users)
         {
@@ -22,44 +27,87 @@ namespace WorkoutCoachV2.Model.Data.Seed
         {
             await _ctx.Database.MigrateAsync();
 
-            var roleNames = new[] { "Admin", "Coach", "Member" };
-            foreach (var r in roleNames)
+            foreach (var r in DefaultRoles)
+            {
                 if (!await _roles.RoleExistsAsync(r))
                     await _roles.CreateAsync(new IdentityRole(r));
+            }
 
-            const string adminEmail = "admin@local";
-            var admin = await _users.FindByEmailAsync(adminEmail);
+            var admin = await _users.FindByEmailAsync(AdminEmail);
             if (admin is null)
             {
                 admin = new AppUser
                 {
-                    UserName = adminEmail,
-                    Email = adminEmail,
+                    UserName = AdminEmail,
+                    Email = AdminEmail,
                     EmailConfirmed = true,
                     DisplayName = "Admin"
                 };
-                await _users.CreateAsync(admin, "Admin!12345");
-                await _users.AddToRolesAsync(admin, roleNames);
+                await _users.CreateAsync(admin, AdminPassword);
+                await _users.AddToRolesAsync(admin, DefaultRoles);
+            }
+            else
+            {
+                var current = await _users.GetRolesAsync(admin);
+                var missing = DefaultRoles.Except(current).ToArray();
+                if (missing.Length > 0)
+                    await _users.AddToRolesAsync(admin, missing);
             }
 
-            if (!await _ctx.Exercises.AnyAsync())
-            {
-                var squat = new Exercise { Name = "Back Squat", Category = "Legs" };
-                var bench = new Exercise { Name = "Bench Press", Category = "Chest" };
-                var row = new Exercise { Name = "Barbell Row", Category = "Back" };
-                _ctx.Exercises.AddRange(squat, bench, row);
+            var squat = await FindOrCreateExerciseAsync("Back Squat", "Legs");
+            var bench = await FindOrCreateExerciseAsync("Bench Press", "Chest");
+            var row = await FindOrCreateExerciseAsync("Barbell Row", "Back");
 
-                var w = new Workout { Title = "Starting Strength A", ScheduledOn = DateTime.Today };
-                _ctx.Workouts.Add(w);
+            var workout = await _ctx.Workouts
+                .Include(w => w.Exercises)
+                .FirstOrDefaultAsync(w => w.Title == "Starting Strength A");
+
+            if (workout is null)
+            {
+                workout = new Workout
+                {
+                    Title = "Starting Strength A",
+                    ScheduledOn = DateTime.Today
+                };
+                _ctx.Workouts.Add(workout);
+                await _ctx.SaveChangesAsync();
 
                 _ctx.WorkoutExercises.AddRange(
-                    new WorkoutExercise { Workout = w, Exercise = squat, Sets = 5, Reps = 5 },
-                    new WorkoutExercise { Workout = w, Exercise = bench, Sets = 5, Reps = 5 },
-                    new WorkoutExercise { Workout = w, Exercise = row, Sets = 5, Reps = 5 }
+                    new WorkoutExercise { WorkoutId = workout.Id, ExerciseId = squat.Id, Sets = 5, Reps = 5 },
+                    new WorkoutExercise { WorkoutId = workout.Id, ExerciseId = bench.Id, Sets = 5, Reps = 5 },
+                    new WorkoutExercise { WorkoutId = workout.Id, ExerciseId = row.Id, Sets = 5, Reps = 5 }
                 );
-
                 await _ctx.SaveChangesAsync();
             }
+
+            if (!await _ctx.Sessions.AnyAsync())
+            {
+                var session = new Session
+                {
+                    Title = "Test session",
+                    Date = DateTime.Today
+                };
+                _ctx.Sessions.Add(session);
+                await _ctx.SaveChangesAsync();
+
+                _ctx.SessionSets.AddRange(
+                    new SessionSet { SessionId = session.Id, ExerciseId = squat.Id, Reps = 5, Weight = 80 },
+                    new SessionSet { SessionId = session.Id, ExerciseId = bench.Id, Reps = 5, Weight = 60 }
+                );
+                await _ctx.SaveChangesAsync();
+            }
+        }
+
+
+        private async Task<Exercise> FindOrCreateExerciseAsync(string name, string? category)
+        {
+            var ex = await _ctx.Exercises.FirstOrDefaultAsync(e => e.Name == name);
+            if (ex is not null) return ex;
+
+            ex = new Exercise { Name = name, Category = category };
+            _ctx.Exercises.Add(ex);
+            await _ctx.SaveChangesAsync();
+            return ex;
         }
     }
 }

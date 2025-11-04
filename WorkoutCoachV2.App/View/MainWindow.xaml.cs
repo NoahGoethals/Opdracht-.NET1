@@ -11,7 +11,6 @@ namespace WorkoutCoachV2.App
             InitializeComponent();
             DataContext = vm;
 
-            // laad data bij start
             Loaded += async (_, __) => await LoadAsync(vm);
         }
 
