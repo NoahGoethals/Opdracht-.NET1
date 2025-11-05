@@ -4,96 +4,97 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using WorkoutCoachV2.App.Helpers;
 using WorkoutCoachV2.Model.Data;
 
 namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class SessionsViewModel
     {
-        private DateTime _dateFrom;
-        public DateTime DateFrom { get => _dateFrom; set => SetProperty(ref _dateFrom, value); }
-
-        private DateTime _dateTo;
-        public DateTime DateTo { get => _dateTo; set => SetProperty(ref _dateTo, value); }
-
-        private double _weekVolume;
-        public double WeekVolume { get => _weekVolume; set => SetProperty(ref _weekVolume, value); }
-
         public ObservableCollection<BestSetItem> BestSets { get; } = new();
 
-        public async Task LoadStatsAsync()
+        private DateTime _fromDate;
+        public DateTime FromDate
+        {
+            get => _fromDate;
+            set => SetProperty(ref _fromDate, value);
+        }
+
+        private DateTime _toDate;
+        public DateTime ToDate
+        {
+            get => _toDate;
+            set => SetProperty(ref _toDate, value);
+        }
+
+        private int _weekVolume;
+        public int WeekVolume
+        {
+            get => _weekVolume;
+            set => SetProperty(ref _weekVolume, value);
+        }
+
+        private async Task CalcStatsAsync()
         {
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var all = await db.SessionSets
-                .Where(x => !x.IsDeleted
-                            && !x.Session.IsDeleted
-                            && x.Exercise != null
-                            && !x.Exercise!.IsDeleted)
-                .Select(x => new RawSet
+            var query = db.Sessions
+                .AsNoTracking()
+                .Include(s => s.Sets).ThenInclude(x => x.Exercise)
+                .Where(s => s.Date >= FromDate && s.Date <= ToDate);
+
+            var all = await query
+                .SelectMany(s => s.Sets.Select(x => new
                 {
-                    ExerciseName = x.Exercise!.Name,
-                    Reps = x.Reps,
+                    SetId = x.Id,
+                    ExerciseName = x.Exercise.Name,
                     Weight = x.Weight,
-                    Date = x.Session.Date
-                })
+                    Reps = x.Reps,
+                    Date = s.Date
+                }))
                 .ToListAsync();
 
-            var from = DateFrom.Date;
-            var to = DateTo.Date.AddDays(1).AddTicks(-1);
+            WeekVolume = (int)Math.Round(all.Sum(a => a.Weight * a.Reps));
 
-            var period = all.Where(s => s.Date >= from && s.Date <= to).ToList();
-
-            WeekVolume = Math.Round(period.Sum(s => s.Weight * s.Reps), 2);
-
-            var periodBest = period
-                .GroupBy(s => s.ExerciseName)
-                .Select(g => g.OrderByDescending(x => x.Weight)
-                              .ThenByDescending(x => x.Reps)
+            var best = all
+                .GroupBy(a => a.ExerciseName)
+                .Select(g => g.OrderByDescending(a => a.Weight)
+                              .ThenByDescending(a => a.Reps)
+                              .ThenByDescending(a => a.Date)
                               .First())
+                .OrderBy(a => a.ExerciseName)
                 .ToList();
 
             BestSets.Clear();
-            foreach (var bp in periodBest)
+            foreach (var b in best)
             {
-                var bestBefore = all
-                    .Where(s => s.ExerciseName == bp.ExerciseName && s.Date < from)
-                    .OrderByDescending(x => x.Weight)
-                    .ThenByDescending(x => x.Reps)
-                    .FirstOrDefault();
-
-                bool isNewPr = bestBefore == null
-                               || bp.Weight > bestBefore.Weight
-                               || (Math.Abs(bp.Weight - bestBefore.Weight) < 0.0001 && bp.Reps > bestBefore.Reps);
-
                 BestSets.Add(new BestSetItem
                 {
-                    ExerciseName = bp.ExerciseName,
-                    Weight = bp.Weight,
-                    Reps = bp.Reps,
-                    Date = bp.Date,
-                    IsNewPr = isNewPr
+                    SetId = b.SetId,
+                    ExerciseName = b.ExerciseName,
+                    Weight = b.Weight,
+                    Reps = b.Reps,
+                    Date = b.Date,
+                    IsPr = true
                 });
             }
         }
+    }
 
-        private class RawSet
-        {
-            public string ExerciseName { get; set; } = "";
-            public int Reps { get; set; }
-            public double Weight { get; set; }
-            public DateTime Date { get; set; }
-        }
+    public class BestSetItem : BaseViewModel
+    {
+        public int SetId { get; set; }
+        public string ExerciseName { get; set; } = "";
+        public double Weight { get; set; }
+        public int Reps { get; set; }
+        public DateTime Date { get; set; }
 
-        public class BestSetItem
+        private bool _isPr;
+        public bool IsPr
         {
-            public string ExerciseName { get; set; } = "";
-            public double Weight { get; set; }
-            public int Reps { get; set; }
-            public DateTime Date { get; set; }
-            public bool IsNewPr { get; set; }
-            public double Volume => Weight * Reps;
+            get => _isPr;
+            set => SetProperty(ref _isPr, value);
         }
     }
 }

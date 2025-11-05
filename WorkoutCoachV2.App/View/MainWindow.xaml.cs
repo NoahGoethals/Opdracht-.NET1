@@ -1,31 +1,39 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using WorkoutCoachV2.App.View;
 using WorkoutCoachV2.App.ViewModels;
 
 namespace WorkoutCoachV2.App
 {
     public partial class MainWindow : Window
     {
-        public MainWindow(MainViewModel vm)
+        public MainWindow()
         {
             InitializeComponent();
-            DataContext = vm;
 
-            Loaded += async (_, __) => await LoadAsync(vm);
-        }
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+                return;
 
-        private static async Task LoadAsync(MainViewModel vm)
-        {
-            await vm.Exercises.LoadAsync();
-            await vm.Workouts.LoadAsync();
-            await vm.Sessions.LoadAsync();
+            var sp = App.HostApp.Services;
+
+            DataContext = sp.GetRequiredService<MainViewModel>();
+
+            var exVm = sp.GetRequiredService<ExercisesViewModel>();
+            var wkVm = sp.GetRequiredService<WorkoutsViewModel>();
+            var ssVm = sp.GetRequiredService<SessionsViewModel>();
+
+            ExercisesHost.Content = new ExercisesView { DataContext = exVm };
+            WorkoutsHost.Content = new WorkoutsView { DataContext = wkVm };
+            SessionsHost.Content = new SessionsView { DataContext = ssVm };
         }
 
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
-            var login = App.HostApp.Services.GetRequiredService<LoginWindow>();
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+                return;
 
+            var login = App.HostApp.Services.GetRequiredService<LoginWindow>();
             login.Show();
             Close();
         }

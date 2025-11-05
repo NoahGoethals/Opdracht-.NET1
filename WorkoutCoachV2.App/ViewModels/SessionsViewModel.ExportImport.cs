@@ -1,66 +1,104 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 using System;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using WorkoutCoachV2.App.Services;
-using WorkoutCoachV2.App.Utils;
+using WorkoutCoachV2.Model.Data;
+using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class SessionsViewModel
     {
-        private ExportImportService? _exportSvc;
-        private ExportImportService ExportSvc =>
-            _exportSvc ??= new ExportImportService(_scopeFactory);
-
-        private ICommand? _exportSessionsCommand, _importSessionsCommand;
-        public ICommand ExportSessionsCommand => _exportSessionsCommand ??= new AsyncRelayCommand(ExportSessionsAsync);
-        public ICommand ImportSessionsCommand => _importSessionsCommand ??= new AsyncRelayCommand(ImportSessionsAsync);
-
         private async Task ExportSessionsAsync()
         {
-            try
+            var dlg = new SaveFileDialog
             {
-                var dlg = new SaveFileDialog
-                {
-                    Filter = "JSON (*.json)|*.json",
-                    FileName = $"sessions_{DateTime.Now:yyyyMMdd}.json"
-                };
-                if (dlg.ShowDialog() != true) return;
+                Filter = "JSON (*.json)|*.json",
+                FileName = $"sessions_{DateTime.Now:yyyyMMdd}.json"
+            };
+            if (dlg.ShowDialog() != true) return;
 
-                var count = await ExportSvc.ExportSessionsAsync(dlg.FileName);
-                MessageBox.Show($"Export klaar: {count} sessie(s).", "Export",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Export mislukt:\n{ex.Message}", "Export",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var payload = await db.Sessions
+                .AsNoTracking()
+                .Include(s => s.Sets).ThenInclude(x => x.Exercise)
+                .OrderBy(s => s.Date)
+                .Select(s => new SessionExportDto
+                {
+                    Title = s.Title,
+                    Date = s.Date,
+                    Sets = s.Sets.Select(x => new SetExportDto
+                    {
+                        ExerciseName = x.Exercise.Name,
+                        Weight = x.Weight,
+                        Reps = x.Reps,
+                        Date = s.Date
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(dlg.FileName, json);
         }
 
         private async Task ImportSessionsAsync()
         {
-            try
+            var dlg = new OpenFileDialog { Filter = "JSON (*.json)|*.json" };
+            if (dlg.ShowDialog() != true) return;
+
+            var json = await File.ReadAllTextAsync(dlg.FileName);
+            var payload = JsonSerializer.Deserialize<SessionExportDto[]>(json) ?? Array.Empty<SessionExportDto>();
+
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            foreach (var s in payload)
             {
-                var dlg = new OpenFileDialog
+                var sess = new Session { Title = s.Title, Date = s.Date };
+                db.Sessions.Add(sess);
+
+                foreach (var set in s.Sets)
                 {
-                    Filter = "JSON (*.json)|*.json"
-                };
-                if (dlg.ShowDialog() != true) return;
+                    var ex = await db.Exercises.FirstOrDefaultAsync(e => e.Name == set.ExerciseName);
+                    if (ex == null)
+                    {
+                        ex = new Exercise { Name = set.ExerciseName, Category = "" };
+                        db.Exercises.Add(ex);
+                        await db.SaveChangesAsync();
+                    }
 
-                var created = await ExportSvc.ImportSessionsAsync(dlg.FileName);
-                MessageBox.Show($"Import klaar. Nieuwe sessies: {created}.", "Import",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                    sess.Sets.Add(new SessionSet
+                    {
+                        ExerciseId = ex.Id,
+                        Weight = set.Weight,
+                        Reps = set.Reps
+                    });
+                }
+            }
 
-                await LoadAsync(); 
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Import mislukt:\n{ex.Message}", "Import",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            await db.SaveChangesAsync();
+            await LoadAsync();
+        }
+
+        internal record SessionExportDto
+        {
+            public string Title { get; set; } = "";
+            public DateTime Date { get; set; }
+            public System.Collections.Generic.List<SetExportDto> Sets { get; set; } = new();
+        }
+
+        internal record SetExportDto
+        {
+            public string ExerciseName { get; set; } = "";
+            public double Weight { get; set; }
+            public int Reps { get; set; }
+            public DateTime Date { get; set; }
         }
     }
 }

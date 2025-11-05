@@ -1,7 +1,6 @@
 ﻿<Window x:Class="WorkoutCoachV2.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:v="clr-namespace:WorkoutCoachV2.App.View"
         Title="WorkoutCoach" Height="520" Width="860"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -17,17 +16,17 @@
         <TabControl>
             <TabItem Header="Exercises"
                      Visibility="{Binding CanSeeExercises, Converter={StaticResource BoolToVis}}">
-                <v:ExercisesView/>
+                <ContentControl x:Name="ExercisesHost"/>
             </TabItem>
 
             <TabItem Header="Workouts"
                      Visibility="{Binding CanSeeWorkouts, Converter={StaticResource BoolToVis}}">
-                <v:WorkoutsView/>
+                <ContentControl x:Name="WorkoutsHost"/>
             </TabItem>
 
             <TabItem Header="Sessions"
                      Visibility="{Binding CanSeeSessions, Converter={StaticResource BoolToVis}}">
-                <v:SessionsView/>
+                <ContentControl x:Name="SessionsHost"/>
             </TabItem>
         </TabControl>
     </DockPanel>
