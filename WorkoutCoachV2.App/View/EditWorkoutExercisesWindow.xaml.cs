@@ -5,13 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-// === Let op: dit zijn de namespaces uit jouw solution ===
-using WorkoutCoachV2.Model.Data;     // AppDbContext
-using WorkoutCoachV2.Model.Models;   // Exercise, Workout, WorkoutExercise
+using WorkoutCoachV2.Model.Data;     
+using WorkoutCoachV2.Model.Models;  
 
 namespace WorkoutCoachV2.App.View
 {
-    public partial class EditWorkoutExercisesWindow : System.Windows.Window
+    public partial class EditWorkoutExercisesWindow : Window
     {
         private readonly int _workoutId;
 
@@ -30,7 +29,6 @@ namespace WorkoutCoachV2.App.View
             using var scope = App.HostApp.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // In jouw model heet de collectie op Workout: "Exercises"
             var workout = await db.Workouts
                 .Include(w => w.Exercises)
                     .ThenInclude(we => we.Exercise)
@@ -52,33 +50,51 @@ namespace WorkoutCoachV2.App.View
             dgInWorkout.ItemsSource = _inWorkout;
         }
 
-        private void btnAdd_Click(object sender, System.Windows.RoutedEventArgs e)
+        private static async Task<int> GetSuggestedRepsAsync(int exerciseId)
         {
-            if (lbAvailable.SelectedItem is Exercise ex)
-            {
-                var we = new WorkoutExercise
-                {
-                    WorkoutId = _workoutId,
-                    ExerciseId = ex.Id,
-                    Exercise = ex,
-                    Reps = 5
-                };
-                _inWorkout.Add(we);
-                _available.Remove(ex);
-            }
+            using var scope = App.HostApp.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var last = await db.WorkoutExercises
+                .Where(we => we.ExerciseId == exerciseId)
+                .OrderByDescending(we => we.WorkoutId)   
+                .Select(we => (int?)we.Reps)
+                .FirstOrDefaultAsync();
+
+            return last ?? 5;
         }
 
-        private void btnRemove_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void btnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            if (lbAvailable.SelectedItem is not Exercise ex) return;
+
+            var defaultReps = await GetSuggestedRepsAsync(ex.Id);
+
+            var dlg = new AskRepsWindow(defaultReps) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true) return;
+
+            var we = new WorkoutExercise
+            {
+                WorkoutId = _workoutId,
+                ExerciseId = ex.Id,
+                Exercise = ex,
+                Reps = dlg.Reps
+            };
+
+            _inWorkout.Add(we);
+            _available.Remove(ex);
+        }
+
+        private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
             if (dgInWorkout.SelectedItem is WorkoutExercise we)
             {
-                if (we.Exercise != null)
-                    _available.Add(we.Exercise);
+                if (we.Exercise != null) _available.Add(we.Exercise);
                 _inWorkout.Remove(we);
             }
         }
 
-        private async void btnSave_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void btnSave_Click(object sender, RoutedEventArgs e)
         {
             using var scope = App.HostApp.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -87,13 +103,10 @@ namespace WorkoutCoachV2.App.View
                 .Include(w => w.Exercises)
                 .FirstAsync(w => w.Id == _workoutId);
 
-            // verwijder niet-geselecteerde
             var keep = _inWorkout.Select(x => x.ExerciseId).ToHashSet();
             var toRemove = workout.Exercises.Where(x => !keep.Contains(x.ExerciseId)).ToList();
-            if (toRemove.Count > 0)
-                db.WorkoutExercises.RemoveRange(toRemove);
+            if (toRemove.Count > 0) db.WorkoutExercises.RemoveRange(toRemove);
 
-            // upsert huidige lijst
             foreach (var item in _inWorkout)
             {
                 var existing = workout.Exercises.FirstOrDefault(x => x.ExerciseId == item.ExerciseId);
@@ -118,7 +131,7 @@ namespace WorkoutCoachV2.App.View
             Close();
         }
 
-        private void btnCancel_Click(object sender, System.Windows.RoutedEventArgs e) => Close();
+        private void btnCancel_Click(object sender, RoutedEventArgs e) => Close();
 
         private void tbFilterLeft_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {

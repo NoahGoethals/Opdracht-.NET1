@@ -1,6 +1,6 @@
 ﻿<UserControl x:Class="WorkoutCoachV2.App.View.WorkoutsView" 
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -30,21 +30,18 @@
                     Command="{Binding EditCmd}"/>
             <Button Grid.Column="5" Margin="8,0,0,0" Width="100" Content="Verwijderen"
                     Command="{Binding DeleteCmd}"/>
-
             <Button Grid.Column="6" Margin="8,0,0,0" Width="100" Content="Inhoud"
-                    Click="btnInhoud_Click"/>
+                    x:Name="btnInhoud" Click="btnInhoud_Click"/>
         </Grid>
 
-        <DataGrid x:Name="dgWorkouts"
-                  Grid.Row="1"
+        <DataGrid x:Name="dgWorkouts" Grid.Row="1"
                   ItemsSource="{Binding Items}"
                   SelectedItem="{Binding Selected, Mode=TwoWay}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Titel" Binding="{Binding Title}" Width="2*"/>
-                <DataGridTextColumn Header="Datum"
-                                    Binding="{Binding ScheduledOn, StringFormat=\{0:yyyy-MM-dd\}}"
+                <DataGridTextColumn Header="Datum" Binding="{Binding ScheduledOn, StringFormat=\{0:yyyy-MM-dd\}}"
                                     Width="*"/>
                 <DataGridTextColumn Header="Aangemaakt"
                                     Binding="{Binding CreatedAt, StringFormat=\{0:yyyy-MM-dd HH:mm\}}"
