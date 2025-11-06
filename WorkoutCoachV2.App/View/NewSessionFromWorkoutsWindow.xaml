@@ -1,0 +1,60 @@
+﻿<Window x:Class="WorkoutCoachV2.App.View.NewSessionFromWorkoutsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nieuwe sessie op basis van workouts"
+        Height="520" Width="840"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="180"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Titel:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBox x:Name="tbTitle" Grid.Column="1"/>
+
+            <TextBlock Grid.Column="3" Text="Datum:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <DatePicker x:Name="dpDate" Grid.Column="4"/>
+        </Grid>
+
+        <GroupBox Grid.Row="1" Header="Kies één of meerdere workouts" Padding="8">
+            <DataGrid x:Name="dgWorkouts"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      SelectionMode="Extended"
+                      SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="" Width="40">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Titel" Width="2*" Binding="{Binding Workout.Title}"/>
+                    <DataGridTextColumn Header="Datum" Width="*" Binding="{Binding Workout.ScheduledOn, StringFormat=\{0:yyyy-MM-dd\}}"/>
+                    <DataGridTextColumn Header="Aangemaakt" Width="*" Binding="{Binding Workout.CreatedAt, StringFormat=\{0:yyyy-MM-dd HH:mm\}}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Bewaar" Width="110" Margin="0,0,8,0" IsDefault="True" Click="BtnSave_Click"/>
+            <Button Content="Annuleer" Width="110" IsCancel="True" Click="BtnCancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
