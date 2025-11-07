@@ -51,17 +51,6 @@
                 <DataGridTextColumn Header="Datum"
                                     Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}"
                                     Width="*"/>
-
-                <DataGridTextColumn Header="Beschrijving"
-                                    Binding="{Binding Description}"
-                                    Width="2*">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            <Setter Property="ToolTip" Value="{Binding Description}"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
