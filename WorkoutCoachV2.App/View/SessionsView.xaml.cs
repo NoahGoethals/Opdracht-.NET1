@@ -1,6 +1,6 @@
-﻿using System.Windows.Controls;
-using Microsoft.Extensions.DependencyInjection;
-using WorkoutCoachV2.App.ViewModels;
+﻿using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace WorkoutCoachV2.App.View
 {
@@ -9,7 +9,11 @@ namespace WorkoutCoachV2.App.View
         public SessionsView()
         {
             InitializeComponent();
-            DataContext = App.HostApp.Services.GetRequiredService<SessionsViewModel>();
+        }
+
+        private async void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            await TryRefreshAsync();
         }
     }
 }

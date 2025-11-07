@@ -9,6 +9,8 @@ namespace WorkoutCoachV2.Model.Models
 
         public DateTime Date { get; set; } = DateTime.Today;
 
+        public string? Description { get; set; }
+
         public ICollection<SessionSet> Sets { get; set; } = new List<SessionSet>();
     }
 }

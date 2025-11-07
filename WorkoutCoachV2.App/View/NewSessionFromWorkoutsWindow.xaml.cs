@@ -4,11 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-using WorkoutCoachV2.Model.Data;     
-using WorkoutCoachV2.Model.Models;   
+using WorkoutCoachV2.Model.Data;       
+using WorkoutCoachV2.Model.Models;    
 
 namespace WorkoutCoachV2.App.View
 {
@@ -33,27 +32,33 @@ namespace WorkoutCoachV2.App.View
                 .ThenByDescending(w => w.CreatedAt)
                 .ToListAsync();
 
-            _items = new ObservableCollection<SelectableWorkout>(workouts.Select(w => new SelectableWorkout { Workout = w }));
+            _items = new ObservableCollection<SelectableWorkout>(
+                workouts.Select(w => new SelectableWorkout { Workout = w }));
+
             dgWorkouts.ItemsSource = _items;
 
             dpDate.SelectedDate = DateTime.Today;
             tbTitle.Text = "Nieuwe sessie";
+            tbDescription.Text = string.Empty;
         }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             var title = tbTitle.Text?.Trim();
             var date = dpDate.SelectedDate ?? DateTime.Today;
+            var description = tbDescription.Text?.Trim() ?? string.Empty;
 
             var chosen = _items.Where(x => x.IsSelected).Select(x => x.Workout).ToList();
             if (chosen.Count == 0)
             {
-                MessageBox.Show("Selecteer minstens één workout.", "Nieuwe sessie", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Selecteer minstens één workout.", "Nieuwe sessie",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             if (string.IsNullOrWhiteSpace(title))
             {
-                MessageBox.Show("Geef een titel in.", "Nieuwe sessie", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Geef een titel in.", "Nieuwe sessie",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -69,11 +74,12 @@ namespace WorkoutCoachV2.App.View
 
             var session = new Session
             {
-                Title = title
+                Title = title!,
+                Date = date.Date,
+                Description = description
             };
-            SetSessionDate(session, date);
             db.Sessions.Add(session);
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(); 
 
             var sets = new List<SessionSet>();
             foreach (var w in workouts)
@@ -84,8 +90,8 @@ namespace WorkoutCoachV2.App.View
                     {
                         SessionId = session.Id,
                         ExerciseId = we.ExerciseId,
-                        Reps = we.Reps,     
-                        Weight = 0         
+                        Reps = we.Reps,
+                        Weight = 0 
                     });
                 }
             }
@@ -101,23 +107,6 @@ namespace WorkoutCoachV2.App.View
         }
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e) => Close();
-
-        private static PropertyInfo? FindDateProp(Type t)
-        {
-            return t.GetProperty("ScheduledOn") ??
-                   t.GetProperty("Date") ??
-                   t.GetProperty("ScheduledAt") ??
-                   t.GetProperty("PerformedOn") ??
-                   t.GetProperty("CreatedAt");
-        }
-
-        private static void SetSessionDate(Session s, DateTime d)
-        {
-            var p = FindDateProp(s.GetType());
-            if (p == null) return;
-            if (p.PropertyType == typeof(DateOnly)) p.SetValue(s, DateOnly.FromDateTime(d));
-            else p.SetValue(s, d);
-        }
 
         private class SelectableWorkout
         {

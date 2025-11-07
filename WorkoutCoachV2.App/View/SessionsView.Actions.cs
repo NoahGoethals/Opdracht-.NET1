@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using WorkoutCoachV2.Model.Data;      
-using WorkoutCoachV2.Model.Models;    
+using WorkoutCoachV2.Model.Data; 
 
 namespace WorkoutCoachV2.App.View
 {
