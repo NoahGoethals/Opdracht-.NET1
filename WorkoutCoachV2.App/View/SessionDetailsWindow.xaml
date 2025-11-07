@@ -1,0 +1,62 @@
+﻿<Window x:Class="WorkoutCoachV2.App.View.SessionDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sessie-inhoud"
+        Height="560" Width="760"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="200"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Titel:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBox x:Name="tbTitle" Grid.Column="1" IsReadOnly="True"/>
+
+            <TextBlock Grid.Column="3" Text="Datum:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBox x:Name="tbDate" Grid.Column="4" IsReadOnly="True"/>
+        </Grid>
+
+        <GroupBox Grid.Row="1" Header="Beschrijving" Margin="0,0,0,8">
+            <TextBox x:Name="tbDescription"
+                     Margin="8"
+                     Height="120"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     AcceptsReturn="True"/>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2" Grid.RowSpan="2" Header="Sets" Margin="0,0,0,8">
+            <DataGrid x:Name="dgSets"
+                      Margin="8"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Oefening" Binding="{Binding Exercise}" Width="2*"/>
+                    <DataGridTextColumn Header="Gewicht" Binding="{Binding Weight}" Width="*"/>
+                    <DataGridTextColumn Header="Reps" Binding="{Binding Reps}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Sluiten" Width="110" Click="BtnClose_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

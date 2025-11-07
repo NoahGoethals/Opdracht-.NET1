@@ -13,6 +13,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0"
@@ -27,8 +28,15 @@
                     Content="Nieuw uit workouts"
                     Click="btnNewFromWorkouts_Click"/>
 
-            <Button x:Name="btnDelete"
+            <Button x:Name="btnDetails"
                     Grid.Column="2"
+                    Margin="8,0,0,0"
+                    Width="110"
+                    Content="Inhoud"
+                    Click="btnDetails_Click"/>
+
+            <Button x:Name="btnDelete"
+                    Grid.Column="3"
                     Margin="8,0,0,0"
                     Width="110"
                     Content="Verwijderen"
@@ -47,7 +55,6 @@
                 <DataGridTextColumn Header="Titel"
                                     Binding="{Binding Title}"
                                     Width="2*"/>
-
                 <DataGridTextColumn Header="Datum"
                                     Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}"
                                     Width="*"/>
