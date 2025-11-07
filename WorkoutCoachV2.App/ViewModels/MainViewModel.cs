@@ -1,27 +1,28 @@
-﻿using WorkoutCoachV2.App.Services;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using WorkoutCoachV2.App.Services;
 
 namespace WorkoutCoachV2.App.ViewModels
 {
-    public class MainViewModel : BaseViewModel
+    public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly AuthState _auth;
+        private readonly AuthService _auth;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        public ExercisesViewModel Exercises { get; }
-        public WorkoutsViewModel Workouts { get; }
-        public SessionsViewModel Sessions { get; }
-
-        public MainViewModel(ExercisesViewModel ex, WorkoutsViewModel wo, SessionsViewModel se, AuthState auth)
+        public MainViewModel(AuthService auth)
         {
-            Exercises = ex;
-            Workouts = wo;
-            Sessions = se;
             _auth = auth;
         }
 
-        public bool CanSeeExercises => true; 
-        public bool CanSeeWorkouts => _auth.IsCoach || _auth.IsAdmin;
-        public bool CanSeeSessions => _auth.IsMember || _auth.IsCoach || _auth.IsAdmin;
+        public string Greeting => _auth.CurrentUser is null ? "Admin" : _auth.CurrentUser.DisplayName;
 
-        public string Greeting => _auth.User?.DisplayName ?? _auth.User?.UserName ?? "User";
+        public bool CanSeeExercises => _auth.IsInRole("Admin") || _auth.IsInRole("User");
+        public bool CanSeeWorkouts => _auth.IsInRole("Admin") || _auth.IsInRole("User");
+        public bool CanSeeSessions => _auth.IsInRole("Admin") || _auth.IsInRole("User");
+        public bool CanSeeStats => _auth.IsInRole("Admin") || _auth.IsInRole("User");
+        public bool CanSeeUserAdmin => _auth.IsInRole("Admin");
+
+        protected void Raise([CallerMemberName] string? p = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
     }
 }

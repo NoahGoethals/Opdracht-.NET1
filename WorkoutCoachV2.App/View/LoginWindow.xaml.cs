@@ -1,30 +1,38 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
-using WorkoutCoachV2.App.ViewModels;
+using WorkoutCoachV2.App.Services;
 
-namespace WorkoutCoachV2.App
+namespace WorkoutCoachV2.App.View
 {
     public partial class LoginWindow : Window
     {
-        private readonly LoginViewModel _vm;
+        private readonly AuthService _auth;
 
-        public LoginWindow()
+        public LoginWindow(AuthService auth)
         {
             InitializeComponent();
-            _vm = App.HostApp.Services.GetRequiredService<LoginViewModel>();
-            DataContext = _vm;
-            _vm.RequestClose += () => this.Close();
+            _auth = auth;
         }
 
-        private void Login_Click(object sender, RoutedEventArgs e)
+        private async void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
-            _vm.UserNameOrEmail = UserBox.Text;
-            _vm.Password = PwdBox.Password;
-            if (_vm.LoginCommand.CanExecute(null))
-                _vm.LoginCommand.Execute(null);
+            var ok = await _auth.LoginAsync(tbUser.Text.Trim(), tbPass.Password);
+            if (!ok)
+            {
+                MessageBox.Show("Login mislukt.", "Login", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var main = App.HostApp.Services.GetRequiredService<MainWindow>();
+            main.Show();
+            Close();
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void BtnRegister_Click(object sender, RoutedEventArgs e)
+        {
+            var wnd = App.HostApp.Services.GetRequiredService<RegisterWindow>();
+            wnd.Owner = this;
+            wnd.ShowDialog();
+        }
     }
 }

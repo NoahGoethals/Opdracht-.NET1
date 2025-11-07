@@ -1,94 +1,63 @@
-﻿using System;
-using System.Windows;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Windows;
+using WorkoutCoachV2.App.Services;
 using WorkoutCoachV2.App.View;
 using WorkoutCoachV2.App.ViewModels;
-using WorkoutCoachV2.App.Services;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Data.Seed;
-using WorkoutCoachV2.Model.Identity;
+using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.App
 {
     public partial class App : Application
     {
-        public static IHost HostApp { get; private set; } = default!;
+        public static IHost HostApp { get; private set; } = null!;
 
-        public App()
+        protected override async void OnStartup(StartupEventArgs e)
         {
-            ShutdownMode = ShutdownMode.OnLastWindowClose;
-
             HostApp = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((ctx, cfg) =>
                 {
-                    cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                    cfg.SetBasePath(AppContext.BaseDirectory)
+                       .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                        .AddEnvironmentVariables();
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    var cs = ctx.Configuration.GetConnectionString("Default")
-                             ?? throw new InvalidOperationException(
-                                 "Missing connection string 'Default' in appsettings.json of User Secrets.");
+                    var cs = ctx.Configuration.GetConnectionString("DefaultConnection")
+                             ?? "Server=(localdb)\\MSSQLLocalDB;Database=WorkoutCoachV2;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
-                    services.AddDbContext<AppDbContext>(opt =>
-                        opt.UseSqlServer(cs, sql =>
-                        {
-                            sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
-                        }));
+                    services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(cs));
 
-                    services.AddIdentityCore<AppUser>(opt =>
+                    services.AddIdentityCore<ApplicationUser>(opt =>
                     {
-                        opt.User.RequireUniqueEmail = true;
+                        opt.Password.RequireNonAlphanumeric = false;
+                        opt.Password.RequireUppercase = false;
+                        opt.Password.RequiredLength = 6;
                     })
                     .AddRoles<IdentityRole>()
                     .AddEntityFrameworkStores<AppDbContext>();
 
-                    services.AddTransient<DbSeeder>();
+                    services.AddScoped<AuthService>();
 
-                    services.AddSingleton<AuthState>();
+                    
+                    services.AddScoped<MainViewModel>();
+                    services.AddScoped<ExercisesViewModel>();
+                    services.AddScoped<WorkoutsViewModel>();
+                    services.AddScoped<SessionsViewModel>();
 
-                    services.AddSingleton<MainViewModel>();
-                    services.AddTransient<LoginViewModel>();
-                    services.AddTransient<ExercisesViewModel>();
-                    services.AddTransient<WorkoutsViewModel>();
-                    services.AddTransient<SessionsViewModel>();
-
-                    services.AddSingleton<MainWindow>();
                     services.AddTransient<LoginWindow>();
+                    services.AddTransient<MainWindow>();
+                    services.AddTransient<RegisterWindow>();
+                    services.AddTransient<UserAdminWindow>();
                 })
                 .Build();
 
-            this.DispatcherUnhandledException += (s, e) =>
-            {
-                MessageBox.Show(e.Exception.Message, "Onverwachte fout", MessageBoxButton.OK, MessageBoxImage.Error);
-                e.Handled = true;
-            };
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                if (e.ExceptionObject is Exception ex)
-                    MessageBox.Show(ex.Message, "Onverwachte fout (background)", MessageBoxButton.OK, MessageBoxImage.Error);
-            };
-        }
-
-        protected override async void OnStartup(StartupEventArgs e)
-        {
-            await HostApp.StartAsync();
-
-            try
-            {
-                using var scope = HostApp.Services.CreateScope();
-                var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
-                await seeder.SeedAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Seeding mislukte: " + ex.Message,
-                    "Initialisatie", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            await DbSeeder.SeedAsync(HostApp.Services);
 
             var login = HostApp.Services.GetRequiredService<LoginWindow>();
             login.Show();
@@ -98,14 +67,7 @@ namespace WorkoutCoachV2.App
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            try
-            {
-                await HostApp.StopAsync();
-            }
-            finally
-            {
-                HostApp.Dispose();
-            }
+            if (HostApp is IAsyncDisposable d) await d.DisposeAsync();
             base.OnExit(e);
         }
     }

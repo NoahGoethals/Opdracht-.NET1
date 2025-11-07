@@ -39,5 +39,12 @@ namespace WorkoutCoachV2.App
             login.Show();
             Close();
         }
+
+        private void OpenUsers_Click(object sender, RoutedEventArgs e)
+        {
+            var wnd = App.HostApp.Services.GetRequiredService<UserAdminWindow>();
+            wnd.Owner = this;
+            wnd.ShowDialog();
+        }
     }
 }

@@ -3,22 +3,38 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WorkoutCoach"
         Height="520"
-        Width="860"
+        Width="960"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
     <DockPanel LastChildFill="True">
-        <StackPanel Orientation="Horizontal"
-                    DockPanel.Dock="Top"
-                    Margin="8"
-                    VerticalAlignment="Center">
-            <TextBlock Text="{Binding Greeting}"
+        <Grid DockPanel.Dock="Top" Margin="8" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding Greeting}"
                        FontWeight="Bold"
-                       Margin="0,0,12,0"/>
-            <Button Content="Logout" Width="80" Click="Logout_Click"/>
-        </StackPanel>
+                       VerticalAlignment="Center"/>
+
+            <Button Grid.Column="1"
+                    Content="Users"
+                    Width="80"
+                    Margin="8,0,0,0"
+                    Visibility="{Binding CanSeeUserAdmin, Converter={StaticResource BoolToVis}}"
+                    Click="OpenUsers_Click"/>
+
+            <Button Grid.Column="2"
+                    Content="Logout"
+                    Width="80"
+                    Margin="8,0,0,0"
+                    Click="Logout_Click"/>
+        </Grid>
 
         <TabControl>
             <TabItem Header="Exercises"
