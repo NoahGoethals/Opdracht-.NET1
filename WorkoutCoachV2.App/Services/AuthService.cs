@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.App.Services
@@ -15,17 +18,23 @@ namespace WorkoutCoachV2.App.Services
             _userManager = userManager;
         }
 
-        public async Task<bool> LoginAsync(string userName, string password)
+        public async Task<bool> LoginAsync(string userNameOrEmail, string password)
         {
-            var user = await _userManager.FindByNameAsync(userName);
-            if (user is null || user.IsBlocked) return false;
+            if (string.IsNullOrWhiteSpace(userNameOrEmail) || string.IsNullOrWhiteSpace(password))
+                return false;
+
+            var user =
+                await _userManager.FindByNameAsync(userNameOrEmail)
+                ?? await _userManager.FindByEmailAsync(userNameOrEmail);
+
+            if (user is null) return false;
+            if (user.IsBlocked) return false;
 
             var ok = await _userManager.CheckPasswordAsync(user, password);
             if (!ok) return false;
 
             CurrentUser = user;
-            var roles = await _userManager.GetRolesAsync(user);
-            Roles = roles.ToArray();
+            Roles = (await _userManager.GetRolesAsync(user)).ToArray();
             return true;
         }
 
@@ -43,9 +52,11 @@ namespace WorkoutCoachV2.App.Services
                 Email = email,
                 DisplayName = displayName
             };
+
             var res = await _userManager.CreateAsync(user, password);
             if (res.Succeeded)
                 await _userManager.AddToRoleAsync(user, "User");
+
             return res;
         }
 
