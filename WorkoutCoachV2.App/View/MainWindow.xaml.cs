@@ -26,6 +26,8 @@ namespace WorkoutCoachV2.App
             ExercisesHost.Content = new ExercisesView { DataContext = exVm };
             WorkoutsHost.Content = new WorkoutsView { DataContext = wkVm };
             SessionsHost.Content = new SessionsView { DataContext = ssVm };
+
+            StatsHost.Content = new StatsView();
         }
 
         private void Logout_Click(object sender, RoutedEventArgs e)
