@@ -9,10 +9,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Content="Vernieuwen"   Width="110" Click="BtnRefresh_Click"/>
-            <Button Content="Nieuw"        Width="110" Margin="8,0,0,0" Click="BtnNewRow_Click"/>
-            <Button Content="Opslaan"      Width="110" Margin="8,0,0,0" Click="BtnSave_Click"/>
-            <Button Content="Verwijderen"  Width="110" Margin="8,0,0,0" Click="BtnDelete_Click"/>
+            <Button Content="Vernieuwen" Width="110" Click="BtnRefresh_Click"/>
+            <Button Content="Nieuw"      Width="110" Margin="8,0,0,0" Click="BtnNewRow_Click"/>
+            <Button Content="Opslaan"    Width="110" Margin="8,0,0,0" Click="BtnSave_Click"/>
+            <Button Content="Verwijderen" Width="110" Margin="8,0,0,0" Click="BtnDelete_Click"/>
         </StackPanel>
 
         <DataGrid x:Name="dg"
@@ -24,37 +24,22 @@
                   SelectionMode="Extended"
                   Margin="0">
             <DataGrid.Columns>
+                <DataGridTextColumn Header="Oefening"
+                                    Width="2*"
+                                    Binding="{Binding ExerciseName}" IsReadOnly="True"/>
 
-                <DataGridComboBoxColumn Header="Oefening"
-                                        Width="2*"
-                                        SelectedValueBinding="{Binding ExerciseId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        SelectedValuePath="Id"
-                                        DisplayMemberPath="Name"
-                                        ItemsSource="{Binding Exercises, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                <DataGridTextColumn Header="Gewicht"
+                                    Width="*"
+                                    Binding="{Binding Weight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <DataGridTextColumn Header="Gewicht" Width="*">
-                    <DataGridTextColumn.Binding>
-                        <Binding Path="Weight"
-                                 Mode="TwoWay"
-                                 UpdateSourceTrigger="PropertyChanged"
-                                 StringFormat="{}{0:#,0.##}"/>
-                    </DataGridTextColumn.Binding>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="Reps" Width="*">
-                    <DataGridTextColumn.Binding>
-                        <Binding Path="Reps" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"/>
-                    </DataGridTextColumn.Binding>
-                </DataGridTextColumn>
+                <DataGridTextColumn Header="Reps"
+                                    Width="*"
+                                    Binding="{Binding Reps, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <DataGridTemplateColumn Header="Datum" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock>
-                                <TextBlock.Text>
-                                    <Binding Path="Date" StringFormat="{}{0:yyyy-MM-dd}"/>
-                                </TextBlock.Text>
-                            </TextBlock>
+                            <TextBlock Text="{Binding Date, StringFormat={}{0:yyyy-MM-dd}}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -64,7 +49,8 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridCheckBoxColumn Header="PR" Width="60"
+                <DataGridCheckBoxColumn Header="PR"
+                                        Width="60"
                                         Binding="{Binding IsPr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </DataGrid.Columns>
         </DataGrid>

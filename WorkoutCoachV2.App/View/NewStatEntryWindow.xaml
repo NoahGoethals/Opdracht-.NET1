@@ -1,0 +1,61 @@
+﻿<Window x:Class="WorkoutCoachV2.App.View.NewStatEntryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nieuwe set toevoegen"
+        Width="1100" Height="720"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- BOVENBALK: WrapPanel voorkomt overlappende hitboxes -->
+        <WrapPanel Grid.Row="0" Margin="0,0,0,8" ItemHeight="32" ItemWidth="Auto">
+            <!-- Zoek -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock Text="Zoek oefening:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="tbSearch" Width="260" VerticalAlignment="Center"
+                         TextChanged="tbSearch_TextChanged"/>
+            </StackPanel>
+
+            <!-- Gewicht -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock Text="Gewicht:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="tbWeight" Width="110" VerticalAlignment="Center" TextAlignment="Right" Text="0"/>
+            </StackPanel>
+
+            <!-- Reps -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock Text="Reps:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="tbReps" Width="110" VerticalAlignment="Center" TextAlignment="Right" Text="5"/>
+            </StackPanel>
+
+            <!-- Datum -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock Text="Datum:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <DatePicker x:Name="dpDate" Width="170" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- PR -->
+            <CheckBox x:Name="cbPr" Content="PR" VerticalAlignment="Center" />
+        </WrapPanel>
+
+        <!-- Oefeninglijst -->
+        <GroupBox Grid.Row="1" Header="Oefening kiezen">
+            <ListBox x:Name="lbExercises"
+                     DisplayMemberPath="Name"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </GroupBox>
+
+        <!-- Acties -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Width="130" Content="Bewaren" IsDefault="True" Click="BtnSave_Click"/>
+            <Button Width="130" Margin="8,0,0,0" Content="Annuleer" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
