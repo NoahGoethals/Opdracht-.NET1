@@ -1,74 +1,128 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using WorkoutCoachV2.Model.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+using WorkoutCoachV2.Model.Data;      
+using WorkoutCoachV2.Model.Models;   
 
 namespace WorkoutCoachV2.Model.Data.Seed
 {
     public static class DbSeeder
     {
-        public static async Task SeedAsync(IServiceProvider sp)
+        
+        public static async Task SeedAsync(IServiceProvider services)
         {
-            // 1) Haal de connection string ZEKER op (met fallback) en migreer met een losse context.
-            //    Dit omzeilt het hele "Name=DefaultConnection" gedoe.
-            var cfg = sp.GetRequiredService<IConfiguration>();
-            var cs = cfg.GetConnectionString("DefaultConnection")
-                     ?? "Server=(localdb)\\MSSQLLocalDB;Database=WorkoutCoachV2;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+            using var scope = services.CreateScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-            var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlServer(cs)
-                .Options;
+            await ctx.Database.MigrateAsync();
 
-            // Migreer met one-off context, zodat de DB er stáát voor we managers gebruiken.
-            using (var ensure = new AppDbContext(options))
+          
+            async Task EnsureRoleAsync(string roleName)
             {
-                await ensure.Database.MigrateAsync();
+                if (!await roleManager.RoleExistsAsync(roleName))
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
             }
 
-            // 2) Vanaf hier gewone DI-objects gebruiken
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            await EnsureRoleAsync("Admin");
+            await EnsureRoleAsync("Member");
 
-            // Rollen
-            foreach (var r in new[] { "Admin", "User" })
-                if (!await roleMgr.RoleExistsAsync(r))
-                    await roleMgr.CreateAsync(new IdentityRole(r));
+            
+            var adminEmail = "admin@local";
+            var memberEmail = "member@local";
 
-            // Admin user
-            if (await userMgr.FindByNameAsync("admin") is null)
+            var admin = await userManager.FindByNameAsync(adminEmail);
+            if (admin == null)
             {
-                var admin = new ApplicationUser
+                admin = new ApplicationUser
                 {
-                    UserName = "admin",
-                    Email = "admin@local",
-                    DisplayName = "Administrator",
-                    EmailConfirmed = true
+                    UserName = adminEmail,
+                    Email = adminEmail
                 };
-
-                var res = await userMgr.CreateAsync(admin, "Admin!123");
-                if (res.Succeeded)
-                    await userMgr.AddToRoleAsync(admin, "Admin");
-                else
-                    throw new InvalidOperationException(
-                        "Kon admin niet aanmaken: " + string.Join("; ", res.Errors.Select(e => e.Description)));
+                await userManager.CreateAsync(admin, "Admin!123");
             }
+            if (!await userManager.IsInRoleAsync(admin, "Admin"))
+                await userManager.AddToRoleAsync(admin, "Admin");
 
-            // Demo data
-            if (!db.Exercises.Any())
+            var member = await userManager.FindByNameAsync(memberEmail);
+            if (member == null)
             {
-                db.Exercises.AddRange(
+                member = new ApplicationUser
+                {
+                    UserName = memberEmail,
+                    Email = memberEmail
+                };
+                await userManager.CreateAsync(member, "Member!123");
+            }
+            if (!await userManager.IsInRoleAsync(member, "Member"))
+                await userManager.AddToRoleAsync(member, "Member");
+
+           
+            var exercises = ctx.Set<Exercise>();
+            var workouts = ctx.Set<Workout>();
+            var workoutExercises = ctx.Set<WorkoutExercise>();
+            var sessions = ctx.Set<Session>();
+            var sessionSets = ctx.Set<SessionSet>();
+
+            if (!await exercises.AnyAsync())
+            {
+                exercises.AddRange(
                     new Exercise { Name = "Bench Press" },
-                    new Exercise { Name = "Back Squat" }
+                    new Exercise { Name = "Back Squat" },
+                    new Exercise { Name = "Deadlift" }
                 );
+                await ctx.SaveChangesAsync();
             }
 
-            await db.SaveChangesAsync();
+            Workout workout;
+            if (!await workouts.AnyAsync())
+            {
+                workout = new Workout { Title = "Full Body A" };
+                workouts.Add(workout);
+                await ctx.SaveChangesAsync();
+            }
+            else
+            {
+                workout = await workouts.FirstAsync();
+            }
+
+            var anyLinkForWorkout = await workoutExercises.AnyAsync(we =>
+                EF.Property<int>(we, "WorkoutId") == workout.Id);
+
+            if (!anyLinkForWorkout)
+            {
+                var firstExercise = await exercises.FirstAsync();
+                workoutExercises.Add(new WorkoutExercise
+                {
+                    WorkoutId = workout.Id,
+                    ExerciseId = firstExercise.Id
+                });
+                await ctx.SaveChangesAsync();
+            }
+
+            if (!await sessions.AnyAsync())
+            {
+                var s1 = new Session { Date = DateTime.Today.AddDays(-3) };
+                var s2 = new Session { Date = DateTime.Today.AddDays(-10) };
+                sessions.AddRange(s1, s2);
+                await ctx.SaveChangesAsync();
+
+                var ex = await exercises.FirstAsync();
+
+                sessionSets.AddRange(
+                    new SessionSet { SessionId = s1.Id, ExerciseId = ex.Id, SetNumber = 1, Reps = 8, Weight = 60, Note = "seed" },
+                    new SessionSet { SessionId = s1.Id, ExerciseId = ex.Id, SetNumber = 2, Reps = 6, Weight = 70 },
+                    new SessionSet { SessionId = s2.Id, ExerciseId = ex.Id, SetNumber = 1, Reps = 8, Weight = 57.5 }
+                );
+
+                await ctx.SaveChangesAsync();
+            }
+
         }
     }
 }
