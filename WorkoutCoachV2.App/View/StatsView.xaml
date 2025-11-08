@@ -11,7 +11,6 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
             <Button Content="Vernieuwen" Width="110" Click="BtnRefresh_Click"/>
             <Button Content="Nieuw"      Width="110" Margin="8,0,0,0" Click="BtnNewRow_Click"/>
-            <Button Content="Opslaan"    Width="110" Margin="8,0,0,0" Click="BtnSave_Click"/>
             <Button Content="Verwijderen" Width="110" Margin="8,0,0,0" Click="BtnDelete_Click"/>
         </StackPanel>
 
@@ -26,7 +25,8 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Oefening"
                                     Width="2*"
-                                    Binding="{Binding ExerciseName}" IsReadOnly="True"/>
+                                    Binding="{Binding ExerciseName}"
+                                    IsReadOnly="True"/>
 
                 <DataGridTextColumn Header="Gewicht"
                                     Width="*"

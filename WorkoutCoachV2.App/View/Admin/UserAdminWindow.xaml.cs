@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,57 +17,102 @@ namespace WorkoutCoachV2.App.View
         private readonly AppDbContext _db;
 
         public ObservableCollection<Row> Rows { get; } = new();
-        public string[] Roles { get; private set; } = new[] { "Admin", "User" };
+        public string[] Roles { get; } = new[] { "Admin", "User" };
 
-        public UserAdminWindow(UserManager<ApplicationUser> userMgr, RoleManager<IdentityRole> roleMgr, AppDbContext db)
+        public UserAdminWindow(
+            UserManager<ApplicationUser> userMgr,
+            RoleManager<IdentityRole> roleMgr,
+            AppDbContext db)
         {
             InitializeComponent();
             _userMgr = userMgr;
             _roleMgr = roleMgr;
             _db = db;
 
-            dg.ItemsSource = Rows;
-            Loaded += async (_, __) => await LoadAsync();
+            DataContext = this;
+            _ = LoadAsync();
         }
 
         private async Task LoadAsync()
         {
             Rows.Clear();
-            var users = await _db.Users.AsNoTracking().ToListAsync();
+
+            var users = await _userMgr.Users
+                .AsNoTracking()
+                .OrderBy(u => u.UserName)
+                .ToListAsync();
+
             foreach (var u in users)
             {
                 var roles = await _userMgr.GetRolesAsync(u);
+                var role = roles.Contains("Admin") ? "Admin" : "User";
+
                 Rows.Add(new Row
                 {
                     Id = u.Id,
-                    UserName = u.UserName!,
-                    DisplayName = u.DisplayName,
+                    UserName = u.UserName ?? "",
+                    DisplayName = u.DisplayName ?? "",
                     IsBlocked = u.IsBlocked,
-                    Role = roles.FirstOrDefault() ?? "User"
+                    Role = role
                 });
             }
-            dg.Items.Refresh();
         }
 
-        private async void BtnRefresh_Click(object sender, RoutedEventArgs e) => await LoadAsync();
+        private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Kon niet vernieuwen:\n{ex.Message}", "Gebruikersbeheer",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var r in Rows)
+            try
             {
-                var u = await _userMgr.FindByIdAsync(r.Id);
-                if (u == null) continue;
-                u.DisplayName = r.DisplayName;
-                u.IsBlocked = r.IsBlocked;
-                await _userMgr.UpdateAsync(u);
+                foreach (var r in Roles)
+                    if (!await _roleMgr.RoleExistsAsync(r))
+                        await _roleMgr.CreateAsync(new IdentityRole(r));
 
-                var current = await _userMgr.GetRolesAsync(u);
-                foreach (var c in current) await _userMgr.RemoveFromRoleAsync(u, c);
-                await _userMgr.AddToRoleAsync(u, r.Role);
+                foreach (var r in Rows)
+                {
+                    var u = await _db.Users.FirstAsync(x => x.Id == r.Id);
+
+                    u.DisplayName = r.DisplayName ?? "";
+                    u.IsBlocked = r.IsBlocked;
+
+                    var current = await _userMgr.GetRolesAsync(u);
+                    if (r.Role == "Admin" && !current.Contains("Admin"))
+                    {
+                        if (current.Any())
+                            await _userMgr.RemoveFromRolesAsync(u, current);
+                        await _userMgr.AddToRoleAsync(u, "Admin");
+                    }
+                    else if (r.Role == "User" && !current.Contains("User"))
+                    {
+                        if (current.Any())
+                            await _userMgr.RemoveFromRolesAsync(u, current);
+                        await _userMgr.AddToRoleAsync(u, "User");
+                    }
+
+                    await _userMgr.UpdateAsync(u);
+                }
+
+                await _db.SaveChangesAsync();
+                MessageBox.Show("Opgeslagen.", "Gebruikersbeheer",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                await LoadAsync();
             }
-
-            MessageBox.Show("Opgeslagen.", "Gebruikersbeheer");
-            await LoadAsync();
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Opslaan mislukt:\n{ex.Message}", "Gebruikersbeheer",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public sealed class Row

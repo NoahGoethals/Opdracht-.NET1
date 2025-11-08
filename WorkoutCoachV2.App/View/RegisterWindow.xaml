@@ -1,7 +1,8 @@
 ﻿<Window x:Class="WorkoutCoachV2.App.View.RegisterWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Registreren" Height="360" Width="480" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="Registreren" Height="360" Width="480"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,7 +16,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Gebruikersnaam"/>
+        <TextBlock Text="Gebruikersnaam" Grid.Row="0"/>
         <TextBox x:Name="tbUser" Grid.Row="2"/>
 
         <TextBlock Text="E-mail" Grid.Row="4"/>
@@ -24,7 +25,8 @@
         <TextBlock Text="Weergavenaam" Grid.Row="6"/>
         <TextBox x:Name="tbDisplay" Grid.Row="6" Margin="0,22,0,0"/>
 
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <TextBlock Text="Wachtwoord" Margin="0,0,8,0" VerticalAlignment="Center"/>
             <PasswordBox x:Name="tbPass" Width="150" Margin="0,0,8,0"/>
             <Button Content="Registreer" Width="110" Click="BtnRegister_Click"/>
         </StackPanel>
