@@ -1,5 +1,11 @@
-﻿namespace WorkoutCoachV2.Model.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace WorkoutCoachV2.Model.Models
 {
+    /// <summary>
+    /// Koppelt Workout en Exercise en bewaart extra velden (Reps, WeightKg).
+    /// Composite key (WorkoutId, ExerciseId) wordt in AppDbContext geconfigureerd.
+    /// </summary>
     public class WorkoutExercise
     {
         public int WorkoutId { get; set; }
@@ -8,6 +14,16 @@
         public int ExerciseId { get; set; }
         public Exercise Exercise { get; set; } = default!;
 
-        public int Reps { get; set; } = 5;
+        /// <summary>
+        /// Geplande herhalingen voor deze oefening binnen de workout.
+        /// </summary>
+        public int Reps { get; set; }
+
+        /// <summary>
+        /// Gepland gewicht (in kg) voor deze oefening binnen de workout.
+        /// Nullable zodat 0/geen gewicht kan.
+        /// </summary>
+        [Column(TypeName = "float")]
+        public double? WeightKg { get; set; } = 0;
     }
 }

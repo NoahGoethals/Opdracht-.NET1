@@ -1,12 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-
-using WorkoutCoachV2.Model.Data;     
-using WorkoutCoachV2.Model.Models;  
+using System.Windows.Controls;
+using WorkoutCoachV2.Model;
+using WorkoutCoachV2.Model.Data;
+using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.App.View
 {
@@ -14,135 +16,150 @@ namespace WorkoutCoachV2.App.View
     {
         private readonly int _workoutId;
 
-        private ObservableCollection<Exercise> _available = new();
-        private ObservableCollection<WorkoutExercise> _inWorkout = new();
+        private readonly ObservableCollection<Exercise> _available = new();
+        private readonly ObservableCollection<WorkoutExercise> _inWorkout = new();
 
         public EditWorkoutExercisesWindow(int workoutId)
         {
             InitializeComponent();
             _workoutId = workoutId;
-            Loaded += async (_, __) => await LoadAsync();
-        }
 
-        private async Task LoadAsync()
-        {
-            using var scope = App.HostApp.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var workout = await db.Workouts
-                .Include(w => w.Exercises)
-                    .ThenInclude(we => we.Exercise)
-                .FirstAsync(w => w.Id == _workoutId);
-
-            var all = await db.Exercises
-                .AsNoTracking()
-                .OrderBy(e => e.Name)
-                .ToListAsync();
-
-            var usedIds = workout.Exercises.Select(we => we.ExerciseId).ToHashSet();
-
-            _inWorkout = new ObservableCollection<WorkoutExercise>(
-                workout.Exercises.OrderBy(we => we.Exercise.Name));
-
-            _available = new ObservableCollection<Exercise>(all.Where(e => !usedIds.Contains(e.Id)));
-
-            lbAvailable.ItemsSource = _available;
             dgInWorkout.ItemsSource = _inWorkout;
+
+            Loaded += async (_, __) => await LoadDataAsync();
         }
 
-        private static async Task<int> GetSuggestedRepsAsync(int exerciseId)
+        private async Task LoadDataAsync()
         {
-            using var scope = App.HostApp.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var last = await db.WorkoutExercises
-                .Where(we => we.ExerciseId == exerciseId)
-                .OrderByDescending(we => we.WorkoutId)   
-                .Select(we => (int?)we.Reps)
-                .FirstOrDefaultAsync();
-
-            return last ?? 5;
-        }
-
-        private async void btnAdd_Click(object sender, RoutedEventArgs e)
-        {
-            if (lbAvailable.SelectedItem is not Exercise ex) return;
-
-            var defaultReps = await GetSuggestedRepsAsync(ex.Id);
-
-            var dlg = new AskRepsWindow(defaultReps) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true) return;
-
-            var we = new WorkoutExercise
+            try
             {
-                WorkoutId = _workoutId,
-                ExerciseId = ex.Id,
-                Exercise = ex,
-                Reps = dlg.Reps
-            };
+                using var scope = App.HostApp.Services.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            _inWorkout.Add(we);
-            _available.Remove(ex);
+                var all = await ctx.Exercises
+                                   .Where(e => !e.IsDeleted)
+                                   .OrderBy(e => e.Name)
+                                   .ToListAsync();
+                _available.Clear();
+                foreach (var e in all) _available.Add(e);
+                lbAvailable.ItemsSource = _available;
+
+                var current = await ctx.WorkoutExercises
+                                       .Include(we => we.Exercise)
+                                       .Where(we => we.WorkoutId == _workoutId)
+                                       .OrderBy(we => we.Exercise.Name)
+                                       .ToListAsync();
+                _inWorkout.Clear();
+                foreach (var we in current) _inWorkout.Add(we);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Kon data niet laden:\n{ex.Message}", "Fout", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var term = (txtSearch.Text ?? string.Empty).Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                lbAvailable.ItemsSource = _available;
+                return;
+            }
+
+            var filtered = _available.Where(x => x.Name.ToLower().Contains(term)).ToList();
+            lbAvailable.ItemsSource = filtered;
+        }
+
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = lbAvailable.SelectedItem as Exercise;
+            if (selected is null) return;
+
+            var repsDlg = new AskRepsWindow();
+            if (repsDlg.ShowDialog() != true) return;
+            var reps = repsDlg.Reps;
+
+            var weightDlg = new AskWeightWindow();
+            if (weightDlg.ShowDialog() != true) return;
+            var weight = weightDlg.WeightKg ?? 0;
+
+            var existing = _inWorkout.FirstOrDefault(x => x.ExerciseId == selected.Id);
+            if (existing is null)
+            {
+                _inWorkout.Add(new WorkoutExercise
+                {
+                    WorkoutId = _workoutId,
+                    ExerciseId = selected.Id,
+                    Exercise = selected,
+                    Reps = reps,
+                    WeightKg = weight
+                });
+            }
+            else
+            {
+                existing.Reps = reps;
+                existing.WeightKg = weight;
+            }
+
+            var sorted = _inWorkout.OrderBy(x => x.Exercise.Name).ToList();
+            _inWorkout.Clear();
+            foreach (var we in sorted) _inWorkout.Add(we);
         }
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            if (dgInWorkout.SelectedItem is WorkoutExercise we)
+            if (dgInWorkout.SelectedItem is WorkoutExercise sel)
             {
-                if (we.Exercise != null) _available.Add(we.Exercise);
-                _inWorkout.Remove(we);
+                _inWorkout.Remove(sel);
             }
         }
 
         private async void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            using var scope = App.HostApp.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var workout = await db.Workouts
-                .Include(w => w.Exercises)
-                .FirstAsync(w => w.Id == _workoutId);
-
-            var keep = _inWorkout.Select(x => x.ExerciseId).ToHashSet();
-            var toRemove = workout.Exercises.Where(x => !keep.Contains(x.ExerciseId)).ToList();
-            if (toRemove.Count > 0) db.WorkoutExercises.RemoveRange(toRemove);
-
-            foreach (var item in _inWorkout)
+            try
             {
-                var existing = workout.Exercises.FirstOrDefault(x => x.ExerciseId == item.ExerciseId);
-                if (existing == null)
+                using var scope = App.HostApp.Services.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var dbItems = await ctx.WorkoutExercises
+                                       .Where(we => we.WorkoutId == _workoutId)
+                                       .ToListAsync();
+
+                foreach (var dbWe in dbItems)
                 {
-                    workout.Exercises.Add(new WorkoutExercise
+                    if (!_inWorkout.Any(x => x.ExerciseId == dbWe.ExerciseId))
+                        ctx.WorkoutExercises.Remove(dbWe);
+                }
+
+                foreach (var item in _inWorkout)
+                {
+                    var dbWe = dbItems.FirstOrDefault(x => x.ExerciseId == item.ExerciseId);
+                    if (dbWe is null)
                     {
-                        WorkoutId = _workoutId,
-                        ExerciseId = item.ExerciseId,
-                        Reps = item.Reps
-                    });
+                        ctx.WorkoutExercises.Add(new WorkoutExercise
+                        {
+                            WorkoutId = _workoutId,
+                            ExerciseId = item.ExerciseId,
+                            Reps = item.Reps,
+                            WeightKg = item.WeightKg
+                        });
+                    }
+                    else
+                    {
+                        dbWe.Reps = item.Reps;
+                        dbWe.WeightKg = item.WeightKg;
+                        ctx.WorkoutExercises.Update(dbWe);
+                    }
                 }
-                else
-                {
-                    existing.Reps = item.Reps;
-                    db.Entry(existing).State = EntityState.Modified;
-                }
+
+                await ctx.SaveChangesAsync();
+                DialogResult = true;
             }
-
-            await db.SaveChangesAsync();
-            DialogResult = true;
-            Close();
-        }
-
-        private void btnCancel_Click(object sender, RoutedEventArgs e) => Close();
-
-        private void tbFilterLeft_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-        {
-            var term = tbFilterLeft.Text?.Trim().ToLowerInvariant() ?? string.Empty;
-            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(lbAvailable.ItemsSource);
-            view.Filter = o =>
+            catch (Exception ex)
             {
-                if (o is Exercise ex)
-                    return string.IsNullOrEmpty(term) || ex.Name.ToLowerInvariant().Contains(term);
-                return true;
-            };
+                MessageBox.Show(this, $"Bewaren mislukt:\n{ex.Message}", "Fout", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
