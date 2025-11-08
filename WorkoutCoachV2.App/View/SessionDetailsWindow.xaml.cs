@@ -103,8 +103,28 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        private async void BtnClose_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                using var scope = App.HostApp.Services.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var db = await ctx.Sessions.FirstOrDefaultAsync(s => s.Id == _sessionId);
+                if (db != null)
+                {
+                    db.Title = (txtTitle.Text ?? string.Empty).Trim();
+                    db.Description = txtDescription.Text ?? string.Empty;
+                    if (dpDate.SelectedDate.HasValue)
+                        db.Date = dpDate.SelectedDate.Value;
+
+                    await ctx.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Bewaren mislukt:\n{ex.Message}", "Fout", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             Close();
         }
 

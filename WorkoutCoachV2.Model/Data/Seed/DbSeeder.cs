@@ -5,14 +5,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using WorkoutCoachV2.Model.Data;      
-using WorkoutCoachV2.Model.Models;   
+using WorkoutCoachV2.Model.Data;
+using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.Model.Data.Seed
 {
     public static class DbSeeder
     {
-        
         public static async Task SeedAsync(IServiceProvider services)
         {
             using var scope = services.CreateScope();
@@ -22,17 +21,14 @@ namespace WorkoutCoachV2.Model.Data.Seed
 
             await ctx.Database.MigrateAsync();
 
-          
             async Task EnsureRoleAsync(string roleName)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))
                     await roleManager.CreateAsync(new IdentityRole(roleName));
             }
-
             await EnsureRoleAsync("Admin");
             await EnsureRoleAsync("Member");
 
-            
             var adminEmail = "admin@local";
             var memberEmail = "member@local";
 
@@ -42,7 +38,8 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 admin = new ApplicationUser
                 {
                     UserName = adminEmail,
-                    Email = adminEmail
+                    Email = adminEmail,
+                    DisplayName = "Administrator"
                 };
                 await userManager.CreateAsync(admin, "Admin!123");
             }
@@ -55,14 +52,14 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 member = new ApplicationUser
                 {
                     UserName = memberEmail,
-                    Email = memberEmail
+                    Email = memberEmail,
+                    DisplayName = "Member"
                 };
                 await userManager.CreateAsync(member, "Member!123");
             }
             if (!await userManager.IsInRoleAsync(member, "Member"))
                 await userManager.AddToRoleAsync(member, "Member");
 
-           
             var exercises = ctx.Set<Exercise>();
             var workouts = ctx.Set<Workout>();
             var workoutExercises = ctx.Set<WorkoutExercise>();
@@ -100,29 +97,31 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 workoutExercises.Add(new WorkoutExercise
                 {
                     WorkoutId = workout.Id,
-                    ExerciseId = firstExercise.Id
+                    ExerciseId = firstExercise.Id,
+                    Reps = 5,
+                    WeightKg = 0
                 });
                 await ctx.SaveChangesAsync();
             }
 
-            if (!await sessions.AnyAsync())
+            var untitled = await sessions
+                .Where(s => string.IsNullOrWhiteSpace(s.Title))
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            if (untitled.Count > 0)
             {
-                var s1 = new Session { Date = DateTime.Today.AddDays(-3) };
-                var s2 = new Session { Date = DateTime.Today.AddDays(-10) };
-                sessions.AddRange(s1, s2);
-                await ctx.SaveChangesAsync();
+                var orphanSets = await sessionSets.Where(ss => untitled.Contains(ss.SessionId)).ToListAsync();
+                if (orphanSets.Count > 0)
+                    sessionSets.RemoveRange(orphanSets);
 
-                var ex = await exercises.FirstAsync();
-
-                sessionSets.AddRange(
-                    new SessionSet { SessionId = s1.Id, ExerciseId = ex.Id, SetNumber = 1, Reps = 8, Weight = 60, Note = "seed" },
-                    new SessionSet { SessionId = s1.Id, ExerciseId = ex.Id, SetNumber = 2, Reps = 6, Weight = 70 },
-                    new SessionSet { SessionId = s2.Id, ExerciseId = ex.Id, SetNumber = 1, Reps = 8, Weight = 57.5 }
-                );
+                var toRemove = await sessions.Where(s => untitled.Contains(s.Id)).ToListAsync();
+                sessions.RemoveRange(toRemove);
 
                 await ctx.SaveChangesAsync();
             }
 
+            
         }
     }
 }

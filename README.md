@@ -109,5 +109,14 @@ Log in als admin om gebruikers/rollen te beheren.
 
 ## Bronnen
 https://chatgpt.com/share/690f7b51-8698-8009-a3fe-5e1c69ed8e49
+https://chatgpt.com/share/690f8196-5fe0-8009-9ac6-a07a36331e91
+https://chatgpt.com/share/690f81be-e1f8-8009-9367-5e6a87085108
+https://chatgpt.com/share/690f81d9-fe0c-8009-81f2-da0e6903e456
+https://chatgpt.com/share/690f7b51-8698-8009-a3fe-5e1c69ed8e49
+https://chatgpt.com/share/690f844f-f0c0-8009-bdd7-112c562a2ce0
+https://chatgpt.com/share/690f8451-c46c-8009-91f1-2044fc1b69dc
+https://chatgpt.com/share/690f8458-9644-8009-a4e3-a43bbaf0d5d7
+https://chatgpt.com/share/690f81be-e1f8-8009-9367-5e6a87085108
+https://chatgpt.com/share/690f8454-4f0c-8009-83d5-de1f39157fc4
 
-
+Copilot af en gevraagd voor advies.
