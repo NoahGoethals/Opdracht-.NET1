@@ -118,5 +118,7 @@ https://chatgpt.com/share/690f8451-c46c-8009-91f1-2044fc1b69dc
 https://chatgpt.com/share/690f8458-9644-8009-a4e3-a43bbaf0d5d7
 https://chatgpt.com/share/690f81be-e1f8-8009-9367-5e6a87085108
 https://chatgpt.com/share/690f8454-4f0c-8009-83d5-de1f39157fc4
+https://chatgpt.com/share/6910875b-3738-8009-a924-aec76e54ad78
+https://chatgpt.com/share/6910875e-b914-8009-8e27-6f3a5f4804e2
 
 Copilot af en gevraagd voor advies.
