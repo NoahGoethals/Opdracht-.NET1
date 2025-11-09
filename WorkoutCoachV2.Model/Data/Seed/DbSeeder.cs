@@ -1,4 +1,6 @@
-﻿using System;
+﻿// DB-seed: migrate DB, maak rollen/users, seed demo-data (oefeningen/workout), ruim lege sessies op.
+
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -14,13 +16,16 @@ namespace WorkoutCoachV2.Model.Data.Seed
     {
         public static async Task SeedAsync(IServiceProvider services)
         {
+            // Scope uit DI halen (DbContext + Identity managers)
             using var scope = services.CreateScope();
             var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
+            // Zorg dat DB + migraties up-to-date zijn
             await ctx.Database.MigrateAsync();
 
+            // Rollen aanmaken indien nodig
             async Task EnsureRoleAsync(string roleName)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))
@@ -29,6 +34,7 @@ namespace WorkoutCoachV2.Model.Data.Seed
             await EnsureRoleAsync("Admin");
             await EnsureRoleAsync("Member");
 
+            // Standaard users (admin/member) + rollen koppelen
             var adminEmail = "admin@local";
             var memberEmail = "member@local";
 
@@ -60,12 +66,14 @@ namespace WorkoutCoachV2.Model.Data.Seed
             if (!await userManager.IsInRoleAsync(member, "Member"))
                 await userManager.AddToRoleAsync(member, "Member");
 
+            // Sets naar DbSets (kortere namen)
             var exercises = ctx.Set<Exercise>();
             var workouts = ctx.Set<Workout>();
             var workoutExercises = ctx.Set<WorkoutExercise>();
             var sessions = ctx.Set<Session>();
             var sessionSets = ctx.Set<SessionSet>();
 
+            // Basisoefeningen (eenmalig)
             if (!await exercises.AnyAsync())
             {
                 exercises.AddRange(
@@ -76,6 +84,7 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 await ctx.SaveChangesAsync();
             }
 
+            // Minstens één workout voorzien
             Workout workout;
             if (!await workouts.AnyAsync())
             {
@@ -88,6 +97,7 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 workout = await workouts.FirstAsync();
             }
 
+            // Koppel de eerste oefening aan de workout (idempotent)
             var anyLinkForWorkout = await workoutExercises.AnyAsync(we =>
                 EF.Property<int>(we, "WorkoutId") == workout.Id);
 
@@ -104,6 +114,7 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 await ctx.SaveChangesAsync();
             }
 
+            // Lege/naamloze sessies opschonen (incl. verweesde sets)
             var untitled = await sessions
                 .Where(s => string.IsNullOrWhiteSpace(s.Title))
                 .Select(s => s.Id)
@@ -121,7 +132,6 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 await ctx.SaveChangesAsync();
             }
 
-            
         }
     }
 }

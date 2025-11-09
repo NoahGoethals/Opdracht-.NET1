@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Sessie-detailvenster: laadt sessie + sets; toont grid; vult leegte uit laatste workout; bewaart header-velden bij sluiten.
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
@@ -12,11 +14,14 @@ namespace WorkoutCoachV2.App.View
 {
     public partial class SessionDetailsWindow : Window
     {
+        // Velden: geselecteerde sessie-id en modelbuffer
         private readonly int _sessionId;
         private Session? _session;
 
+        // Grid-rijen (viewmodelletje per set)
         private readonly ObservableCollection<SessionSetRow> _rows = new();
 
+        // Constructor: id aanvaarden, grid binden, lazy load
         public SessionDetailsWindow(int sessionId)
         {
             InitializeComponent();
@@ -26,6 +31,7 @@ namespace WorkoutCoachV2.App.View
             Loaded += async (_, __) => await LoadAsync();
         }
 
+        // Data laden: sessie + sets; of import uit meest recente workout
         private async Task LoadAsync()
         {
             try
@@ -45,14 +51,17 @@ namespace WorkoutCoachV2.App.View
                     return;
                 }
 
+                // Header vullen
                 txtTitle.Text = _session.Title;
                 dpDate.SelectedDate = _session.Date;
                 txtDescription.Text = _session.Description ?? string.Empty;
 
+                // Rijen voorbereiden
                 _rows.Clear();
 
                 if (_session.Sets != null && _session.Sets.Count > 0)
                 {
+                    // Bestaande sets tonen
                     foreach (var ss in _session.Sets.OrderBy(x => x.Exercise.Name))
                     {
                         _rows.Add(new SessionSetRow
@@ -66,6 +75,7 @@ namespace WorkoutCoachV2.App.View
                 }
                 else
                 {
+                    // Geen sets: automatisch overnemen uit laatste workout
                     await ImportFromLatestWorkoutAsync(ctx);
                 }
             }
@@ -75,6 +85,7 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // Hulpmethode: haal items uit meest recente workout (op Id aflopend) en vul grid
         private async Task ImportFromLatestWorkoutAsync(AppDbContext ctx)
         {
             var latestWorkout = await ctx.Workouts
@@ -103,6 +114,7 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // Sluiten: header-velden (titel/desc/datum) wegschrijven; grid-edit blijft in-memory (geen CRUD hier)
         private async void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -128,6 +140,7 @@ namespace WorkoutCoachV2.App.View
             Close();
         }
 
+        // Eenvoudige weergavemodel-rij voor het DataGrid
         private sealed class SessionSetRow
         {
             public int ExerciseId { get; set; }

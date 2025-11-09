@@ -1,17 +1,24 @@
-﻿<UserControl x:Class="WorkoutCoachV2.App.Controls.LabeledInput"
+﻿<!--
+  LabeledInput: kleine herbruikbare control met een label links en content rechts.
+  Doel: consequent uitlijnen van label + invoer (bv. TextBox/DatePicker).
+-->
+<UserControl x:Class="WorkoutCoachV2.App.Controls.LabeledInput"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Layout: 2 kolommen (Auto voor label, * voor invoer) -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Label: leest de 'Label' dependency property van de UserControl -->
         <TextBlock Grid.Column="0"
                    Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}"
                    VerticalAlignment="Center"
                    Margin="0,0,8,0"/>
 
+        <!-- Invoer: toont de 'Input' content (bv. TextBox) -->
         <ContentPresenter Grid.Column="1"
                           Content="{Binding Input, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
     </Grid>

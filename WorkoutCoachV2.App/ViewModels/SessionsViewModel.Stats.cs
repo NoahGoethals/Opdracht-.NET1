@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Stat-berekening voor Sessions: periode kiezen, weekvolume, beste set per oefening.
+
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,8 +13,10 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class SessionsViewModel
     {
+        // Lijst met “beste” sets per oefening (voor weergave).
         public ObservableCollection<BestSetItem> BestSets { get; } = new();
 
+        // Filter: van-datum.
         private DateTime _fromDate;
         public DateTime FromDate
         {
@@ -20,6 +24,7 @@ namespace WorkoutCoachV2.App.ViewModels
             set => SetProperty(ref _fromDate, value);
         }
 
+        // Filter: tot-datum.
         private DateTime _toDate;
         public DateTime ToDate
         {
@@ -27,6 +32,7 @@ namespace WorkoutCoachV2.App.ViewModels
             set => SetProperty(ref _toDate, value);
         }
 
+        // Volume (gewicht * reps) in de gekozen periode, afgerond naar int.
         private int _weekVolume;
         public int WeekVolume
         {
@@ -34,11 +40,13 @@ namespace WorkoutCoachV2.App.ViewModels
             set => SetProperty(ref _weekVolume, value);
         }
 
+        // Bereken stats: filter sessies, som volume, pick beste set per oefening.
         private async Task CalcStatsAsync()
         {
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+            // Sla sets (met oefening en sessiedatum) plat voor aggregaties.
             var query = db.Sessions
                 .AsNoTracking()
                 .Include(s => s.Sets).ThenInclude(x => x.Exercise)
@@ -55,8 +63,10 @@ namespace WorkoutCoachV2.App.ViewModels
                 }))
                 .ToListAsync();
 
+            // Weekvolume = som(gewicht * reps).
             WeekVolume = (int)Math.Round(all.Sum(a => a.Weight * a.Reps));
 
+            // Beste set per oefening: hoogste gewicht, dan reps, dan recentste datum.
             var best = all
                 .GroupBy(a => a.ExerciseName)
                 .Select(g => g.OrderByDescending(a => a.Weight)
@@ -66,6 +76,7 @@ namespace WorkoutCoachV2.App.ViewModels
                 .OrderBy(a => a.ExerciseName)
                 .ToList();
 
+            // UI-lijst vullen (markeer als PR in deze context).
             BestSets.Clear();
             foreach (var b in best)
             {
@@ -82,6 +93,7 @@ namespace WorkoutCoachV2.App.ViewModels
         }
     }
 
+    // View-model item voor de statistiekentabel.
     public class BestSetItem : BaseViewModel
     {
         public int SetId { get; set; }

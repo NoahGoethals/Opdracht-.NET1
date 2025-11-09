@@ -1,28 +1,38 @@
-﻿<Window x:Class="WorkoutCoachV2.App.View.AddWorkoutWindow"
+﻿<!-- Compact venster om een workout toe te voegen/bewerken: titel + datum met OK/Annuleer. -->
+<Window x:Class="WorkoutCoachV2.App.View.AddWorkoutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Workout" Height="200" Width="400"
         WindowStartupLocation="CenterOwner">
+
+    <!-- Basis layout: 2 kolommen (label / input), knoppen onderaan -->
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Titel rij -->
             <RowDefinition Height="Auto"/>
+            <!-- Datum rij -->
             <RowDefinition Height="Auto"/>
+            <!-- Knoppen rij -->
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100"/>
+            <!-- Labels -->
             <ColumnDefinition Width="*"/>
+            <!-- Inputs -->
         </Grid.ColumnDefinitions>
 
+        <!-- Titel -->
         <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Titel:"/>
         <TextBox   Grid.Row="0" Grid.Column="1" x:Name="TitleBox" Margin="6,0,0,8"/>
 
+        <!-- Datum -->
         <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Datum:"/>
         <DatePicker Grid.Row="1" Grid.Column="1" x:Name="DatePick" Margin="6,0,0,8"/>
 
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <Button Width="100" Margin="0,8,8,0" Content="Bewaar" Click="Ok_Click"/>
+        <!-- Actieknoppen -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Width="100" Margin="0,8,8,0" Content="Bewaar"   Click="Ok_Click"/>
             <Button Width="100" Margin="0,8,0,0"  Content="Annuleer" Click="Cancel_Click"/>
         </StackPanel>
     </Grid>

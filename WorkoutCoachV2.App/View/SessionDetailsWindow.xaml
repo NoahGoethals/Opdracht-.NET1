@@ -1,10 +1,13 @@
-﻿<Window x:Class="WorkoutCoachV2.App.View.SessionDetailsWindow"
+﻿<!-- Sessie-inhoudvenster: kop (titel+datum), beschrijving, sets-grid en sluitknop. -->
+<Window x:Class="WorkoutCoachV2.App.View.SessionDetailsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Sessie-inhoud" Height="640" Width="980"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize">
+
     <Grid Margin="10">
+        <!-- Layout-rijen: kop, beschrijving, sets, footer -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -12,6 +15,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- KOP: Titel + Datum -->
         <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -27,11 +31,16 @@
             <DatePicker Grid.Column="3" x:Name="dpDate" Height="24"/>
         </Grid>
 
+        <!-- BESCHRIJVING -->
         <GroupBox Grid.Row="1" Header="Beschrijving" Margin="0,0,0,8">
-            <TextBox x:Name="txtDescription" AcceptsReturn="True" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto" MinHeight="110"/>
+            <TextBox x:Name="txtDescription"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     MinHeight="110"/>
         </GroupBox>
 
+        <!-- SETS: oefening + gewicht + reps -->
         <GroupBox Grid.Row="2" Header="Sets">
             <Grid Margin="8">
                 <DataGrid x:Name="dgSets"
@@ -41,13 +50,16 @@
                           IsReadOnly="False"
                           HeadersVisibility="Column">
                     <DataGrid.Columns>
+                        <!-- Oefening-naam (alleen-lezen) -->
                         <DataGridTextColumn Header="Oefening"
                                             Binding="{Binding ExerciseName}"
                                             IsReadOnly="True"
                                             Width="2*"/>
+                        <!-- Gewichtsveld -->
                         <DataGridTextColumn Header="Gewicht"
                                             Binding="{Binding Weight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                             Width="*"/>
+                        <!-- Repsveld -->
                         <DataGridTextColumn Header="Reps"
                                             Binding="{Binding Reps, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                             Width="*"/>
@@ -56,6 +68,7 @@
             </Grid>
         </GroupBox>
 
+        <!-- FOOTER: Sluiten (en bewaren in code-behind) -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Content="Sluiten" Width="120" Click="BtnClose_Click"/>
         </StackPanel>

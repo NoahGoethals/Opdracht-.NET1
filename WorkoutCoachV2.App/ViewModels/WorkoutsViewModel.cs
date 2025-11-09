@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿// CRUD + zoeken/sorteren voor Workouts-tab (soft delete via IsDeleted).
+
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,8 +14,10 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public class WorkoutsViewModel : BaseViewModel
     {
+        // DI: scope voor DbContext.
         private readonly IServiceScopeFactory _scopeFactory;
 
+        // Data-binding: lijst + selectie.
         public ObservableCollection<Workout> Items { get; } = new();
 
         private Workout? _selected;
@@ -23,6 +27,7 @@ namespace WorkoutCoachV2.App.ViewModels
             set { SetProperty(ref _selected, value); UpdateButtons(); }
         }
 
+        // Zoekterm (filtert op titel).
         private string _search = "";
         public string Search
         {
@@ -30,11 +35,13 @@ namespace WorkoutCoachV2.App.ViewModels
             set { if (SetProperty(ref _search, value)) _ = LoadAsync(); }
         }
 
+        // Commands voor de toolbar.
         public RelayCommand AddCmd { get; }
         public RelayCommand EditCmd { get; }
         public RelayCommand DeleteCmd { get; }
         public RelayCommand RefreshCmd { get; }
 
+        // Ctor: commands koppelen; geen autoload hier (view triggert LoadAsync).
         public WorkoutsViewModel(IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory;
@@ -45,12 +52,14 @@ namespace WorkoutCoachV2.App.ViewModels
             RefreshCmd = new RelayCommand(_ => _ = LoadAsync());
         }
 
+        // Buttons en CanExecute updaten bij selectie-wijziging.
         private void UpdateButtons()
         {
             EditCmd.RaiseCanExecuteChanged();
             DeleteCmd.RaiseCanExecuteChanged();
         }
 
+        // Ophalen van workouts (soft-deleted uitsluiten), zoekterm toepassen, sorteren op datum ↓.
         public async Task LoadAsync()
         {
             using var scope = _scopeFactory.CreateScope();
@@ -72,6 +81,7 @@ namespace WorkoutCoachV2.App.ViewModels
             UpdateButtons();
         }
 
+        // Nieuw: dialoog openen → resultaat bewaren → refresh.
         private void Add()
         {
             var win = new View.AddWorkoutWindow();
@@ -81,6 +91,7 @@ namespace WorkoutCoachV2.App.ViewModels
             }
         }
 
+        // Bewaar nieuwe workout (DB) en herlaad.
         private async Task SaveNewAsync(Workout w)
         {
             using var scope = _scopeFactory.CreateScope();
@@ -91,6 +102,7 @@ namespace WorkoutCoachV2.App.ViewModels
             await LoadAsync();
         }
 
+        // Bewerken: maak kopie → dialoog → opgeslagen wijzigingen toepassen.
         private void Edit()
         {
             if (Selected is null) return;
@@ -103,6 +115,7 @@ namespace WorkoutCoachV2.App.ViewModels
             }
         }
 
+        // Bewaar edits op bestaande workout.
         private async Task SaveEditAsync(Workout updated)
         {
             using var scope = _scopeFactory.CreateScope();
@@ -116,6 +129,7 @@ namespace WorkoutCoachV2.App.ViewModels
             await LoadAsync();
         }
 
+        // Verwijderen: soft delete (IsDeleted = true) met bevestiging.
         private async void DeleteAsync()
         {
             if (Selected is null) return;

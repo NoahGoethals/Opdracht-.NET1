@@ -1,4 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// SessionsViewModel: lijst + snelle acties voor de Sessions-tab.
+// - Toont sessies (met set-count) en selecteert nieuw aangemaakte sessie.
+// - Default datumbereik = laatste 7 dagen (FromDate/ToDate in andere partial).
+// - Export/Import/Stats commands zijn aangesloten; implementatie zit elders.
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
@@ -12,24 +17,27 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class SessionsViewModel : BaseViewModel
     {
+        // DI: scope factory voor AppDbContext.
         private readonly IServiceScopeFactory _scopeFactory;
 
+        // Ctor: commands koppelen, datumbereik init, eerste load triggeren.
         public SessionsViewModel(IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory;
 
-            RefreshCmd = new RelayCommand(_ => _ = LoadAsync());
-            AddSessionCmd = new RelayCommand(_ => _ = AddSessionAsync());
+            RefreshCmd        = new RelayCommand(_ => _ = LoadAsync());
+            AddSessionCmd     = new RelayCommand(_ => _ = AddSessionAsync());
             ExportSessionsCmd = new RelayCommand(_ => _ = ExportSessionsAsync());
             ImportSessionsCmd = new RelayCommand(_ => _ = ImportSessionsAsync());
-            CalcStatsCmd = new RelayCommand(_ => _ = CalcStatsAsync());
+            CalcStatsCmd      = new RelayCommand(_ => _ = CalcStatsAsync());
 
-            ToDate = DateTime.Today;
+            ToDate  = DateTime.Today;
             FromDate = ToDate.AddDays(-7);
 
             _ = LoadAsync();
         }
 
+        // Bindings: lijst + selectie.
         public ObservableCollection<SessionListItem> Items { get; } = new();
 
         private SessionListItem? _selected;
@@ -39,12 +47,14 @@ namespace WorkoutCoachV2.App.ViewModels
             set => SetProperty(ref _selected, value);
         }
 
+        // UI-commands (implementaties van export/import/stats kunnen in een andere partial staan).
         public RelayCommand RefreshCmd { get; }
         public RelayCommand AddSessionCmd { get; }
         public RelayCommand ExportSessionsCmd { get; }
         public RelayCommand ImportSessionsCmd { get; }
         public RelayCommand CalcStatsCmd { get; }
 
+        // Data ophalen: sessies + aantal sets, sortering op datum aflopend.
         public async Task LoadAsync()
         {
             using var scope = _scopeFactory.CreateScope();
@@ -67,6 +77,7 @@ namespace WorkoutCoachV2.App.ViewModels
             foreach (var it in list) Items.Add(it);
         }
 
+        // Snelle toevoeging: maakt 'Nieuwe sessie' (vandaag) en selecteert die in de grid.
         private async Task AddSessionAsync()
         {
             using var scope = _scopeFactory.CreateScope();
@@ -86,6 +97,7 @@ namespace WorkoutCoachV2.App.ViewModels
         }
     }
 
+    // Lichte DTO voor de grid-weergave.
     public class SessionListItem
     {
         public int Id { get; set; }

@@ -1,4 +1,8 @@
-﻿<UserControl x:Class="WorkoutCoachV2.App.View.ExercisesView"
+﻿<!-- Overzicht & beheer van oefeningen:
+     - Boven: zoeken + CRUD-acties (Vernieuwen/Nieuw/Bewerken/Verwijderen)
+     - Midden: export/import knoppen (JSON/CSV via service)
+     - Onder: tabel met oefeningen (Naam/Categorie/Aangemaakt) -->
+<UserControl x:Class="WorkoutCoachV2.App.View.ExercisesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="10">
@@ -8,6 +12,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- TOOLBAR: zoekveld + CRUD -->
         <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -32,6 +37,7 @@
                     Content="Verwijderen" Command="{Binding DeleteCmd}"/>
         </Grid>
 
+        <!-- EXTRA ACTIES: export / import -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
             <Button Content="Export Exercises"
                     Padding="12,6"
@@ -42,6 +48,7 @@
                     Command="{Binding ImportExercisesCommand}" />
         </StackPanel>
 
+        <!-- TABEL: oefeningenlijst (alleen lezen) -->
         <DataGrid Grid.Row="2"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"

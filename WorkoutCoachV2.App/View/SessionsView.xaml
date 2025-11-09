@@ -1,26 +1,40 @@
-﻿<UserControl x:Class="WorkoutCoachV2.App.View.SessionsView"
+﻿<!--
+  SessionsView: overzicht van sessies met acties (Vernieuwen, Nieuw uit workouts, Inhoud, Verwijderen).
+  Bovenbalk met knoppen -> handlers in code-behind.
+  DataGrid toont Titel + Datum, binding naar VM (Items/Selected).
+-->
+<UserControl x:Class="WorkoutCoachV2.App.View.SessionsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Actieknoppen -->
             <RowDefinition Height="*"/>
+            <!-- Tabel met sessies -->
         </Grid.RowDefinitions>
 
+        <!-- Actieknoppen bovenaan -->
         <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
+                <!-- Vernieuwen -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Nieuw uit workouts -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Inhoud -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Verwijderen -->
             </Grid.ColumnDefinitions>
 
+            <!-- Roept TryRefreshAsync() aan (zie code-behind) -->
             <Button Grid.Column="0"
                     Width="110"
                     Content="Vernieuwen"
                     Click="btnRefresh_Click"/>
 
+            <!-- Opent NewSessionFromWorkoutsWindow -->
             <Button x:Name="btnNewFromWorkouts"
                     Grid.Column="1"
                     Margin="8,0,0,0"
@@ -28,6 +42,7 @@
                     Content="Nieuw uit workouts"
                     Click="btnNewFromWorkouts_Click"/>
 
+            <!-- Opent SessionDetailsWindow voor geselecteerde rij -->
             <Button x:Name="btnDetails"
                     Grid.Column="2"
                     Margin="8,0,0,0"
@@ -35,6 +50,7 @@
                     Content="Inhoud"
                     Click="btnDetails_Click"/>
 
+            <!-- Verwijdert geselecteerde sessie + sets (hard delete in actions-partial) -->
             <Button x:Name="btnDelete"
                     Grid.Column="3"
                     Margin="8,0,0,0"
@@ -43,6 +59,7 @@
                     Click="btnDelete_Click"/>
         </Grid>
 
+        <!-- Overzicht van sessies -->
         <DataGrid x:Name="dgSessions"
                   Grid.Row="1"
                   ItemsSource="{Binding Items}"

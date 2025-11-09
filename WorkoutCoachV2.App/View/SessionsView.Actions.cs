@@ -1,16 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// SessionsView (actions): 'Nieuwe sessie uit workouts', hard delete van sessie, en herladen van de grid.
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using WorkoutCoachV2.Model.Data; 
+using WorkoutCoachV2.Model.Data;
 
 namespace WorkoutCoachV2.App.View
 {
     public partial class SessionsView : UserControl
     {
+        // Opent de wizard om een nieuwe sessie te maken op basis van (meerdere) workouts.
         private async void btnNewFromWorkouts_Click(object sender, RoutedEventArgs e)
         {
             var owner = Window.GetWindow(this);
@@ -19,6 +22,7 @@ namespace WorkoutCoachV2.App.View
             if (ok) await TryRefreshAsync();
         }
 
+        // Verwijdert de geselecteerde sessie + bijhorende sets (hard delete).
         private async void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             var selected = dgSessions?.SelectedItem;
@@ -54,6 +58,7 @@ namespace WorkoutCoachV2.App.View
             await TryRefreshAsync();
         }
 
+        // Probeert de lijst te herladen via VM.LoadAsync() of via RefreshCmd (fallback).
         private async Task TryRefreshAsync()
         {
             var vm = DataContext;

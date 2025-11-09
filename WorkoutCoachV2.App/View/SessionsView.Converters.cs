@@ -1,16 +1,19 @@
-﻿using System;
+﻿// Converters voor datum- en beschrijving-velden in sessierijen (reflectie-based, tolerant voor verschillende modelnamen).
+
+using System;
 using System.Globalization;
 using System.Windows.Data;
 
 namespace WorkoutCoachV2.App.View
 {
-    
+    // Haalt een datum uit verschillende mogelijke property-namen (ScheduledOn/Date/…).
     public class SessionDateConverter : IValueConverter
     {
         public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is null) return null;
 
+            // Probeert diverse veldnamen en keert DateTime? terug.
             static DateTime? PickDate(object obj)
             {
                 var t = obj.GetType();
@@ -34,9 +37,9 @@ namespace WorkoutCoachV2.App.View
             var dt = PickDate(value);
             if (dt is not null) return dt;
 
+            // Eventueel geneste eigenschap 'Session' proberen.
             var sessionObj = value.GetType().GetProperty("Session")?.GetValue(value);
-            if (sessionObj is not null)
-                return PickDate(sessionObj);
+            if (sessionObj is not null) return PickDate(sessionObj);
 
             return null;
         }
@@ -45,7 +48,7 @@ namespace WorkoutCoachV2.App.View
             => throw new NotSupportedException();
     }
 
-   
+    // Leest beschrijving/notes uit verschillende property-namen en geeft string terug.
     public class SessionDescriptionConverter : IValueConverter
     {
         public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)

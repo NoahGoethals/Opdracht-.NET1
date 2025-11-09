@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Export/Import: oefeningen (JSON/CSV) en sessies (JSON) met minimale afhankelijkheid.
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -14,14 +15,18 @@ namespace WorkoutCoachV2.App.Services
 {
     public class ExportImportService
     {
+        // Factory om een korte DB-scope te maken binnen elke bewerking.
         private readonly IServiceScopeFactory _scopeFactory;
 
+        // Constructor: DI voor scopes.
         public ExportImportService(IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
         }
 
 
+        // Exporteer niet-verwijderde oefeningen naar .json of .csv.
+        // Returnt het aantal geëxporteerde records.
         public async Task<int> ExportExercisesAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -59,6 +64,10 @@ namespace WorkoutCoachV2.App.Services
             }
         }
 
+        
+
+        // Importeer oefeningen uit .json of .csv.
+        // Maakt nieuwe aan, herstelt soft-deleted, en werkt Category bij.
         public async Task<int> ImportExercisesAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Pad is leeg", nameof(filePath));
@@ -114,6 +123,7 @@ namespace WorkoutCoachV2.App.Services
             return created;
         }
 
+        // CSV helper: lijst -> CSV string.
         private static string ToCsv(IEnumerable<ExerciseDto> items)
         {
             var sb = new StringBuilder();
@@ -128,6 +138,7 @@ namespace WorkoutCoachV2.App.Services
                 s is null ? "" : s.Replace(";", ",").Replace("\r", " ").Replace("\n", " ");
         }
 
+        // CSV helper: CSV string -> lijst.
         private static List<ExerciseDto> FromCsv(string csv)
         {
             var lines = (csv ?? "").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -146,7 +157,9 @@ namespace WorkoutCoachV2.App.Services
             return list;
         }
 
-
+       
+        // Exporteer sessies (soft-deleted gefilterd) binnen optionele datumbereik.
+        // Inclusief set-details met ExerciseName.
         public async Task<int> ExportSessionsAsync(string filePath, DateTime? from = null, DateTime? to = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Pad is leeg", nameof(filePath));
@@ -183,6 +196,9 @@ namespace WorkoutCoachV2.App.Services
             return items.Count;
         }
 
+       
+        // Importeer sessies uit JSON. Hergebruikt bestaande sessie per (Date+Title),
+        // maakt exercises aan indien nodig, en voegt unieke sets toe.
         public async Task<int> ImportSessionsAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Pad is leeg", nameof(filePath));
@@ -259,7 +275,7 @@ namespace WorkoutCoachV2.App.Services
             return created;
         }
 
-
+       
         public record ExerciseDto
         {
             public string? Name { get; init; }

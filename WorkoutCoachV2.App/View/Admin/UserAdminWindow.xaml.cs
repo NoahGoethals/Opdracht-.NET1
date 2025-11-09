@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿// UserAdminWindow: eenvoudig gebruikersbeheer (DisplayName, blokkeren) en rolwissel (Admin/User).
+
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
@@ -12,13 +14,18 @@ namespace WorkoutCoachV2.App.View
 {
     public partial class UserAdminWindow : Window
     {
+        // Services voor users/rollen en directe DB-toegang (DisplayName/IsBlocked updaten).
         private readonly UserManager<ApplicationUser> _userMgr;
         private readonly RoleManager<IdentityRole> _roleMgr;
         private readonly AppDbContext _db;
 
+        // Grid-bron: één rij per gebruiker.
         public ObservableCollection<Row> Rows { get; } = new();
+
+        // Beschikbare rollen voor de ComboBox.
         public string[] Roles { get; } = new[] { "Admin", "User" };
 
+        // Constructor: dependency-injectie + DataContext instellen en laden.
         public UserAdminWindow(
             UserManager<ApplicationUser> userMgr,
             RoleManager<IdentityRole> roleMgr,
@@ -33,6 +40,7 @@ namespace WorkoutCoachV2.App.View
             _ = LoadAsync();
         }
 
+        // Laadt alle gebruikers en projecteert naar Row (incl. huidige rol).
         private async Task LoadAsync()
         {
             Rows.Clear();
@@ -58,6 +66,7 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // Vernieuwen-knop: herlaadt de tabel.
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -71,21 +80,26 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // Opslaan-knop: rollen garanderen, wijzigingen (DisplayName/IsBlocked/Role) wegschrijven.
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                // Zorg dat de twee rollen bestaan.
                 foreach (var r in Roles)
                     if (!await _roleMgr.RoleExistsAsync(r))
                         await _roleMgr.CreateAsync(new IdentityRole(r));
 
+                // Voor elke rij: velden updaten en rol aanpassen.
                 foreach (var r in Rows)
                 {
                     var u = await _db.Users.FirstAsync(x => x.Id == r.Id);
 
+                    // Tekstvelden en blokkade opslaan.
                     u.DisplayName = r.DisplayName ?? "";
                     u.IsBlocked = r.IsBlocked;
 
+                    // Rolset ophalen en bijsturen naar gekozen rol.
                     var current = await _userMgr.GetRolesAsync(u);
                     if (r.Role == "Admin" && !current.Contains("Admin"))
                     {
@@ -104,8 +118,10 @@ namespace WorkoutCoachV2.App.View
                 }
 
                 await _db.SaveChangesAsync();
+
                 MessageBox.Show("Opgeslagen.", "Gebruikersbeheer",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
                 await LoadAsync();
             }
             catch (Exception ex)
@@ -115,6 +131,7 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // View-Model voor een rij in het DataGrid.
         public sealed class Row
         {
             public string Id { get; set; } = "";

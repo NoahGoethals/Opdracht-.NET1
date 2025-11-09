@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿// WorkoutsView (events): opent de inhoud-editor voor een geselecteerde workout en kan de view verversen via de VM.
+
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +10,7 @@ namespace WorkoutCoachV2.App.View
 {
     public partial class WorkoutsView : UserControl
     {
+        // Klik op "Inhoud": opent EditWorkoutExercisesWindow voor de geselecteerde workout.
         private async void btnInhoud_Click(object sender, RoutedEventArgs e)
         {
             if (dgWorkouts?.SelectedItem is not Workout selected)
@@ -23,9 +26,12 @@ namespace WorkoutCoachV2.App.View
             };
 
             var ok = dlg.ShowDialog() == true;
-            if (ok) await TryRefreshAsync();
+            if (ok) await TryRefreshAsync(); // na bewaren: lijst herladen
         }
 
+        // Probeert de lijst te verversen.
+        // 1) Roept VM.LoadAsync() aan als die bestaat
+        // 2) Anders voert VM.RefreshCmd uit als die bestaat
         private async Task TryRefreshAsync()
         {
             var vm = DataContext;

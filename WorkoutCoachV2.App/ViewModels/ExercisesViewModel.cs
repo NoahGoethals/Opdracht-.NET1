@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// ViewModel voor Exercises-tab: lijst, zoeken, CRUD en soft-delete.
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,10 +14,13 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class ExercisesViewModel : BaseViewModel
     {
+        // DI: maakt per actie een scope aan om AppDbContext te verkrijgen.
         private readonly IServiceScopeFactory _scopeFactory;
 
+        // Bindingsbron voor de DataGrid.
         public ObservableCollection<Exercise> Items { get; } = new();
 
+        // Geselecteerde oefening (stuurt Edit/Delete knopstatus).
         private Exercise? _selected;
         public Exercise? Selected
         {
@@ -30,6 +35,7 @@ namespace WorkoutCoachV2.App.ViewModels
             }
         }
 
+        // Zoekterm; triggert herladen.
         private string _search = "";
         public string Search
         {
@@ -41,11 +47,13 @@ namespace WorkoutCoachV2.App.ViewModels
             }
         }
 
+        // Commands voor UI-knoppen.
         public RelayCommand AddCmd { get; }
         public RelayCommand EditCmd { get; }
         public RelayCommand DeleteCmd { get; }
         public RelayCommand RefreshCmd { get; }
 
+        // Init: commands koppelen en eerste load starten.
         public ExercisesViewModel(IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory;
@@ -58,6 +66,7 @@ namespace WorkoutCoachV2.App.ViewModels
             _ = LoadAsync();
         }
 
+        // Leest oefeningen (zonder soft-deleted) met optionele filter.
         public async Task LoadAsync()
         {
             using var scope = _scopeFactory.CreateScope();
@@ -77,6 +86,7 @@ namespace WorkoutCoachV2.App.ViewModels
             foreach (var e in list) Items.Add(e);
         }
 
+        // Nieuw: opent dialoog en bewaart resultaat.
         private void Add()
         {
             var win = new View.AddExerciseWindow();
@@ -84,6 +94,7 @@ namespace WorkoutCoachV2.App.ViewModels
                 _ = SaveNewAsync(e);
         }
 
+        // Persist van nieuw item + herladen.
         private async Task SaveNewAsync(Exercise e)
         {
             using var scope = _scopeFactory.CreateScope();
@@ -93,6 +104,7 @@ namespace WorkoutCoachV2.App.ViewModels
             await LoadAsync();
         }
 
+        // Bewerken: opent dialoog met kopie van geselecteerde oefening.
         private void Edit()
         {
             if (Selected is null) return;
@@ -109,6 +121,7 @@ namespace WorkoutCoachV2.App.ViewModels
                 _ = SaveEditAsync(updated);
         }
 
+        // Persist van bewerkte data + herladen.
         private async Task SaveEditAsync(Exercise updated)
         {
             using var scope = _scopeFactory.CreateScope();
@@ -120,6 +133,7 @@ namespace WorkoutCoachV2.App.ViewModels
             await LoadAsync();
         }
 
+        // Verwijderen: soft-delete (IsDeleted = true) en herladen.
         private async void DeleteAsync()
         {
             if (Selected is null) return;

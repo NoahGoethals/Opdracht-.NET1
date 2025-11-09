@@ -1,4 +1,8 @@
-﻿<Window x:Class="WorkoutCoachV2.App.View.NewSessionFromWorkoutsWindow"
+﻿<!-- Venster om 1..n bestaande workouts te kiezen en daarvan snel een nieuwe sessie te maken.
+     Boven: titel + datum. Daaronder: beschrijving. Midden: grid met selectievakjes per workout.
+     Onder: Bewaar/Annuleer. -->
+
+<Window x:Class="WorkoutCoachV2.App.View.NewSessionFromWorkoutsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Nieuwe sessie op basis van workouts"
@@ -8,11 +12,16 @@
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Titel + datum -->
             <RowDefinition Height="Auto"/>
+            <!-- Beschrijving -->
             <RowDefinition Height="*"/>
+            <!-- Lijst van workouts -->
             <RowDefinition Height="Auto"/>
+            <!-- Actieknoppen -->
         </Grid.RowDefinitions>
 
+        <!-- Titel + datum -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -29,6 +38,7 @@
             <DatePicker x:Name="dpDate" Grid.Column="4"/>
         </Grid>
 
+        <!-- Beschrijving -->
         <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -43,6 +53,7 @@
                      TextWrapping="Wrap"/>
         </Grid>
 
+        <!-- Overzicht van workouts met selectievakje per rij -->
         <GroupBox Grid.Row="2" Header="Kies één of meerdere workouts" Padding="8">
             <DataGrid x:Name="dgWorkouts"
                       AutoGenerateColumns="False"
@@ -51,6 +62,7 @@
                       SelectionMode="Extended"
                       SelectionUnit="FullRow">
                 <DataGrid.Columns>
+                    <!-- Handige checkbox-kolom voor selectie -->
                     <DataGridTemplateColumn Header="" Width="40">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -67,6 +79,7 @@
             </DataGrid>
         </GroupBox>
 
+        <!-- Actieknoppen -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button Content="Bewaar" Width="110" Margin="0,0,8,0" IsDefault="True" Click="BtnSave_Click"/>
             <Button Content="Annuleer" Width="110" IsCancel="True" Click="BtnCancel_Click"/>

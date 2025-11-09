@@ -1,5 +1,7 @@
-﻿using System;
-using System.Linq; // <— toevoegen
+﻿// LoginViewModel: behandelt inloglogica, zet AuthState en opent MainWindow.
+
+using System;
+using System.Linq; 
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -13,10 +15,12 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public class LoginViewModel : BaseViewModel
     {
+        // DI + appstate.
         private readonly UserManager<AppUser> _userManager;
         private readonly IServiceProvider _provider;
         private readonly AuthState _auth;
 
+        // Koppelt command aan async inloggen.
         public LoginViewModel(UserManager<AppUser> userManager, IServiceProvider provider, AuthState auth)
         {
             _userManager = userManager;
@@ -26,6 +30,7 @@ namespace WorkoutCoachV2.App.ViewModels
             LoginCommand = new RelayCommand(async _ => await LoginAsync(), _ => !IsBusy);
         }
 
+        // Invoer: username of e-mail.
         private string _userNameOrEmail = "";
         public string UserNameOrEmail
         {
@@ -33,6 +38,7 @@ namespace WorkoutCoachV2.App.ViewModels
             set { SetProperty(ref _userNameOrEmail, value); (LoginCommand as RelayCommand)?.RaiseCanExecuteChanged(); }
         }
 
+        // Invoer: wachtwoord.
         private string _password = "";
         public string Password
         {
@@ -40,6 +46,7 @@ namespace WorkoutCoachV2.App.ViewModels
             set { SetProperty(ref _password, value); (LoginCommand as RelayCommand)?.RaiseCanExecuteChanged(); }
         }
 
+        // UI-state: blokkeert dubbelklikken tijdens login.
         private bool _isBusy;
         public bool IsBusy
         {
@@ -47,9 +54,11 @@ namespace WorkoutCoachV2.App.ViewModels
             set { SetProperty(ref _isBusy, value); (LoginCommand as RelayCommand)?.RaiseCanExecuteChanged(); }
         }
 
+        // Command + event om LoginWindow te sluiten bij succes.
         public ICommand LoginCommand { get; }
         public event Action? RequestClose;
 
+        // Inlogstroom: validatie → user opzoeken → pwd check → rollen → MainWindow openen.
         private async Task LoginAsync()
         {
             if (string.IsNullOrWhiteSpace(UserNameOrEmail) || string.IsNullOrWhiteSpace(Password))
@@ -75,7 +84,7 @@ namespace WorkoutCoachV2.App.ViewModels
 
                 var roles = await _userManager.GetRolesAsync(user);
                 _auth.User = user;
-                _auth.Roles = roles.ToList(); // <— fix: IList -> List (IReadOnlyList)
+                _auth.Roles = roles.ToList(); // IList -> List (IReadOnlyList)
 
                 var shell = _provider.GetRequiredService<MainWindow>();
                 shell.Show();

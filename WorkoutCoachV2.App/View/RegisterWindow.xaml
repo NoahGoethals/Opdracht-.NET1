@@ -1,34 +1,46 @@
-﻿<Window x:Class="WorkoutCoachV2.App.View.RegisterWindow"
+﻿<!-- Doel: eenvoudig registratievenster met username, e-mail, weergavenaam en wachtwoord + Registreer-knop. -->
+<Window x:Class="WorkoutCoachV2.App.View.RegisterWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Registreren" Height="360" Width="480"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+
+    <!-- Layout: labels en inputs in rijen; onderaan een rij met wachtwoord + knop -->
     <Grid Margin="14">
+        <!-- Rijen voor labels/inputs en de onderste knoppenrij -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- label: gebruikersnaam -->
             <RowDefinition Height="8"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- input: gebruikersnaam -->
             <RowDefinition Height="8"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- label: e-mail -->
             <RowDefinition Height="8"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- input: e-mail -->
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/> <!-- label: weergavenaam -->
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/> <!-- input: weergavenaam -->
+            <RowDefinition Height="*" />   <!-- filler -->
+            <RowDefinition Height="Auto"/> <!-- onderbalk: wachtwoord + registreer -->
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Gebruikersnaam" Grid.Row="0"/>
-        <TextBox x:Name="tbUser" Grid.Row="2"/>
+        <!-- Gebruikersnaam -->
+        <TextBlock Grid.Row="0" Text="Gebruikersnaam"/>
+        <TextBox   Grid.Row="2" x:Name="tbUser"/>
 
-        <TextBlock Text="E-mail" Grid.Row="4"/>
-        <TextBox x:Name="tbMail" Grid.Row="4" Margin="0,22,0,0"/>
+        <!-- E-mail -->
+        <TextBlock Grid.Row="4" Text="E-mail"/>
+        <TextBox   Grid.Row="6" x:Name="tbMail"/>
 
-        <TextBlock Text="Weergavenaam" Grid.Row="6"/>
-        <TextBox x:Name="tbDisplay" Grid.Row="6" Margin="0,22,0,0"/>
+        <!-- Weergavenaam -->
+        <TextBlock Grid.Row="8"  Text="Weergavenaam"/>
+        <TextBox   Grid.Row="10" x:Name="tbDisplay"/>
 
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <TextBlock Text="Wachtwoord" Margin="0,0,8,0" VerticalAlignment="Center"/>
+        <!-- Onderbalk: wachtwoord naast knop -->
+        <StackPanel Grid.Row="12" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <TextBlock   Text="Wachtwoord" Margin="0,0,8,0" VerticalAlignment="Center"/>
             <PasswordBox x:Name="tbPass" Width="150" Margin="0,0,8,0"/>
-            <Button Content="Registreer" Width="110" Click="BtnRegister_Click"/>
+            <Button      Content="Registreer" Width="110" Click="BtnRegister_Click"/>
         </StackPanel>
     </Grid>
 </Window>

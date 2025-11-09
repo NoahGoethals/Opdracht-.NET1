@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Export/Import van sessies naar/van JSON (platte DTO’s voor simpele uitwisseling).
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using System;
@@ -13,6 +15,7 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class SessionsViewModel
     {
+        // Export: toon dialoog → haal sessies + sets op → serialize naar JSON-bestand.
         private async Task ExportSessionsAsync()
         {
             var dlg = new SaveFileDialog
@@ -25,6 +28,7 @@ namespace WorkoutCoachV2.App.ViewModels
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+            // Projecteer naar exportvriendelijke DTO’s (met oefeningnaam in plaats van Id).
             var payload = await db.Sessions
                 .AsNoTracking()
                 .Include(s => s.Sets).ThenInclude(x => x.Exercise)
@@ -43,10 +47,12 @@ namespace WorkoutCoachV2.App.ViewModels
                 })
                 .ToListAsync();
 
+            // Netjes geformatteerde JSON schrijven.
             var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(dlg.FileName, json);
         }
 
+        // Import: kies JSON → lees DTO’s → zorg dat oefeningen bestaan → maak sessies + sets aan.
         private async Task ImportSessionsAsync()
         {
             var dlg = new OpenFileDialog { Filter = "JSON (*.json)|*.json" };
@@ -60,9 +66,11 @@ namespace WorkoutCoachV2.App.ViewModels
 
             foreach (var s in payload)
             {
+                // Nieuwe sessie per item in het JSON-bestand.
                 var sess = new Session { Title = s.Title, Date = s.Date };
                 db.Sessions.Add(sess);
 
+                // Voor elke set: oefening opzoeken (of aanmaken) en set toevoegen.
                 foreach (var set in s.Sets)
                 {
                     var ex = await db.Exercises.FirstOrDefaultAsync(e => e.Name == set.ExerciseName);
@@ -70,7 +78,7 @@ namespace WorkoutCoachV2.App.ViewModels
                     {
                         ex = new Exercise { Name = set.ExerciseName, Category = "" };
                         db.Exercises.Add(ex);
-                        await db.SaveChangesAsync();
+                        await db.SaveChangesAsync(); // zodat ex.Id beschikbaar is
                     }
 
                     sess.Sets.Add(new SessionSet
@@ -83,9 +91,10 @@ namespace WorkoutCoachV2.App.ViewModels
             }
 
             await db.SaveChangesAsync();
-            await LoadAsync();
+            await LoadAsync(); // grid verversen
         }
 
+        // Simpele export-DTO voor een sessie.
         internal record SessionExportDto
         {
             public string Title { get; set; } = "";
@@ -93,6 +102,7 @@ namespace WorkoutCoachV2.App.ViewModels
             public System.Collections.Generic.List<SetExportDto> Sets { get; set; } = new();
         }
 
+        // Simpele export-DTO voor een set (met naam i.p.v. ExerciseId).
         internal record SetExportDto
         {
             public string ExerciseName { get; set; } = "";

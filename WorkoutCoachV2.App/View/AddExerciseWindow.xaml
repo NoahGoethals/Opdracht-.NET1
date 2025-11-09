@@ -1,8 +1,11 @@
-﻿<Window x:Class="WorkoutCoachV2.App.View.AddExerciseWindow"
+﻿<!-- Venster voor (toevoegen/bewerken) van een Exercise: naam + categorie, met Bewaar/Annuleer. -->
+<Window x:Class="WorkoutCoachV2.App.View.AddExerciseWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Exercise" Height="220" Width="360"
         WindowStartupLocation="CenterOwner">
+
+    <!-- Layout: 2 invoervelden (Naam, Categorie) en onderaan knoppen -->
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -12,18 +15,21 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Naam -->
         <StackPanel Grid.Row="0" Orientation="Vertical">
             <TextBlock Text="Naam" Margin="0,0,0,4"/>
             <TextBox x:Name="NameBox"/>
         </StackPanel>
 
+        <!-- Categorie (optioneel) -->
         <StackPanel Grid.Row="2" Orientation="Vertical">
             <TextBlock Text="Categorie" Margin="0,0,0,4"/>
             <TextBox x:Name="CatBox"/>
         </StackPanel>
 
+        <!-- Actieknoppen -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Bewaar" Width="90" Margin="0,0,8,0" Click="Ok_Click"/>
+            <Button Content="Bewaar"   Width="90" Margin="0,0,8,0" Click="Ok_Click"/>
             <Button Content="Annuleer" Width="90" Click="Cancel_Click"/>
         </StackPanel>
     </Grid>

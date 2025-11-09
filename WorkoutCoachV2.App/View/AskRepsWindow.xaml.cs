@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿// Popup voor aantal reps (1..1000). Filtert invoer op cijfers en valideert bij OK.
+
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
@@ -6,8 +8,10 @@ namespace WorkoutCoachV2.App.View
 {
     public partial class AskRepsWindow : Window
     {
+        // Resultaat: gekozen aantal herhalingen.
         public int Reps { get; private set; }
 
+        // Constructor: zet standaardwaarde en focus/selectie op het invoerveld.
         public AskRepsWindow(int defaultReps = 5)
         {
             InitializeComponent();
@@ -16,6 +20,7 @@ namespace WorkoutCoachV2.App.View
             tbReps.Focus();
         }
 
+        // OK: valideer integer in bereik [1..1000]; bij succes sluiten met DialogResult = true.
         private void BtnOk_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(tbReps.Text, out var reps) && reps >= 1 && reps <= 1000)
@@ -33,6 +38,7 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // Invoerbeperking: enkel cijfers toestaan bij typen en plakken.
         private static readonly Regex Digits = new(@"^\d+$");
 
         private void tbReps_PreviewTextInput(object sender, TextCompositionEventArgs e)
@@ -45,7 +51,10 @@ namespace WorkoutCoachV2.App.View
                 var text = (string)e.DataObject.GetData(typeof(string));
                 if (!Digits.IsMatch(text)) e.CancelCommand();
             }
-            else e.CancelCommand();
+            else
+            {
+                e.CancelCommand();
+            }
         }
     }
 }

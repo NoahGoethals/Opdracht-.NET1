@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// StatsView (code-behind): laadt en toont alle SessionSets, snelle inline edits, nieuwe losse set via popup.
+// Verwijderen: geselecteerde sets + opruimen lege sessies. PR wordt via reflectie gelezen/geschreven.
+// Opmerking: BtnSave_Click bestaat nog als hulproutine, maar er is geen knop in de XAML (mag later gebonden worden).
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -15,17 +19,21 @@ namespace WorkoutCoachV2.App.View
 {
     public partial class StatsView : UserControl
     {
+        // In-memory rijen die rechtstreeks op het DataGrid binden.
         private readonly ObservableCollection<GridRow> _rows = new();
 
+        // Init + eerste load.
         public StatsView()
         {
             InitializeComponent();
             Loaded += async (_, __) => await LoadAsync();
         }
 
+        // Zoekt een PR-property (ondersteunt 'IsPr' of 'Pr') op SessionSet.
         private static PropertyInfo? FindPrProp(SessionSet ss)
             => ss.GetType().GetProperty("IsPr") ?? ss.GetType().GetProperty("Pr");
 
+        // Leest PR boolean indien aanwezig, anders false.
         private static bool ReadPr(SessionSet ss)
         {
             var p = FindPrProp(ss);
@@ -34,6 +42,7 @@ namespace WorkoutCoachV2.App.View
             return v is bool b && b;
         }
 
+        // Schrijft PR naar DB via attach + PropertyEntry (zonder volledig object op te halen).
         private static void WritePr(DbContext db, int sessionSetId, bool value)
         {
             var stub = new SessionSet { Id = sessionSetId };
@@ -48,6 +57,7 @@ namespace WorkoutCoachV2.App.View
             entry.IsModified = true;
         }
 
+        // Laadt alle SessionSets + gekoppelde Exercise en Session (naam, datum, gewicht, reps, PR).
         private async Task LoadAsync()
         {
             _rows.Clear();
@@ -81,6 +91,7 @@ namespace WorkoutCoachV2.App.View
             dg.ItemsSource = _rows;
         }
 
+        // Handlers bovenbalk.
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e) => await LoadAsync();
 
         private async void BtnNewRow_Click(object sender, RoutedEventArgs e)
@@ -93,6 +104,7 @@ namespace WorkoutCoachV2.App.View
             }
         }
 
+        // Niet gekoppeld in XAML; hulproutine om edits in _rows in bulk te bewaren indien je later een Opslaan-knop wil.
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             using var scope = App.HostApp.Services.CreateScope();
@@ -100,13 +112,16 @@ namespace WorkoutCoachV2.App.View
 
             foreach (var row in _rows)
             {
+                // Minimale update zonder volledige fetch
                 var stub = new SessionSet { Id = row.SessionSetId };
                 db.Attach(stub);
                 stub.Weight = row.Weight;
                 stub.Reps = row.Reps;
 
+                // PR togglen via dynamische property
                 WritePr(db, row.SessionSetId, row.IsPr);
 
+                // Sessiedatum bijwerken indien aangepast
                 var sessStub = new Session { Id = row.SessionId, Date = row.Date.Date };
                 db.Attach(sessStub);
                 db.Entry(sessStub).Property(s => s.Date).IsModified = true;
@@ -117,6 +132,7 @@ namespace WorkoutCoachV2.App.View
             await LoadAsync();
         }
 
+        // Verwijdert geselecteerde sets; ruimt lege sessies op om wees-records te vermijden.
         private async void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
             var selected = dg.SelectedItems.Cast<GridRow>().ToList();
@@ -144,12 +160,14 @@ namespace WorkoutCoachV2.App.View
                 .Where(s => sessIds.Contains(s.Id))
                 .Where(s => !db.SessionSets.Any(ss => ss.SessionId == s.Id))
                 .ToListAsync();
+
             if (emptySessions.Count > 0) db.Sessions.RemoveRange(emptySessions);
 
             await db.SaveChangesAsync();
             await LoadAsync();
         }
 
+        // Rijweergave voor DataGrid; simpel DTO voor binding.
         private sealed class GridRow
         {
             public int SessionSetId { get; set; }

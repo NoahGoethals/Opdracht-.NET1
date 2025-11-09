@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+﻿// Extra: export/import van oefeningen (JSON/CSV) via ExportImportService.
+
+using Microsoft.Win32;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,14 +12,17 @@ namespace WorkoutCoachV2.App.ViewModels
 {
     public partial class ExercisesViewModel
     {
+        // Lazy service-resolving (hergebruik binnen deze VM).
         private ExportImportService? _exportSvc;
         private ExportImportService ExportSvc =>
             _exportSvc ??= new ExportImportService(_scopeFactory);
 
+        // Async-commands voor export en import.
         private ICommand? _exportExercisesCommand, _importExercisesCommand;
         public ICommand ExportExercisesCommand => _exportExercisesCommand ??= new AsyncRelayCommand(ExportExercisesAsync);
         public ICommand ImportExercisesCommand => _importExercisesCommand ??= new AsyncRelayCommand(ImportExercisesAsync);
 
+        // Export: schrijft JSON of CSV met niet-gedelete oefeningen.
         private async Task ExportExercisesAsync()
         {
             try
@@ -40,6 +45,7 @@ namespace WorkoutCoachV2.App.ViewModels
             }
         }
 
+        // Import: leest JSON/CSV, voegt nieuwe toe en “herstelt” soft-deletes.
         private async Task ImportExercisesAsync()
         {
             try
@@ -54,7 +60,7 @@ namespace WorkoutCoachV2.App.ViewModels
                 MessageBox.Show($"Import klaar. Nieuwe items: {created}.", "Import",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                await LoadAsync();
+                await LoadAsync(); // refresh tabel
             }
             catch (Exception ex)
             {

@@ -1,15 +1,24 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿
+<!-- Centrale stijlen: keep-it-simple, consistente spacing & basisgedrag -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Button: uniforme margin + voldoende klikbare padding -->
     <Style TargetType="Button">
         <Setter Property="Margin" Value="0,0,0,0"/>
         <Setter Property="Padding" Value="8,4"/>
     </Style>
+
+    <!-- TextBox: uniforme margin + minimum breedte voor nette formulieren -->
     <Style TargetType="TextBox">
         <Setter Property="Margin" Value="0,0,0,0"/>
         <Setter Property="MinWidth" Value="140"/>
     </Style>
+
+    <!-- DataGrid: geen extra buitenmarge + geen rijen rechtstreeks toevoegen -->
     <Style TargetType="DataGrid">
         <Setter Property="Margin" Value="0"/>
         <Setter Property="CanUserAddRows" Value="False"/>
     </Style>
+
 </ResourceDictionary>

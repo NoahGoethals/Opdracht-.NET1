@@ -1,21 +1,36 @@
-﻿<UserControl x:Class="WorkoutCoachV2.App.View.WorkoutsView" 
+﻿<!--
+  WorkoutsView: beheer van workouts (zoeken + CRUD) en knop "Inhoud" om oefeningen toe te voegen/bewerken.
+  Bovenbalk: Zoekveld + knoppen (Vernieuwen/Nieuw/Bewerken/Verwijderen/Inhoud).
+  Tabel: toont Titel, Datum (ScheduledOn), en aanmaakmoment.
+-->
+<UserControl x:Class="WorkoutCoachV2.App.View.WorkoutsView" 
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Actie- en zoekbalk -->
             <RowDefinition Height="*"/>
+            <!-- DataGrid -->
         </Grid.RowDefinitions>
 
+        <!-- Bovenbalk met zoekvak en acties -->
         <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
+                <!-- label 'Zoek:' -->
                 <ColumnDefinition Width="200"/>
+                <!-- zoek TextBox -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Vernieuwen -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Nieuw -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Bewerken -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Verwijderen -->
                 <ColumnDefinition Width="Auto"/>
+                <!-- Inhoud -->
             </Grid.ColumnDefinitions>
 
             <TextBlock Text="Zoek:" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -34,15 +49,19 @@
                     x:Name="btnInhoud" Click="btnInhoud_Click"/>
         </Grid>
 
+        <!-- Lijst met workouts -->
         <DataGrid x:Name="dgWorkouts" Grid.Row="1"
                   ItemsSource="{Binding Items}"
                   SelectedItem="{Binding Selected, Mode=TwoWay}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True">
             <DataGrid.Columns>
+                <!-- Titel van de workout -->
                 <DataGridTextColumn Header="Titel" Binding="{Binding Title}" Width="2*"/>
+                <!-- Geplande datum (ScheduledOn) -->
                 <DataGridTextColumn Header="Datum" Binding="{Binding ScheduledOn, StringFormat=\{0:yyyy-MM-dd\}}"
                                     Width="*"/>
+                <!-- Aangemaakt op -->
                 <DataGridTextColumn Header="Aangemaakt"
                                     Binding="{Binding CreatedAt, StringFormat=\{0:yyyy-MM-dd HH:mm\}}"
                                     Width="*"/>

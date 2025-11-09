@@ -1,8 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿// Identity user-uitbreiding met extra schermnaam (DisplayName).
+// Erft van IdentityUser zodat het werkt met ASP.NET Core Identity.
 
-namespace WorkoutCoachV2.Model.Identity;
+using Microsoft.AspNetCore.Identity;
 
-public class AppUser : IdentityUser
+namespace WorkoutCoachV2.Model.Identity
 {
-    public string? DisplayName { get; set; }
+    public class AppUser : IdentityUser
+    {
+        // Optionele naam die je in de UI toont (los van UserName/Email).
+        public string? DisplayName { get; set; }
+    }
 }

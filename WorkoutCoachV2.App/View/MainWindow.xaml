@@ -1,4 +1,9 @@
-﻿<Window x:Class="WorkoutCoachV2.App.MainWindow"
+﻿<!-- Hoofdvenster:
+     - Topbar met begroeting, Users (alleen voor Admin) en Logout
+     - Tabs voor Exercises, Workouts, Sessions, Overzicht & Statistiek
+     - Zichtbaarheid van tabbladen is rolgebaseerd via MainViewModel flags -->
+
+<Window x:Class="WorkoutCoachV2.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WorkoutCoach"
@@ -6,10 +11,12 @@
         Width="960"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <!-- Converter om bool → Visibility te doen (Collapsed bij false) -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
     <DockPanel LastChildFill="True">
+        <!-- Bovenbalk met begroeting, Users (admin) en Logout -->
         <Grid DockPanel.Dock="Top" Margin="8" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -36,24 +43,29 @@
                     Click="Logout_Click"/>
         </Grid>
 
+        <!-- Rolgebaseerde navigatie via TabControl -->
         <TabControl>
             <TabItem Header="Exercises"
                      Visibility="{Binding CanSeeExercises, Converter={StaticResource BoolToVis}}">
+                <!-- Wordt gevuld vanuit code-behind met ExercisesView -->
                 <ContentControl x:Name="ExercisesHost"/>
             </TabItem>
 
             <TabItem Header="Workouts"
                      Visibility="{Binding CanSeeWorkouts, Converter={StaticResource BoolToVis}}">
+                <!-- Wordt gevuld vanuit code-behind met WorkoutsView -->
                 <ContentControl x:Name="WorkoutsHost"/>
             </TabItem>
 
             <TabItem Header="Sessions"
                      Visibility="{Binding CanSeeSessions, Converter={StaticResource BoolToVis}}">
+                <!-- Wordt gevuld vanuit code-behind met SessionsView -->
                 <ContentControl x:Name="SessionsHost"/>
             </TabItem>
 
             <TabItem Header="Overzicht &amp; Statistiek"
                      Visibility="{Binding CanSeeStats, Converter={StaticResource BoolToVis}, FallbackValue=Visible}">
+                <!-- Wordt gevuld vanuit code-behind met StatsView -->
                 <ContentControl x:Name="StatsHost"/>
             </TabItem>
         </TabControl>
