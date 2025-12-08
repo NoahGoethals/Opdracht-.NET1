@@ -151,3 +151,4 @@ namespace WorkoutCoachV2.App.ViewModels
         }
     }
 }
+

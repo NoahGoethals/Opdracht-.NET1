@@ -1,4 +1,5 @@
-﻿// UserAdminWindow: eenvoudig gebruikersbeheer (DisplayName, blokkeren) en rolwissel (Admin/User).
+﻿// File: WorkoutCoachV2.App/View/UserAdminWindow.xaml.cs
+// UserAdminWindow: eenvoudig gebruikersbeheer (DisplayName, blokkeren) en rolwissel (Admin/User).
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
