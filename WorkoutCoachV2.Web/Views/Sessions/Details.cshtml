@@ -1,0 +1,73 @@
+﻿@model WorkoutCoachV2.Model.Models.Session
+
+@{
+    ViewData["Title"] = "Session details";
+}
+
+<h1>Session details</h1>
+
+<div>
+    <h4>Session</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Date)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Date)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Description)
+        </dd>
+    </dl>
+</div>
+
+@if (Model.Sets != null && Model.Sets.Any())
+{
+    <h4>Sets</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Exercise</th>
+                <th>Set #</th>
+                <th>Reps</th>
+                <th>Weight</th>
+                <th>RPE</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var set in Model.Sets.OrderBy(s => s.SetNumber))
+            {
+                <tr>
+                    <td>@set.Exercise?.Name</td>
+                    <td>@set.SetNumber</td>
+                    <td>@set.Reps</td>
+                    <td>@set.Weight</td>
+                    <td>@set.Rpe</td>
+                    <td>@set.Note</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No sets logged yet for this session.</p>
+}
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
