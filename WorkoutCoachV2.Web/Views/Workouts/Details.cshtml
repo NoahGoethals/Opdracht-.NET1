@@ -1,7 +1,11 @@
 ﻿@model WorkoutCoachV2.Model.Models.Workout
+@using WorkoutCoachV2.Model.Models
+@using System.Linq
 
 @{
     ViewData["Title"] = "Workout details";
+    var workoutExercises = ViewBag.WorkoutExercises as IEnumerable<WorkoutExercise>
+                           ?? Enumerable.Empty<WorkoutExercise>();
 }
 
 <h1>Workout details</h1>
@@ -11,21 +15,53 @@
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
+            @Html.DisplayNameFor(m => m.Title)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Title)
+            @Html.DisplayFor(m => m.Title)
         </dd>
 
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ScheduledOn)
+            @Html.DisplayNameFor(m => m.ScheduledOn)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.ScheduledOn)
+            @Html.DisplayFor(m => m.ScheduledOn)
         </dd>
     </dl>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<h4>Exercises in this workout</h4>
+<hr />
+
+@if (!workoutExercises.Any())
+{
+    <p>No exercises linked yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Exercise</th>
+                <th>Reps</th>
+                <th>Weight (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var x in workoutExercises)
+            {
+                <tr>
+                    <td>@x.Exercise?.Name</td>
+                    <td>@x.Reps</td>
+                    <td>@x.WeightKg</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="mt-3">
+    <a asp-action="Exercises" asp-route-id="@Model.Id" class="btn btn-secondary">Manage exercises</a>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit workout</a>
+    <a asp-action="Index" class="btn btn-link">Back to List</a>
 </div>

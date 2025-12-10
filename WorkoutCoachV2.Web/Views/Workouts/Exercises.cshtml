@@ -1,0 +1,63 @@
+﻿@model WorkoutCoachV2.Web.Models.WorkoutExercisesEditViewModel
+
+@{
+    ViewData["Title"] = "Manage exercises";
+}
+
+<h1>Manage exercises</h1>
+<h4>@Model.WorkoutTitle</h4>
+<hr />
+
+<form asp-action="Exercises" method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="WorkoutId" />
+    <input type="hidden" asp-for="WorkoutTitle" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>In workout?</th>
+                <th>Exercise</th>
+                <th>Reps</th>
+                <th>Weight (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Model.Items.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <input asp-for="Items[@i].IsSelected" />
+                    </td>
+                    <td>
+                        @Model.Items[i].ExerciseName
+                        <input type="hidden" asp-for="Items[@i].ExerciseId" />
+                        <input type="hidden" asp-for="Items[@i].ExerciseName" />
+                    </td>
+                    <td>
+                        <input asp-for="Items[@i].Reps" class="form-control" />
+                        <span asp-validation-for="Items[@i].Reps" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="Items[@i].WeightKg" class="form-control" />
+                        <span asp-validation-for="Items[@i].WeightKg" class="text-danger"></span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="form-group mt-3">
+        <input type="submit" value="Save" class="btn btn-primary" />
+        <a asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
