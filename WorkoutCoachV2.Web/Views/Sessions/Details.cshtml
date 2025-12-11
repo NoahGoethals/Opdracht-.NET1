@@ -1,4 +1,4 @@
-﻿@model WorkoutCoachV2.Model.Models.Session
+﻿@model WorkoutCoachV2.Web.Models.SessionDetailsViewModel
 
 @{
     ViewData["Title"] = "Session details";
@@ -6,68 +6,84 @@
 
 <h1>Session details</h1>
 
-<div>
-    <h4>Session</h4>
-    <hr />
+<div class="mb-3">
+    <h4>@Model.Title</h4>
     <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
+        <dt class="col-sm-2">Date</dt>
+        <dd class="col-sm-10">@Model.Date.ToShortDateString()</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Date)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Date)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@Model.Description</dd>
+        }
     </dl>
 </div>
 
-@if (Model.Sets != null && Model.Sets.Any())
+@if (Model.Workouts.Any())
 {
-    <h4>Sets</h4>
-    <table class="table">
+    <h5>Workouts in this session</h5>
+
+    @foreach (var w in Model.Workouts)
+    {
+        <h6 class="mt-3">@w.WorkoutTitle</h6>
+
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Set</th>
+                    <th>Exercise</th>
+                    <th>Reps</th>
+                    <th>Weight (kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in w.Sets)
+                {
+                    <tr>
+                        <td>@s.SetNumber</td>
+                        <td>@s.ExerciseName</td>
+                        <td>@s.Reps</td>
+                        <td>@s.Weight</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p><em>No workouts detected for this session.</em></p>
+}
+
+@if (Model.ExtraSets.Any())
+{
+    <h5>Other sets</h5>
+
+    <table class="table table-sm">
         <thead>
             <tr>
+                <th>Set</th>
                 <th>Exercise</th>
-                <th>Set #</th>
                 <th>Reps</th>
-                <th>Weight</th>
-                <th>RPE</th>
-                <th>Note</th>
+                <th>Weight (kg)</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var set in Model.Sets.OrderBy(s => s.SetNumber))
+            @foreach (var s in Model.ExtraSets)
             {
                 <tr>
-                    <td>@set.Exercise?.Name</td>
-                    <td>@set.SetNumber</td>
-                    <td>@set.Reps</td>
-                    <td>@set.Weight</td>
-                    <td>@set.Rpe</td>
-                    <td>@set.Note</td>
+                    <td>@s.SetNumber</td>
+                    <td>@s.ExerciseName</td>
+                    <td>@s.Reps</td>
+                    <td>@s.Weight</td>
                 </tr>
             }
         </tbody>
     </table>
 }
-else
-{
-    <p>No sets logged yet for this session.</p>
-}
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model.SessionId">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
