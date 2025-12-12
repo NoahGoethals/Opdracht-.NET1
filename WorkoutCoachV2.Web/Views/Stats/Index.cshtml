@@ -1,0 +1,75 @@
+﻿@model WorkoutCoachV2.Web.Models.StatsIndexViewModel
+
+@{
+    ViewData["Title"] = "Stats";
+}
+
+<h1>Stats</h1>
+
+<form id="statsForm" class="row g-3 mb-3" method="get" asp-controller="Stats" asp-action="Index">
+    <div class="col-md-4">
+        <label class="form-label">Exercise</label>
+        <select class="form-select" asp-for="ExerciseId" asp-items="Model.Exercises"></select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">From</label>
+        <input class="form-control" asp-for="From" type="date" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">To</label>
+        <input class="form-control" asp-for="To" type="date" />
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Apply</button>
+    </div>
+
+    <div class="col-12">
+        <small class="text-muted">
+            Tip: dit formulier werkt ook zonder JS (normale GET). Met JS worden resultaten via AJAX vernieuwd.
+        </small>
+    </div>
+</form>
+
+<div id="statsResults">
+    @if (Model.Results != null)
+    {
+        @await Html.PartialAsync("_StatsResults", Model.Results)
+    }
+    else
+    {
+        <div class="alert alert-secondary">
+            No stats to show.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("statsForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const data = new FormData(form);
+
+            const params = new URLSearchParams();
+            for (const [k, v] of data.entries()) {
+                if (v !== null && v !== "") params.append(k, v);
+            }
+
+            const resultsUrl = '@Url.Action("Results", "Stats")';
+            const url = resultsUrl + (params.toString() ? ("?" + params.toString()) : "");
+
+            try {
+                const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                const html = await res.text();
+                document.getElementById("statsResults").innerHTML = html;
+            } catch (err) {
+                form.submit();
+            }
+        });
+    </script>
+}

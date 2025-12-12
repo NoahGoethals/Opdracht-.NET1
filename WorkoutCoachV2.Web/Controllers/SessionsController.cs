@@ -19,6 +19,7 @@ namespace WorkoutCoachV2.Web.Controllers
             _context = context;
         }
 
+        
         public async Task<IActionResult> Index()
         {
             var sessions = await _context.Sessions
@@ -46,76 +47,7 @@ namespace WorkoutCoachV2.Web.Controllers
                 return NotFound();
             }
 
-            var exerciseIds = session.Sets
-                .Select(ss => ss.ExerciseId)
-                .Distinct()
-                .ToList();
-
-            var workouts = await _context.Workouts
-                .Include(w => w.Exercises)
-                    .ThenInclude(we => we.Exercise)
-                .Where(w => w.Exercises.Any(we => exerciseIds.Contains(we.ExerciseId)))
-                .OrderBy(w => w.Title)
-                .ToListAsync();
-
-            var remainingSets = session.Sets
-                .OrderBy(ss => ss.SetNumber)
-                .ToList();
-
-            var workoutGroups = new List<SessionDetailsWorkoutGroupViewModel>();
-
-            foreach (var workout in workouts)
-            {
-                var group = new SessionDetailsWorkoutGroupViewModel
-                {
-                    WorkoutTitle = workout.Title
-                };
-
-                foreach (var we in workout.Exercises
-                                          .OrderBy(we => we.Exercise.Name))
-                {
-                    var matchingSet = remainingSets
-                        .FirstOrDefault(ss => ss.ExerciseId == we.ExerciseId);
-
-                    if (matchingSet != null)
-                    {
-                        group.Sets.Add(new SessionDetailsSetRowViewModel
-                        {
-                            SetNumber = matchingSet.SetNumber,
-                            ExerciseName = matchingSet.Exercise?.Name ?? string.Empty,
-                            Reps = matchingSet.Reps,
-                            Weight = matchingSet.Weight
-                        });
-
-                        remainingSets.Remove(matchingSet);
-                    }
-                }
-
-                if (group.Sets.Any())
-                {
-                    workoutGroups.Add(group);
-                }
-            }
-
-            var vm = new SessionDetailsViewModel
-            {
-                SessionId = session.Id,
-                Title = session.Title,
-                Date = session.Date,
-                Description = session.Description,
-                Workouts = workoutGroups,
-                ExtraSets = remainingSets
-                    .Select(ss => new SessionDetailsSetRowViewModel
-                    {
-                        SetNumber = ss.SetNumber,
-                        ExerciseName = ss.Exercise?.Name ?? string.Empty,
-                        Reps = ss.Reps,
-                        Weight = ss.Weight
-                    })
-                    .ToList()
-            };
-
-            return View(vm);
+            return View(session);
         }
 
         public IActionResult Create()
@@ -222,36 +154,33 @@ namespace WorkoutCoachV2.Web.Controllers
                 .Select(w => w.WorkoutId)
                 .ToList();
 
-            var workoutsWithExercises = await _context.Workouts
-                .Include(w => w.Exercises)
-                    .ThenInclude(we => we.Exercise)
-                .Where(w => selectedIds.Contains(w.Id))
+            var workoutExercises = await _context.WorkoutExercises
+                .Include(we => we.Exercise)
+                .Where(we => selectedIds.Contains(we.WorkoutId))
+                .OrderBy(we => we.WorkoutId)
+                .ThenBy(we => we.Exercise.Name)
                 .ToListAsync();
 
             var sessionSets = new List<SessionSet>();
             var setNumber = 1;
 
-            foreach (var workout in workoutsWithExercises)
+            foreach (var we in workoutExercises)
             {
-                foreach (var we in workout.Exercises
-                                          .OrderBy(we => we.Exercise.Name))
+                var set = new SessionSet
                 {
-                    var set = new SessionSet
-                    {
-                        SessionId = session.Id,
-                        ExerciseId = we.ExerciseId,
-                        SetNumber = setNumber++,
-                        Reps = we.Reps,
-                        Weight = we.WeightKg ?? 0,
-                        Rpe = null,
-                        Note = null,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                        IsDeleted = false
-                    };
+                    SessionId = session.Id,
+                    ExerciseId = we.ExerciseId,
+                    SetNumber = setNumber++,
+                    Reps = we.Reps,
+                    Weight = we.WeightKg ?? 0,
+                    Rpe = null,
+                    Note = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
 
-                    sessionSets.Add(set);
-                }
+                sessionSets.Add(set);
             }
 
             if (sessionSets.Count > 0)
@@ -265,63 +194,110 @@ namespace WorkoutCoachV2.Web.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var session = await _context.Sessions
+                .Include(s => s.Sets)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (session == null)
-            {
-                return NotFound();
-            }
+            if (session == null) return NotFound();
 
-            return View(session);
+            var workouts = await _context.Workouts
+                .OrderBy(w => w.Title)
+                .Include(w => w.Exercises)
+                .ToListAsync();
+
+            var vm = new SessionCreateFromWorkoutsViewModel
+            {
+                Title = session.Title,
+                Date = session.Date,
+                Description = session.Description,
+                Workouts = workouts.Select(w => new SessionWorkoutRowViewModel
+                {
+                    WorkoutId = w.Id,
+                    WorkoutTitle = w.Title,
+                    IsSelected = w.Exercises.Any(we => session.Sets.Any(ss => ss.ExerciseId == we.ExerciseId))
+                }).ToList()
+            };
+
+            ViewBag.SessionId = session.Id;
+            return View(vm);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Description")] Session formSession)
+        public async Task<IActionResult> Edit(int id, SessionCreateFromWorkoutsViewModel model)
         {
-            if (id != formSession.Id)
+            var session = await _context.Sessions
+                .Include(s => s.Sets)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (session == null) return NotFound();
+
+            if (model.Workouts == null || !model.Workouts.Any(w => w.IsSelected))
             {
-                return NotFound();
+                ModelState.AddModelError(string.Empty, "Select at least one workout.");
             }
 
             if (!ModelState.IsValid)
             {
-                return View(formSession);
+                var workouts = await _context.Workouts
+                    .OrderBy(w => w.Title)
+                    .ToListAsync();
+
+                var selected = model.Workouts?.ToDictionary(x => x.WorkoutId, x => x.IsSelected)
+                               ?? new Dictionary<int, bool>();
+
+                model.Workouts = workouts.Select(w => new SessionWorkoutRowViewModel
+                {
+                    WorkoutId = w.Id,
+                    WorkoutTitle = w.Title,
+                    IsSelected = selected.ContainsKey(w.Id) && selected[w.Id]
+                }).ToList();
+
+                ViewBag.SessionId = id;
+                return View(model);
             }
 
-            var session = await _context.Sessions
-                .FirstOrDefaultAsync(s => s.Id == id);
-
-            if (session == null)
-            {
-                return NotFound();
-            }
-
-            session.Title = formSession.Title;
-            session.Date = formSession.Date;
-            session.Description = formSession.Description;
+            session.Title = model.Title;
+            session.Date = model.Date;
+            session.Description = model.Description;
             session.UpdatedAt = DateTime.UtcNow;
 
-            try
+            _context.SessionSets.RemoveRange(session.Sets);
+            session.Sets.Clear();
+
+            var selectedIds = model.Workouts
+                .Where(w => w.IsSelected)
+                .Select(w => w.WorkoutId)
+                .ToList();
+
+            var workoutExercises = await _context.WorkoutExercises
+                .Include(we => we.Exercise)
+                .Where(we => selectedIds.Contains(we.WorkoutId))
+                .OrderBy(we => we.WorkoutId)
+                .ThenBy(we => we.Exercise.Name)
+                .ToListAsync();
+
+            int setNumber = 1;
+            foreach (var we in workoutExercises)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SessionExists(session.Id))
+                session.Sets.Add(new SessionSet
                 {
-                    return NotFound();
-                }
-
-                throw;
+                    SessionId = session.Id,
+                    ExerciseId = we.ExerciseId,
+                    SetNumber = setNumber++,
+                    Reps = we.Reps,
+                    Weight = we.WeightKg ?? 0,
+                    Rpe = null,
+                    Note = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                });
             }
 
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
