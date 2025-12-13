@@ -1,8 +1,23 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Identity
+@using WorkoutCoachV2.Model.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
     var pageTitle = ViewData["Title"] as string;
     var fullTitle = string.IsNullOrWhiteSpace(pageTitle)
         ? "WorkoutCoach"
         : $"{pageTitle} - WorkoutCoach";
+
+    var isSignedIn = SignInManager.IsSignedIn(User);
+    var displayName = "";
+
+    if (isSignedIn)
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        displayName = currentUser?.DisplayName ?? currentUser?.UserName ?? "";
+    }
 }
 
 <!DOCTYPE html>
@@ -20,9 +35,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    WorkoutCoach
-                </a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WorkoutCoach</a>
 
                 <button class="navbar-toggler" type="button"
                         data-bs-toggle="collapse"
@@ -34,69 +47,74 @@
                 </button>
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Home"
-                               asp-action="Index">
-                                Home
-                            </a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Exercises"
-                               asp-action="Index">
-                                Exercises
-                            </a>
-                        </li>
+                        @if (isSignedIn)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Exercises" asp-action="Index">Exercises</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Workouts" asp-action="Index">Workouts</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Sessions" asp-action="Index">Sessions</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Stats" asp-action="Index">Stats</a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+                                </li>
+                            }
+                        }
 
                         <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Workouts"
-                               asp-action="Index">
-                                Workouts
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Sessions"
-                               asp-action="Index">
-                                Sessions
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Stats"
-                               asp-action="Index">
-                                Stats
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Home"
-                               asp-action="Privacy">
-                                Privacy
-                            </a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
 
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <span class="navbar-text text-muted small">
-                                .NET Advanced – WorkoutCoach
-                            </span>
+                    <ul class="navbar-nav align-items-center">
+                        @if (isSignedIn)
+                        {
+                            <li class="nav-item me-2">
+                                <span class="navbar-text text-muted small">
+                                    Ingelogd als <strong>@displayName</strong>
+                                </span>
+                            </li>
+
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item me-2">
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
+
+                        <li class="nav-item ms-3 d-none d-md-inline">
+                            <span class="navbar-text text-muted small">.NET Advanced – WorkoutCoach</span>
                         </li>
                     </ul>
+
                 </div>
             </div>
         </nav>

@@ -1,0 +1,69 @@
+﻿@model WorkoutCoachV2.Web.Models.AdminUsersIndexViewModel
+
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<h1>Admin</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Display name</th>
+            <th>Roles</th>
+            <th>Status</th>
+            <th style="width: 320px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model.Users)
+        {
+            var rolesText = (u.Roles != null && u.Roles.Any()) ? string.Join(", ", u.Roles) : "-";
+            <tr>
+                <td>@u.Email</td>
+                <td>@u.DisplayName</td>
+                <td>@rolesText</td>
+                <td>
+                    @if (u.IsBlocked)
+                    {
+                        <span class="badge bg-danger">Blocked</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <form asp-controller="Admin" asp-action="ToggleBlock" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@u.Id" />
+                        @if (u.IsBlocked)
+                        {
+                            <button type="submit" class="btn btn-sm btn-outline-success">Unblock</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Block</button>
+                        }
+                    </form>
+
+                    <form asp-controller="Admin" asp-action="ToggleAdminRole" method="post" class="d-inline ms-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@u.Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Toggle Admin</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
