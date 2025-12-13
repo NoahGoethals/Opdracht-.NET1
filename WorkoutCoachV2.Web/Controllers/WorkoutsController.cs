@@ -44,12 +44,19 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var workout = await _context.Workouts
-                .Where(w => w.OwnerId == userId)
-                .Include(w => w.Exercises)
-                    .ThenInclude(we => we.Exercise)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId);
 
             if (workout == null) return NotFound();
+
+            var workoutExercises = await _context.WorkoutExercises
+                .AsNoTracking()
+                .Include(we => we.Exercise)
+                .Where(we => we.WorkoutId == workout.Id)
+                .OrderBy(we => we.Exercise != null ? we.Exercise.Name : "")
+                .ToListAsync();
+
+            ViewBag.WorkoutExercises = workoutExercises;
 
             return View(workout);
         }

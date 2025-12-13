@@ -19,6 +19,16 @@ namespace WorkoutCoachV2.Web.Models
         public List<SessionWorkoutRowViewModel> Workouts { get; set; } = new();
     }
 
+    public class SessionEditViewModel
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+        public DateTime Date { get; set; } = DateTime.Today;
+        public string? Description { get; set; }
+
+        public List<SessionWorkoutRowViewModel> Workouts { get; set; } = new();
+    }
 
     public class SessionDetailsSetRowViewModel
     {
@@ -42,7 +52,6 @@ namespace WorkoutCoachV2.Web.Models
         public string? Description { get; set; }
 
         public List<SessionDetailsWorkoutGroupViewModel> Workouts { get; set; } = new();
-
         public List<SessionDetailsSetRowViewModel> ExtraSets { get; set; } = new();
     }
 }
