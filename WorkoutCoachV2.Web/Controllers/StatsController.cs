@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +11,7 @@ using WorkoutCoachV2.Web.Models;
 
 namespace WorkoutCoachV2.Web.Controllers
 {
+    [Authorize]
     public class StatsController : Controller
     {
         private readonly AppDbContext _context;
@@ -18,9 +21,15 @@ namespace WorkoutCoachV2.Web.Controllers
             _context = context;
         }
 
+        private string? CurrentUserId =>
+            User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         [HttpGet]
         public async Task<IActionResult> Index(int? exerciseId, DateTime? from, DateTime? to)
         {
+            if (string.IsNullOrWhiteSpace(CurrentUserId))
+                return Challenge();
+
             var vm = new StatsIndexViewModel
             {
                 ExerciseId = exerciseId,
@@ -36,15 +45,19 @@ namespace WorkoutCoachV2.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Results(int? exerciseId, DateTime? from, DateTime? to)
         {
+            if (string.IsNullOrWhiteSpace(CurrentUserId))
+                return Challenge();
+
             var results = await BuildResultsAsync(exerciseId, from, to);
             return PartialView("_StatsResults", results);
         }
 
         private async Task<SelectListItem[]> BuildExerciseSelectListAsync(int? selectedId)
         {
+            var userId = CurrentUserId!;
             var items = await _context.Exercises
                 .AsNoTracking()
-                .Where(e => !e.IsDeleted)
+                .Where(e => !e.IsDeleted && e.OwnerId == userId)
                 .OrderBy(e => e.Name)
                 .Select(e => new SelectListItem
                 {
@@ -66,15 +79,22 @@ namespace WorkoutCoachV2.Web.Controllers
 
         private async Task<StatsResultsViewModel> BuildResultsAsync(int? exerciseId, DateTime? from, DateTime? to)
         {
+            var userId = CurrentUserId!;
+
             var q = _context.SessionSets
                 .AsNoTracking()
                 .Include(ss => ss.Session)
                 .Include(ss => ss.Exercise)
                 .AsQueryable();
 
-            q = q.Where(ss => !ss.IsDeleted
-                              && ss.Session != null && !ss.Session.IsDeleted
-                              && ss.Exercise != null && !ss.Exercise.IsDeleted);
+            q = q.Where(ss =>
+                !ss.IsDeleted
+                && ss.Session != null
+                && !ss.Session.IsDeleted
+                && ss.Session.OwnerId == userId
+                && ss.Exercise != null
+                && !ss.Exercise.IsDeleted
+                && ss.Exercise.OwnerId == userId);
 
             if (from.HasValue)
             {
@@ -115,7 +135,6 @@ namespace WorkoutCoachV2.Web.Controllers
                 if (sets.Count > 0)
                 {
                     result.MaxWeight = sets.Max(s => s.Weight);
-
                     result.BestEstimated1Rm = sets.Max(s => s.Weight * (1.0 + (s.Reps / 30.0)));
                 }
 

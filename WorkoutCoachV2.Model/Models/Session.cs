@@ -1,22 +1,23 @@
-﻿// Sessie (trainingmoment) met datum, titel, beschrijving en sets.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace WorkoutCoachV2.Model.Models
 {
     public class Session : BaseEntity
     {
-        // Titel van de sessie (bv. "Push Day").
+        [Required]
         public string Title { get; set; } = "";
 
-        // Datum waarop de sessie plaatsvond.
+        [Display(Name = "Date")]
         public DateTime Date { get; set; } = DateTime.Today;
 
-        // Optionele beschrijving/notities.
         public string? Description { get; set; }
 
-        // Uitgevoerde sets binnen deze sessie.
+        // Per-user data
+        public string? OwnerId { get; set; }
+        public ApplicationUser? Owner { get; set; }
+
         public ICollection<SessionSet> Sets { get; set; } = new List<SessionSet>();
     }
 }

@@ -1,52 +1,51 @@
-﻿@model WorkoutCoachV2.Web.Models.SessionCreateFromWorkoutsViewModel
+﻿@model WorkoutCoachV2.Model.Models.Session
 
 @{
     ViewData["Title"] = "Edit session";
 }
 
 <h1>Edit session</h1>
+<hr />
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" name="id" value="@ViewBag.SessionId" />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
 
-    <div class="mb-3">
-        <label asp-for="Title" class="form-label"></label>
-        <input asp-for="Title" class="form-control" />
-        <span asp-validation-for="Title" class="text-danger"></span>
-    </div>
+            <input type="hidden" asp-for="Id" />
 
-    <div class="mb-3">
-        <label asp-for="Date" class="form-label"></label>
-        <input asp-for="Date" type="date" class="form-control" />
-        <span asp-validation-for="Date" class="text-danger"></span>
-    </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <h4>Workouts</h4>
-    <p class="text-muted">Selecteer workouts om hun oefeningen in deze sessie te laden.</p>
-
-    <div class="mb-3">
-        @foreach (var w in Model.Workouts)
-        {
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Workouts[@Model.Workouts.IndexOf(w)].IsSelected" value="true" @(w.IsSelected ? "checked" : "") />
-                <input type="hidden" name="Workouts[@Model.Workouts.IndexOf(w)].WorkoutId" value="@w.WorkoutId" />
-                <label class="form-check-label">@w.WorkoutTitle</label>
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
             </div>
-        }
-    </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+            <div class="mb-3">
+                <label asp-for="Date" class="form-label"></label>
+                <input asp-for="Date" type="date" class="form-control" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
 
-<div class="mt-3">
-    <a asp-action="Index">Back to List</a>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+
+        <div class="mt-3">
+            <a asp-action="Index">Back to List</a>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

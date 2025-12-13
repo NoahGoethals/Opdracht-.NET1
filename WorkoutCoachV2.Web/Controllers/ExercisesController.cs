@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkoutCoachV2.Model.Data;
@@ -8,6 +10,7 @@ using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.Web.Controllers
 {
+    [Authorize]
     public class ExercisesController : Controller
     {
         private readonly AppDbContext _context;
@@ -17,9 +20,14 @@ namespace WorkoutCoachV2.Web.Controllers
             _context = context;
         }
 
+        private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
         public async Task<IActionResult> Index()
         {
+            var userId = CurrentUserId;
+
             var exercises = await _context.Exercises
+                .Where(e => e.OwnerId == userId)
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
@@ -28,54 +36,50 @@ namespace WorkoutCoachV2.Web.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
+
+            var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId);
 
-            if (exercise == null)
-                return NotFound();
+            if (exercise == null) return NotFound();
 
             return View(exercise);
         }
 
         public IActionResult Create()
         {
-            var exercise = new Exercise
-            {
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
-                IsDeleted = false
-            };
-
-            return View(exercise);
+            return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Category,Notes")] Exercise exercise)
         {
-            if (!ModelState.IsValid)
-                return View(exercise);
+            if (!ModelState.IsValid) return View(exercise);
 
-            exercise.CreatedAt = DateTime.Now;
-            exercise.UpdatedAt = DateTime.Now;
+            exercise.OwnerId = CurrentUserId;
+            exercise.CreatedAt = DateTime.UtcNow;
+            exercise.UpdatedAt = DateTime.UtcNow;
             exercise.IsDeleted = false;
 
             _context.Add(exercise);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
 
-            var exercise = await _context.Exercises.FindAsync(id);
-            if (exercise == null)
-                return NotFound();
+            var userId = CurrentUserId;
+
+            var exercise = await _context.Exercises
+                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId);
+
+            if (exercise == null) return NotFound();
 
             return View(exercise);
         }
@@ -84,49 +88,35 @@ namespace WorkoutCoachV2.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Category,Notes")] Exercise formExercise)
         {
-            if (id != formExercise.Id)
-                return NotFound();
+            if (id != formExercise.Id) return NotFound();
+            if (!ModelState.IsValid) return View(formExercise);
 
-            if (!ModelState.IsValid)
-                return View(formExercise);
+            var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId);
 
-            if (exercise == null)
-                return NotFound();
+            if (exercise == null) return NotFound();
 
             exercise.Name = formExercise.Name;
             exercise.Category = formExercise.Category;
             exercise.Notes = formExercise.Notes;
+            exercise.UpdatedAt = DateTime.UtcNow;
 
-            exercise.UpdatedAt = DateTime.Now;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ExerciseExists(exercise.Id))
-                    return NotFound();
-
-                throw;
-            }
-
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
+
+            var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId);
 
-            if (exercise == null)
-                return NotFound();
+            if (exercise == null) return NotFound();
 
             return View(exercise);
         }
@@ -135,25 +125,18 @@ namespace WorkoutCoachV2.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var userId = CurrentUserId;
+
             var exercise = await _context.Exercises
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId);
 
             if (exercise != null)
             {
-                exercise.IsDeleted = true;
-                exercise.UpdatedAt = DateTime.Now;
+                _context.Exercises.Remove(exercise);
                 await _context.SaveChangesAsync();
             }
 
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ExerciseExists(int id)
-        {
-            return _context.Exercises
-                .IgnoreQueryFilters()
-                .Any(e => e.Id == id);
         }
     }
 }

@@ -1,24 +1,24 @@
-﻿// Oefening met naam/categorie en relaties naar workouts & sessies.
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace WorkoutCoachV2.Model.Models
 {
     public class Exercise : BaseEntity
     {
-        // Verplichte naam (bv. "Bench Press").
+        [Required]
         public string Name { get; set; } = "";
 
-        // Optionele categorie (bv. "Chest").
-        public string? Category { get; set; }
+        [Required]
+        public string Category { get; set; } = "";
 
-        // Optionele notities over de oefening.
         public string? Notes { get; set; }
 
-        // Koppeling naar workouts via koppelentiteit.
-        public ICollection<WorkoutExercise> InWorkouts { get; set; } = new List<WorkoutExercise>();
+        // Per-user data
+        public string? OwnerId { get; set; }
+        public ApplicationUser? Owner { get; set; }
 
-        // Sets waarin deze oefening effectief werd uitgevoerd.
+        // Navigaties
+        public ICollection<WorkoutExercise> InWorkouts { get; set; } = new List<WorkoutExercise>();
         public ICollection<SessionSet> SessionSets { get; set; } = new List<SessionSet>();
     }
 }

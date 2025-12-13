@@ -53,7 +53,9 @@ using (var scope = app.Services.CreateScope())
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
+        {
             await roleManager.CreateAsync(new IdentityRole(role));
+        }
     }
 
     var adminEmail = config["AdminSeed:Email"];
@@ -83,13 +85,8 @@ using (var scope = app.Services.CreateScope())
         else
         {
             if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-
-          
-            if (app.Environment.IsDevelopment())
             {
-                var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
-                await userManager.ResetPasswordAsync(adminUser, token, adminPassword);
+                await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
     }

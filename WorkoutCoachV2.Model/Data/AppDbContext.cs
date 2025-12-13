@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WorkoutCoachV2.Model.Models;
 
@@ -20,24 +19,29 @@ namespace WorkoutCoachV2.Model.Data
             base.OnModelCreating(b);
 
             if (b.Entity<Exercise>().Metadata.FindProperty("IsDeleted") != null)
-                b.Entity<Exercise>().HasQueryFilter(e => EF.Property<bool>(e, "IsDeleted") == false);
+                b.Entity<Exercise>().HasQueryFilter(e => !EF.Property<bool>(e, "IsDeleted"));
+
             if (b.Entity<Workout>().Metadata.FindProperty("IsDeleted") != null)
-                b.Entity<Workout>().HasQueryFilter(w => EF.Property<bool>(w, "IsDeleted") == false);
+                b.Entity<Workout>().HasQueryFilter(w => !EF.Property<bool>(w, "IsDeleted"));
+
             if (b.Entity<Session>().Metadata.FindProperty("IsDeleted") != null)
-                b.Entity<Session>().HasQueryFilter(s => EF.Property<bool>(s, "IsDeleted") == false);
+                b.Entity<Session>().HasQueryFilter(s => !EF.Property<bool>(s, "IsDeleted"));
+
+            if (b.Entity<SessionSet>().Metadata.FindProperty("IsDeleted") != null)
+                b.Entity<SessionSet>().HasQueryFilter(ss => !EF.Property<bool>(ss, "IsDeleted"));
 
             b.Entity<WorkoutExercise>()
                 .HasKey(we => new { we.WorkoutId, we.ExerciseId });
 
             b.Entity<WorkoutExercise>()
                 .HasOne(we => we.Workout)
-                .WithMany() 
+                .WithMany(w => w.Exercises)
                 .HasForeignKey(we => we.WorkoutId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             b.Entity<WorkoutExercise>()
                 .HasOne(we => we.Exercise)
-                .WithMany() 
+                .WithMany()
                 .HasForeignKey(we => we.ExerciseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
