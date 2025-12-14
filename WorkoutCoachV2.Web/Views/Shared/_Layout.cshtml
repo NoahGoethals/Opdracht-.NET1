@@ -1,8 +1,12 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using System.Globalization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
 @using WorkoutCoachV2.Model.Models
+@using WorkoutCoachV2.Web
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject IStringLocalizer<SharedResource> L
 
 @{
     var pageTitle = ViewData["Title"] as string;
@@ -18,10 +22,13 @@
         var currentUser = await UserManager.GetUserAsync(User);
         displayName = currentUser?.DisplayName ?? currentUser?.UserName ?? "";
     }
+
+    var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName; 
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@currentCulture">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -50,63 +57,93 @@
 
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">@L["Home"]</a>
                         </li>
 
                         @if (isSignedIn)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Exercises" asp-action="Index">Exercises</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Exercises" asp-action="Index">@L["Exercises"]</a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Workouts" asp-action="Index">Workouts</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Workouts" asp-action="Index">@L["Workouts"]</a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Sessions" asp-action="Index">Sessions</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Sessions" asp-action="Index">@L["Sessions"]</a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Stats" asp-action="Index">Stats</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Stats" asp-action="Index">@L["Stats"]</a>
                             </li>
 
                             @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">@L["Admin"]</a>
                                 </li>
                             }
                         }
 
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">@L["Privacy"]</a>
                         </li>
                     </ul>
 
                     <ul class="navbar-nav align-items-center">
+                        <li class="nav-item dropdown me-2">
+                            <a class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                               href="#"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                @L["Language"]: @(currentCulture.ToUpper())
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Language"
+                                       asp-action="Set"
+                                       asp-route-culture="nl"
+                                       asp-route-returnUrl="@returnUrl">
+                                        @L["Dutch"]
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Language"
+                                       asp-action="Set"
+                                       asp-route-culture="en"
+                                       asp-route-returnUrl="@returnUrl">
+                                        @L["English"]
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
                         @if (isSignedIn)
                         {
                             <li class="nav-item me-2">
                                 <span class="navbar-text text-muted small">
-                                    Ingelogd als <strong>@displayName</strong>
+                                    @L["LoggedInAs", displayName]
                                 </span>
                             </li>
 
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@L["Logout"]</button>
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item me-2">
-                                <a class="btn btn-sm btn-outline-primary" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="Account" asp-action="Login">@L["Login"]</a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">@L["Register"]</a>
                             </li>
                         }
 
@@ -129,7 +166,7 @@
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; @DateTime.Now.Year - WorkoutCoach -
-            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">@L["Privacy"]</a>
         </div>
     </footer>
 
