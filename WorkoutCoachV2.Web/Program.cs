@@ -16,7 +16,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-// ✅ Localization (EN/NL)
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services
@@ -29,21 +28,20 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     var supportedCultures = new[]
     {
         new CultureInfo("en"),
-        new CultureInfo("nl")
+        new CultureInfo("nl"),
+        new CultureInfo("fr")
     };
 
     options.DefaultRequestCulture = new RequestCulture("nl");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 
-    // cookie eerst (wat we via LanguageController zetten)
     options.RequestCultureProviders = new IRequestCultureProvider[]
     {
         new CookieRequestCultureProvider()
     };
 });
 
-// ✅ Identity
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -70,11 +68,9 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// ✅ Use localization middleware (vroeg in pipeline)
 var locOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions>>();
 app.UseRequestLocalization(locOptions.Value);
 
-// ✅ Seed roles + admin
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+
+	<!-- NAV / HEADER -->
+	<data name="Home" xml:space="preserve"><value>Accueil</value></data>
+	<data name="Exercises" xml:space="preserve"><value>Exercices</value></data>
+	<data name="Workouts" xml:space="preserve"><value>Entraînements</value></data>
+	<data name="Sessions" xml:space="preserve"><value>Sessions</value></data>
+	<data name="Stats" xml:space="preserve"><value>Statistiques</value></data>
+	<data name="Privacy" xml:space="preserve"><value>Confidentialité</value></data>
+	<data name="Admin" xml:space="preserve"><value>Admin</value></data>
+	<data name="Login" xml:space="preserve"><value>Connexion</value></data>
+	<data name="Register" xml:space="preserve"><value>Inscription</value></data>
+	<data name="Logout" xml:space="preserve"><value>Déconnexion</value></data>
+	<data name="Language" xml:space="preserve"><value>Langue</value></data>
+	<data name="Dutch" xml:space="preserve"><value>Néerlandais</value></data>
+	<data name="English" xml:space="preserve"><value>Anglais</value></data>
+	<data name="French" xml:space="preserve"><value>Français</value></data>
+	<data name="LoggedInAs" xml:space="preserve"><value>Connecté en tant que {0}</value></data>
+
+	<!-- COMMON (buttons/links/headings) -->
+	<data name="Common_Create" xml:space="preserve"><value>Créer</value></data>
+	<data name="Common_Save" xml:space="preserve"><value>Enregistrer</value></data>
+	<data name="Common_Delete" xml:space="preserve"><value>Supprimer</value></data>
+	<data name="Common_Edit" xml:space="preserve"><value>Modifier</value></data>
+	<data name="Common_Details" xml:space="preserve"><value>Détails</value></data>
+	<data name="Common_BackToList" xml:space="preserve"><value>Retour à la liste</value></data>
+	<data name="Common_Cancel" xml:space="preserve"><value>Annuler</value></data>
+
+	<!-- EXERCISES -->
+	<data name="Ex_Create_Title" xml:space="preserve"><value>Créer</value></data>
+	<data name="Ex_Create_H1" xml:space="preserve"><value>Créer un exercice</value></data>
+	<data name="Ex_CreateNew" xml:space="preserve"><value>Créer un nouvel exercice</value></data>
+	<data name="Ex_NoExercises" xml:space="preserve"><value>Aucun exercice pour l'instant.</value></data>
+	<data name="Ex_Index_Title" xml:space="preserve"><value>Exercices</value></data>
+	<data name="Ex_Index_H1" xml:space="preserve"><value>Exercices</value></data>
+
+	<data name="Ex_Edit_Title" xml:space="preserve"><value>Modifier</value></data>
+	<data name="Ex_Edit_H1" xml:space="preserve"><value>Modifier l’exercice</value></data>
+
+	<data name="Ex_Details_Title" xml:space="preserve"><value>Détails</value></data>
+	<data name="Ex_Details_H1" xml:space="preserve"><value>Détails de l’exercice</value></data>
+
+	<data name="Ex_Delete_Title" xml:space="preserve"><value>Supprimer</value></data>
+	<data name="Ex_Delete_H1" xml:space="preserve"><value>Supprimer l’exercice</value></data>
+	<data name="Ex_Delete_Confirm" xml:space="preserve"><value>Êtes-vous sûr de vouloir supprimer ceci ?</value></data>
+
+	<data name="Ex_Field_Name" xml:space="preserve"><value>Nom</value></data>
+	<data name="Ex_Field_Category" xml:space="preserve"><value>Catégorie</value></data>
+	<data name="Ex_Field_Notes" xml:space="preserve"><value>Notes</value></data>
+	<data name="Ex_Field_CreatedAt" xml:space="preserve"><value>Créé le</value></data>
+
+	<!-- WORKOUTS -->
+	<data name="Wk_Index_Title" xml:space="preserve"><value>Entraînements</value></data>
+	<data name="Wk_Index_H1" xml:space="preserve"><value>Entraînements</value></data>
+	<data name="Wk_CreateNew" xml:space="preserve"><value>Créer un nouvel entraînement</value></data>
+	<data name="Wk_NoWorkouts" xml:space="preserve"><value>Aucun entraînement pour l'instant.</value></data>
+
+	<data name="Wk_Create_Title" xml:space="preserve"><value>Créer un entraînement</value></data>
+	<data name="Wk_Create_H1" xml:space="preserve"><value>Créer un entraînement</value></data>
+
+	<data name="Wk_Edit_Title" xml:space="preserve"><value>Modifier l’entraînement</value></data>
+	<data name="Wk_Edit_H1" xml:space="preserve"><value>Modifier l’entraînement</value></data>
+
+	<data name="Wk_Delete_Title" xml:space="preserve"><value>Supprimer l’entraînement</value></data>
+	<data name="Wk_Delete_H1" xml:space="preserve"><value>Supprimer l’entraînement</value></data>
+	<data name="Wk_Delete_Confirm" xml:space="preserve"><value>Êtes-vous sûr de vouloir supprimer cet entraînement ?</value></data>
+
+	<data name="Wk_Details_Title" xml:space="preserve"><value>Détails de l’entraînement</value></data>
+	<data name="Wk_Details_H1" xml:space="preserve"><value>Détails de l’entraînement</value></data>
+
+	<data name="Wk_Field_Title" xml:space="preserve"><value>Titre</value></data>
+	<data name="Wk_Field_ScheduledOn" xml:space="preserve"><value>Planifié le</value></data>
+	<data name="Wk_Col_Exercises" xml:space="preserve"><value>Exercices</value></data>
+
+	<data name="Wk_Details_ExercisesInWorkout" xml:space="preserve"><value>Exercices dans cet entraînement</value></data>
+	<data name="Wk_Details_NoExercisesLinked" xml:space="preserve"><value>Aucun exercice lié pour l'instant.</value></data>
+	<data name="Wk_Details_ManageExercises" xml:space="preserve"><value>Gérer les exercices</value></data>
+	<data name="Wk_Details_EditWorkout" xml:space="preserve"><value>Modifier l’entraînement</value></data>
+
+	<data name="Wk_Manage_Title" xml:space="preserve"><value>Gérer les exercices</value></data>
+	<data name="Wk_Manage_H1" xml:space="preserve"><value>Gérer les exercices</value></data>
+	<data name="Wk_Manage_InWorkout" xml:space="preserve"><value>Dans l’entraînement ?</value></data>
+	<data name="Wk_Manage_Exercise" xml:space="preserve"><value>Exercice</value></data>
+	<data name="Wk_Manage_Reps" xml:space="preserve"><value>Répétitions</value></data>
+	<data name="Wk_Manage_WeightKg" xml:space="preserve"><value>Poids (kg)</value></data>
+
+	<!-- SESSIONS -->
+	<data name="Se_Index_Title" xml:space="preserve"><value>Sessions</value></data>
+	<data name="Se_Index_H1" xml:space="preserve"><value>Sessions</value></data>
+	<data name="Se_Index_NewFromWorkouts" xml:space="preserve"><value>Nouvelle session à partir des entraînements</value></data>
+	<data name="Se_NoSessions" xml:space="preserve"><value>Aucune session pour l'instant.</value></data>
+	<data name="Se_Col_Sets" xml:space="preserve"><value>Séries</value></data>
+
+	<data name="Se_Create_Title" xml:space="preserve"><value>Créer une session</value></data>
+	<data name="Se_Create_H1" xml:space="preserve"><value>Créer une session</value></data>
+	<data name="Se_CreateFromWorkouts_Title" xml:space="preserve"><value>Nouvelle session à partir des entraînements</value></data>
+	<data name="Se_CreateFromWorkouts_H1" xml:space="preserve"><value>Nouvelle session à partir des entraînements</value></data>
+
+	<data name="Se_Edit_Title" xml:space="preserve"><value>Modifier la session</value></data>
+	<data name="Se_Edit_H1" xml:space="preserve"><value>Modifier la session</value></data>
+
+	<data name="Se_Delete_Title" xml:space="preserve"><value>Supprimer la session</value></data>
+	<data name="Se_Delete_H1" xml:space="preserve"><value>Supprimer la session</value></data>
+	<data name="Se_Delete_Confirm" xml:space="preserve"><value>Êtes-vous sûr de vouloir supprimer cette session ?</value></data>
+
+	<data name="Se_Details_Title" xml:space="preserve"><value>Détails de la session</value></data>
+	<data name="Se_Details_H1" xml:space="preserve"><value>Détails de la session</value></data>
+
+	<data name="Se_Field_Title" xml:space="preserve"><value>Titre</value></data>
+	<data name="Se_Field_Date" xml:space="preserve"><value>Date</value></data>
+	<data name="Se_Field_Description" xml:space="preserve"><value>Description</value></data>
+
+	<data name="Se_Details_Sets" xml:space="preserve"><value>Séries</value></data>
+	<data name="Se_Details_SetNumber" xml:space="preserve"><value>Série n°</value></data>
+	<data name="Se_Details_Exercise" xml:space="preserve"><value>Exercice</value></data>
+	<data name="Se_Details_Reps" xml:space="preserve"><value>Répétitions</value></data>
+	<data name="Se_Details_WeightKg" xml:space="preserve"><value>Poids (kg)</value></data>
+	<data name="Se_Details_NoSets" xml:space="preserve"><value>Aucune série pour cette session pour l'instant.</value></data>
+
+	<data name="Se_FromWorkouts_ChooseWorkouts" xml:space="preserve"><value>Choisir des entraînements</value></data>
+	<data name="Se_FromWorkouts_Select" xml:space="preserve"><value>Sélectionner</value></data>
+	<data name="Se_FromWorkouts_Workout" xml:space="preserve"><value>Entraînement</value></data>
+	<data name="Se_FromWorkouts_CreateBtn" xml:space="preserve"><value>Créer la session</value></data>
+
+	<data name="Se_Edit_Workouts" xml:space="preserve"><value>Entraînements</value></data>
+	<data name="Se_Edit_Tip" xml:space="preserve"><value>Sélectionnez des entraînements pour charger leurs exercices dans cette session. L’enregistrement remplacera les séries actuelles (si vous cochez au moins 1 entraînement).</value></data>
+	<data name="Se_Edit_NoWorkoutsFound" xml:space="preserve"><value>Aucun entraînement trouvé.</value></data>
+
+	<!-- STATS -->
+	<data name="St_Index_Title" xml:space="preserve"><value>Statistiques</value></data>
+	<data name="St_Index_H1" xml:space="preserve"><value>Statistiques</value></data>
+
+	<data name="St_Filter_Exercise" xml:space="preserve"><value>Exercice</value></data>
+	<data name="St_Filter_From" xml:space="preserve"><value>Du</value></data>
+	<data name="St_Filter_To" xml:space="preserve"><value>Au</value></data>
+	<data name="St_Filter_Apply" xml:space="preserve"><value>Appliquer</value></data>
+
+	<data name="St_NoStats" xml:space="preserve"><value>Aucune statistique à afficher.</value></data>
+	<data name="St_Range" xml:space="preserve"><value>Période</value></data>
+	<data name="St_Exercise" xml:space="preserve"><value>Exercice</value></data>
+
+	<data name="St_Card_Sessions" xml:space="preserve"><value>Sessions</value></data>
+	<data name="St_Card_Sets" xml:space="preserve"><value>Séries</value></data>
+	<data name="St_Card_TotalReps" xml:space="preserve"><value>Total répétitions</value></data>
+	<data name="St_Card_TotalVolumeKg" xml:space="preserve"><value>Volume total (kg)</value></data>
+	<data name="St_Card_MaxWeightKg" xml:space="preserve"><value>Poids max (kg)</value></data>
+	<data name="St_Card_BestEstimated1Rm" xml:space="preserve"><value>Meilleure 1RM estimée</value></data>
+
+	<data name="St_NoSetsForFilter" xml:space="preserve"><value>Aucune série trouvée pour ce filtre.</value></data>
+
+	<data name="St_Col_Date" xml:space="preserve"><value>Date</value></data>
+	<data name="St_Col_Session" xml:space="preserve"><value>Session</value></data>
+	<data name="St_Col_Sets" xml:space="preserve"><value>Séries</value></data>
+	<data name="St_Col_Reps" xml:space="preserve"><value>Répétitions</value></data>
+	<data name="St_Col_VolumeKg" xml:space="preserve"><value>Volume (kg)</value></data>
+	<data name="St_Col_MaxKg" xml:space="preserve"><value>Max (kg)</value></data>
+	<data name="St_Col_Exercise" xml:space="preserve"><value>Exercice</value></data>
+
+	<data name="St_Overall_Title" xml:space="preserve"><value>Statistiques globales (tous les exercices)</value></data>
+	<data name="St_NoDataForFilter" xml:space="preserve"><value>Aucune donnée trouvée pour ce filtre.</value></data>
+	<data name="St_TopExercisesByVolume" xml:space="preserve"><value>Top exercices (par volume)</value></data>
+
+	<!-- ADMIN -->
+	<data name="Ad_Index_Title" xml:space="preserve"><value>Admin</value></data>
+	<data name="Ad_Index_H1" xml:space="preserve"><value>Admin</value></data>
+	<data name="Ad_Col_Email" xml:space="preserve"><value>E-mail</value></data>
+	<data name="Ad_Col_DisplayName" xml:space="preserve"><value>Nom d’affichage</value></data>
+	<data name="Ad_Col_Roles" xml:space="preserve"><value>Rôles</value></data>
+	<data name="Ad_Col_Status" xml:space="preserve"><value>Statut</value></data>
+	<data name="Ad_Status_Blocked" xml:space="preserve"><value>Bloqué</value></data>
+	<data name="Ad_Status_Active" xml:space="preserve"><value>Actif</value></data>
+	<data name="Ad_Btn_Block" xml:space="preserve"><value>Bloquer</value></data>
+	<data name="Ad_Btn_Unblock" xml:space="preserve"><value>Débloquer</value></data>
+	<data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Basculer admin</value></data>
+	<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
+
+	<!-- HOME -->
+	<data name="Ho_Title" xml:space="preserve"><value>Accueil</value></data>
+	<data name="Ho_Welcome" xml:space="preserve"><value>Bienvenue</value></data>
+	<data name="Ho_LearnAboutPrefix" xml:space="preserve"><value>En savoir plus sur </value></data>
+	<data name="Ho_LearnAboutLinkText" xml:space="preserve"><value>la création d’applications Web avec ASP.NET Core</value></data>
+
+	<!-- PRIVACY -->
+	<data name="Pr_Title" xml:space="preserve"><value>Politique de confidentialité</value></data>
+	<data name="Pr_Text" xml:space="preserve"><value>Utilisez cette page pour décrire la politique de confidentialité de votre site.</value></data>
+
+	<!-- ACCESS DENIED -->
+	<data name="Ac_Title" xml:space="preserve"><value>Accès refusé</value></data>
+	<data name="Ac_H1" xml:space="preserve"><value>Accès refusé</value></data>
+	<data name="Ac_Text" xml:space="preserve"><value>Vous n’avez pas les droits pour consulter cette page.</value></data>
+	<data name="Ac_Btn_Home" xml:space="preserve"><value>Accueil</value></data>
+
+	<!-- LOGIN / REGISTER -->
+	<data name="Lo_Title" xml:space="preserve"><value>Connexion</value></data>
+	<data name="Lo_H1" xml:space="preserve"><value>Connexion</value></data>
+	<data name="Lo_Btn_Login" xml:space="preserve"><value>Connexion</value></data>
+	<data name="Lo_Btn_Register" xml:space="preserve"><value>Inscription</value></data>
+
+	<data name="Re_Title" xml:space="preserve"><value>Inscription</value></data>
+	<data name="Re_H1" xml:space="preserve"><value>Inscription</value></data>
+	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Créer un compte</value></data>
+	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Retour à la connexion</value></data>
+
+</root>

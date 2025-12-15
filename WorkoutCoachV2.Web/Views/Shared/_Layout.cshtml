@@ -23,7 +23,7 @@
         displayName = currentUser?.DisplayName ?? currentUser?.UserName ?? "";
     }
 
-    var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName; 
+    var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
@@ -117,6 +117,15 @@
                                        asp-route-culture="en"
                                        asp-route-returnUrl="@returnUrl">
                                         @L["English"]
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Language"
+                                       asp-action="Set"
+                                       asp-route-culture="fr"
+                                       asp-route-returnUrl="@returnUrl">
+                                        @L["French"]
                                     </a>
                                 </li>
                             </ul>

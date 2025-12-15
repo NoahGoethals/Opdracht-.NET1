@@ -24,4 +24,13 @@
 		<ProjectReference Include="..\WorkoutCoachV2.Model\WorkoutCoachV2.Model.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\SharedResource.fr.resx">
+	    <SubType>Designer</SubType>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Resources\SharedResource.resx">
+	    <SubType>Designer</SubType>
+	  </EmbeddedResource>
+	</ItemGroup>
+
 </Project>
