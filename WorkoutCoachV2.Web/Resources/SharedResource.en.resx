@@ -171,4 +171,19 @@
 	<data name="St_Overall_Title" xml:space="preserve"><value>Overall stats (all exercises)</value></data>
 	<data name="St_NoDataForFilter" xml:space="preserve"><value>No data found for this filter.</value></data>
 	<data name="St_TopExercisesByVolume" xml:space="preserve"><value>Top exercises (by volume)</value></data>
+
+<!-- ADMIN -->
+<data name="Ad_Index_Title" xml:space="preserve"><value>Admin</value></data>
+<data name="Ad_Index_H1" xml:space="preserve"><value>Admin</value></data>
+<data name="Ad_Col_Email" xml:space="preserve"><value>Email</value></data>
+<data name="Ad_Col_DisplayName" xml:space="preserve"><value>Display name</value></data>
+<data name="Ad_Col_Roles" xml:space="preserve"><value>Roles</value></data>
+<data name="Ad_Col_Status" xml:space="preserve"><value>Status</value></data>
+<data name="Ad_Status_Blocked" xml:space="preserve"><value>Blocked</value></data>
+<data name="Ad_Status_Active" xml:space="preserve"><value>Active</value></data>
+<data name="Ad_Btn_Block" xml:space="preserve"><value>Block</value></data>
+<data name="Ad_Btn_Unblock" xml:space="preserve"><value>Unblock</value></data>
+<data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Toggle Admin</value></data>
+<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
+
 </root>

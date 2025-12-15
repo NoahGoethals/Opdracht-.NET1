@@ -1,10 +1,11 @@
 ﻿@model WorkoutCoachV2.Web.Models.AdminUsersIndexViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<WorkoutCoachV2.Web.SharedResource> SR
 
 @{
-    ViewData["Title"] = "Admin";
+    ViewData["Title"] = SR["Ad_Index_Title"];
 }
 
-<h1>Admin</h1>
+<h1>@SR["Ad_Index_H1"]</h1>
 
 @if (TempData["Error"] != null)
 {
@@ -18,17 +19,20 @@
 <table class="table table-striped align-middle">
     <thead>
         <tr>
-            <th>Email</th>
-            <th>Display name</th>
-            <th>Roles</th>
-            <th>Status</th>
+            <th>@SR["Ad_Col_Email"]</th>
+            <th>@SR["Ad_Col_DisplayName"]</th>
+            <th>@SR["Ad_Col_Roles"]</th>
+            <th>@SR["Ad_Col_Status"]</th>
             <th style="width: 320px;"></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var u in Model.Users)
         {
-            var rolesText = (u.Roles != null && u.Roles.Any()) ? string.Join(", ", u.Roles) : "-";
+            var rolesText = (u.Roles != null && u.Roles.Any())
+            ? string.Join(", ", u.Roles)
+            : SR["Ad_Roles_None"].ToString();
+
             <tr>
                 <td>@u.Email</td>
                 <td>@u.DisplayName</td>
@@ -36,11 +40,11 @@
                 <td>
                     @if (u.IsBlocked)
                     {
-                        <span class="badge bg-danger">Blocked</span>
+                        <span class="badge bg-danger">@SR["Ad_Status_Blocked"]</span>
                     }
                     else
                     {
-                        <span class="badge bg-success">Active</span>
+                        <span class="badge bg-success">@SR["Ad_Status_Active"]</span>
                     }
                 </td>
                 <td class="text-end">
@@ -49,18 +53,18 @@
                         <input type="hidden" name="id" value="@u.Id" />
                         @if (u.IsBlocked)
                         {
-                            <button type="submit" class="btn btn-sm btn-outline-success">Unblock</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success">@SR["Ad_Btn_Unblock"]</button>
                         }
                         else
                         {
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Block</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">@SR["Ad_Btn_Block"]</button>
                         }
                     </form>
 
                     <form asp-controller="Admin" asp-action="ToggleAdminRole" method="post" class="d-inline ms-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@u.Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Toggle Admin</button>
+                        <button type="submit" class="btn btn-sm btn-outline-primary">@SR["Ad_Btn_ToggleAdmin"]</button>
                     </form>
                 </td>
             </tr>
