@@ -27,7 +27,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var exercises = await _context.Exercises
-                .Where(e => e.OwnerId == userId)
+                .Where(e => e.OwnerId == userId && !e.IsDeleted)
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
@@ -64,7 +64,7 @@ namespace WorkoutCoachV2.Web.Controllers
             exercise.UpdatedAt = DateTime.UtcNow;
             exercise.IsDeleted = false;
 
-            _context.Add(exercise);
+            _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
@@ -130,12 +130,36 @@ namespace WorkoutCoachV2.Web.Controllers
             var exercise = await _context.Exercises
                 .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId);
 
-            if (exercise != null)
+            if (exercise == null) return NotFound();
+
+            var workoutLinks = await _context.WorkoutExercises
+                .Where(we => we.ExerciseId == id)
+                .ToListAsync();
+
+            if (workoutLinks.Count > 0)
             {
-                _context.Exercises.Remove(exercise);
-                await _context.SaveChangesAsync();
+                _context.WorkoutExercises.RemoveRange(workoutLinks);
             }
 
+       
+            var usedInSessions = await _context.SessionSets
+                .AnyAsync(s => s.ExerciseId == id);
+
+            if (usedInSessions)
+            {
+                exercise.IsDeleted = true;
+                exercise.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Oefening is verwijderd (gearchiveerd) omdat ze gebruikt werd in sessies.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            _context.Exercises.Remove(exercise);
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Oefening is verwijderd.";
             return RedirectToAction(nameof(Index));
         }
     }
