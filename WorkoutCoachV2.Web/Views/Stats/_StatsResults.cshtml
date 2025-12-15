@@ -1,5 +1,9 @@
 ﻿@model WorkoutCoachV2.Web.Models.StatsResultsViewModel
 
+@using Microsoft.Extensions.Localization
+@using WorkoutCoachV2.Web
+@inject IStringLocalizer<SharedResource> L
+
 @{
     string rangeText = "";
     if (Model.From.HasValue || Model.To.HasValue)
@@ -13,48 +17,48 @@
 @if (!string.IsNullOrWhiteSpace(rangeText))
 {
     <div class="mb-2 text-muted">
-        Range: <strong>@rangeText</strong>
+        @L["St_Range"]: <strong>@rangeText</strong>
     </div>
 }
 
 @if (Model.ExerciseId.HasValue)
 {
-    <h5>Exercise: @(!string.IsNullOrWhiteSpace(Model.ExerciseName) ? Model.ExerciseName : $"#{Model.ExerciseId}")</h5>
+    <h5>@L["St_Exercise"]: @(!string.IsNullOrWhiteSpace(Model.ExerciseName) ? Model.ExerciseName : $"#{Model.ExerciseId}")</h5>
 
     <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Sessions</div>
+                <div class="text-muted small">@L["St_Card_Sessions"]</div>
                 <div class="fw-bold">@Model.SessionsCount</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Sets</div>
+                <div class="text-muted small">@L["St_Card_Sets"]</div>
                 <div class="fw-bold">@Model.SetsCount</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Total reps</div>
+                <div class="text-muted small">@L["St_Card_TotalReps"]</div>
                 <div class="fw-bold">@Model.TotalReps</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Total volume (kg)</div>
+                <div class="text-muted small">@L["St_Card_TotalVolumeKg"]</div>
                 <div class="fw-bold">@Model.TotalVolumeKg.ToString("0.##")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Max weight (kg)</div>
+                <div class="text-muted small">@L["St_Card_MaxWeightKg"]</div>
                 <div class="fw-bold">@Model.MaxWeight.ToString("0.##")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Best est. 1RM</div>
+                <div class="text-muted small">@L["St_Card_BestEstimated1Rm"]</div>
                 <div class="fw-bold">@Model.BestEstimated1Rm.ToString("0.##")</div>
             </div>
         </div>
@@ -62,19 +66,19 @@
 
     @if (Model.PerSession.Count == 0)
     {
-        <div class="alert alert-warning">No sets found for this filter.</div>
+        <div class="alert alert-warning">@L["St_NoSetsForFilter"]</div>
     }
     else
     {
         <table class="table table-sm">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Session</th>
-                    <th class="text-end">Sets</th>
-                    <th class="text-end">Reps</th>
-                    <th class="text-end">Volume (kg)</th>
-                    <th class="text-end">Max (kg)</th>
+                    <th>@L["St_Col_Date"]</th>
+                    <th>@L["St_Col_Session"]</th>
+                    <th class="text-end">@L["St_Col_Sets"]</th>
+                    <th class="text-end">@L["St_Col_Reps"]</th>
+                    <th class="text-end">@L["St_Col_VolumeKg"]</th>
+                    <th class="text-end">@L["St_Col_MaxKg"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -95,30 +99,30 @@
 }
 else
 {
-    <h5>Overall stats (all exercises)</h5>
+    <h5>@L["St_Overall_Title"]</h5>
 
     <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Sessions</div>
+                <div class="text-muted small">@L["St_Card_Sessions"]</div>
                 <div class="fw-bold">@Model.SessionsCount</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Sets</div>
+                <div class="text-muted small">@L["St_Card_Sets"]</div>
                 <div class="fw-bold">@Model.SetsCount</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Total reps</div>
+                <div class="text-muted small">@L["St_Card_TotalReps"]</div>
                 <div class="fw-bold">@Model.TotalReps</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="border rounded p-2">
-                <div class="text-muted small">Total volume (kg)</div>
+                <div class="text-muted small">@L["St_Card_TotalVolumeKg"]</div>
                 <div class="fw-bold">@Model.TotalVolumeKg.ToString("0.##")</div>
             </div>
         </div>
@@ -126,20 +130,20 @@ else
 
     @if (Model.TopExercises.Count == 0)
     {
-        <div class="alert alert-warning">No data found for this filter.</div>
+        <div class="alert alert-warning">@L["St_NoDataForFilter"]</div>
     }
     else
     {
-        <h6 class="mt-3">Top exercises (by volume)</h6>
+        <h6 class="mt-3">@L["St_TopExercisesByVolume"]</h6>
 
         <table class="table table-sm">
             <thead>
                 <tr>
-                    <th>Exercise</th>
-                    <th class="text-end">Sets</th>
-                    <th class="text-end">Reps</th>
-                    <th class="text-end">Volume (kg)</th>
-                    <th class="text-end">Max (kg)</th>
+                    <th>@L["St_Col_Exercise"]</th>
+                    <th class="text-end">@L["St_Col_Sets"]</th>
+                    <th class="text-end">@L["St_Col_Reps"]</th>
+                    <th class="text-end">@L["St_Col_VolumeKg"]</th>
+                    <th class="text-end">@L["St_Col_MaxKg"]</th>
                 </tr>
             </thead>
             <tbody>

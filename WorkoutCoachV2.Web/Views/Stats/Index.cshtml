@@ -1,29 +1,33 @@
 ﻿@model WorkoutCoachV2.Web.Models.StatsIndexViewModel
 
+@using Microsoft.Extensions.Localization
+@using WorkoutCoachV2.Web
+@inject IStringLocalizer<SharedResource> L
+
 @{
-    ViewData["Title"] = "Stats";
+    ViewData["Title"] = L["St_Index_Title"];
 }
 
-<h1>Stats</h1>
+<h1>@L["St_Index_H1"]</h1>
 
 <form id="statsForm" class="row g-3 mb-3" method="get" asp-controller="Stats" asp-action="Index">
     <div class="col-md-4">
-        <label class="form-label">Exercise</label>
+        <label class="form-label">@L["St_Filter_Exercise"]</label>
         <select class="form-select" asp-for="ExerciseId" asp-items="Model.Exercises"></select>
     </div>
 
     <div class="col-md-3">
-        <label class="form-label">From</label>
+        <label class="form-label">@L["St_Filter_From"]</label>
         <input class="form-control" asp-for="From" type="date" />
     </div>
 
     <div class="col-md-3">
-        <label class="form-label">To</label>
+        <label class="form-label">@L["St_Filter_To"]</label>
         <input class="form-control" asp-for="To" type="date" />
     </div>
 
     <div class="col-md-2 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100">Apply</button>
+        <button type="submit" class="btn btn-primary w-100">@L["St_Filter_Apply"]</button>
     </div>
 </form>
 
@@ -35,7 +39,7 @@
     else
     {
         <div class="alert alert-secondary">
-            No stats to show.
+            @L["St_NoStats"]
         </div>
     }
 </div>

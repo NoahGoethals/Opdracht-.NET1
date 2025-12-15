@@ -38,11 +38,28 @@
 	<data name="Common_BackToList" xml:space="preserve"><value>Terug naar lijst</value></data>
 	<data name="Common_Cancel" xml:space="preserve"><value>Annuleren</value></data>
 
-	<!-- EXERCISES (laat ik staan want je had dit al) -->
+	<!-- EXERCISES -->
 	<data name="Ex_Create_Title" xml:space="preserve"><value>Aanmaken</value></data>
 	<data name="Ex_Create_H1" xml:space="preserve"><value>Oefening aanmaken</value></data>
 	<data name="Ex_CreateNew" xml:space="preserve"><value>Nieuwe oefening</value></data>
 	<data name="Ex_NoExercises" xml:space="preserve"><value>Nog geen oefeningen.</value></data>
+	<data name="Ex_Index_Title" xml:space="preserve"><value>Oefeningen</value></data>
+	<data name="Ex_Index_H1" xml:space="preserve"><value>Oefeningen</value></data>
+
+	<data name="Ex_Edit_Title" xml:space="preserve"><value>Bewerken</value></data>
+	<data name="Ex_Edit_H1" xml:space="preserve"><value>Oefening bewerken</value></data>
+
+	<data name="Ex_Details_Title" xml:space="preserve"><value>Details</value></data>
+	<data name="Ex_Details_H1" xml:space="preserve"><value>Oefening details</value></data>
+
+	<data name="Ex_Delete_Title" xml:space="preserve"><value>Verwijderen</value></data>
+	<data name="Ex_Delete_H1" xml:space="preserve"><value>Oefening verwijderen</value></data>
+	<data name="Ex_Delete_Confirm" xml:space="preserve"><value>Ben je zeker dat je dit wil verwijderen?</value></data>
+
+	<data name="Ex_Field_Name" xml:space="preserve"><value>Naam</value></data>
+	<data name="Ex_Field_Category" xml:space="preserve"><value>Categorie</value></data>
+	<data name="Ex_Field_Notes" xml:space="preserve"><value>Notities</value></data>
+	<data name="Ex_Field_CreatedAt" xml:space="preserve"><value>Aangemaakt op</value></data>
 
 	<!-- WORKOUTS -->
 	<data name="Wk_Index_Title" xml:space="preserve"><value>Workouts</value></data>
@@ -78,4 +95,80 @@
 	<data name="Wk_Manage_Exercise" xml:space="preserve"><value>Oefening</value></data>
 	<data name="Wk_Manage_Reps" xml:space="preserve"><value>Herhalingen</value></data>
 	<data name="Wk_Manage_WeightKg" xml:space="preserve"><value>Gewicht (kg)</value></data>
+
+	<!-- SESSIONS -->
+	<data name="Se_Index_Title" xml:space="preserve"><value>Sessies</value></data>
+	<data name="Se_Index_H1" xml:space="preserve"><value>Sessies</value></data>
+	<data name="Se_Index_NewFromWorkouts" xml:space="preserve"><value>Nieuwe sessie vanuit workouts</value></data>
+	<data name="Se_NoSessions" xml:space="preserve"><value>Nog geen sessies.</value></data>
+	<data name="Se_Col_Sets" xml:space="preserve"><value>Sets</value></data>
+
+	<data name="Se_Create_Title" xml:space="preserve"><value>Sessie aanmaken</value></data>
+	<data name="Se_Create_H1" xml:space="preserve"><value>Sessie aanmaken</value></data>
+	<data name="Se_CreateFromWorkouts_Title" xml:space="preserve"><value>Nieuwe sessie vanuit workouts</value></data>
+	<data name="Se_CreateFromWorkouts_H1" xml:space="preserve"><value>Nieuwe sessie vanuit workouts</value></data>
+
+	<data name="Se_Edit_Title" xml:space="preserve"><value>Sessie bewerken</value></data>
+	<data name="Se_Edit_H1" xml:space="preserve"><value>Sessie bewerken</value></data>
+
+	<data name="Se_Delete_Title" xml:space="preserve"><value>Sessie verwijderen</value></data>
+	<data name="Se_Delete_H1" xml:space="preserve"><value>Sessie verwijderen</value></data>
+	<data name="Se_Delete_Confirm" xml:space="preserve"><value>Ben je zeker dat je deze sessie wilt verwijderen?</value></data>
+
+	<data name="Se_Details_Title" xml:space="preserve"><value>Sessie details</value></data>
+	<data name="Se_Details_H1" xml:space="preserve"><value>Sessie details</value></data>
+
+	<data name="Se_Field_Title" xml:space="preserve"><value>Titel</value></data>
+	<data name="Se_Field_Date" xml:space="preserve"><value>Datum</value></data>
+	<data name="Se_Field_Description" xml:space="preserve"><value>Beschrijving</value></data>
+
+	<data name="Se_Details_Sets" xml:space="preserve"><value>Sets</value></data>
+	<data name="Se_Details_SetNumber" xml:space="preserve"><value>Set #</value></data>
+	<data name="Se_Details_Exercise" xml:space="preserve"><value>Oefening</value></data>
+	<data name="Se_Details_Reps" xml:space="preserve"><value>Herhalingen</value></data>
+	<data name="Se_Details_WeightKg" xml:space="preserve"><value>Gewicht (kg)</value></data>
+	<data name="Se_Details_NoSets" xml:space="preserve"><value>Nog geen sets voor deze sessie.</value></data>
+
+	<data name="Se_FromWorkouts_ChooseWorkouts" xml:space="preserve"><value>Kies workouts</value></data>
+	<data name="Se_FromWorkouts_Select" xml:space="preserve"><value>Selecteer</value></data>
+	<data name="Se_FromWorkouts_Workout" xml:space="preserve"><value>Workout</value></data>
+	<data name="Se_FromWorkouts_CreateBtn" xml:space="preserve"><value>Sessie aanmaken</value></data>
+
+	<data name="Se_Edit_Workouts" xml:space="preserve"><value>Workouts</value></data>
+	<data name="Se_Edit_Tip" xml:space="preserve"><value>Selecteer workouts om hun oefeningen in deze sessie te laden. Bij opslaan worden de huidige sets vervangen (als je minstens 1 workout aanvinkt).</value></data>
+	<data name="Se_Edit_NoWorkoutsFound" xml:space="preserve"><value>Geen workouts gevonden.</value></data>
+
+	<!-- STATS -->
+	<data name="St_Index_Title" xml:space="preserve"><value>Statistieken</value></data>
+	<data name="St_Index_H1" xml:space="preserve"><value>Statistieken</value></data>
+
+	<data name="St_Filter_Exercise" xml:space="preserve"><value>Oefening</value></data>
+	<data name="St_Filter_From" xml:space="preserve"><value>Van</value></data>
+	<data name="St_Filter_To" xml:space="preserve"><value>Tot</value></data>
+	<data name="St_Filter_Apply" xml:space="preserve"><value>Toepassen</value></data>
+
+	<data name="St_NoStats" xml:space="preserve"><value>Geen statistieken om te tonen.</value></data>
+	<data name="St_Range" xml:space="preserve"><value>Periode</value></data>
+	<data name="St_Exercise" xml:space="preserve"><value>Oefening</value></data>
+
+	<data name="St_Card_Sessions" xml:space="preserve"><value>Sessies</value></data>
+	<data name="St_Card_Sets" xml:space="preserve"><value>Sets</value></data>
+	<data name="St_Card_TotalReps" xml:space="preserve"><value>Totaal herhalingen</value></data>
+	<data name="St_Card_TotalVolumeKg" xml:space="preserve"><value>Totaal volume (kg)</value></data>
+	<data name="St_Card_MaxWeightKg" xml:space="preserve"><value>Max gewicht (kg)</value></data>
+	<data name="St_Card_BestEstimated1Rm" xml:space="preserve"><value>Beste geschatte 1RM</value></data>
+
+	<data name="St_NoSetsForFilter" xml:space="preserve"><value>Geen sets gevonden voor deze filter.</value></data>
+
+	<data name="St_Col_Date" xml:space="preserve"><value>Datum</value></data>
+	<data name="St_Col_Session" xml:space="preserve"><value>Sessie</value></data>
+	<data name="St_Col_Sets" xml:space="preserve"><value>Sets</value></data>
+	<data name="St_Col_Reps" xml:space="preserve"><value>Herhalingen</value></data>
+	<data name="St_Col_VolumeKg" xml:space="preserve"><value>Volume (kg)</value></data>
+	<data name="St_Col_MaxKg" xml:space="preserve"><value>Max (kg)</value></data>
+	<data name="St_Col_Exercise" xml:space="preserve"><value>Oefening</value></data>
+
+	<data name="St_Overall_Title" xml:space="preserve"><value>Overzicht (alle oefeningen)</value></data>
+	<data name="St_NoDataForFilter" xml:space="preserve"><value>Geen data gevonden voor deze filter.</value></data>
+	<data name="St_TopExercisesByVolume" xml:space="preserve"><value>Top oefeningen (op volume)</value></data>
 </root>

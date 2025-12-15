@@ -1,10 +1,11 @@
 ﻿@model WorkoutCoachV2.Web.Models.SessionCreateFromWorkoutsViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = "New session from workouts";
+    ViewData["Title"] = L["Se_CreateFromWorkouts_Title"];
 }
 
-<h1>New session from workouts</h1>
+<h1>@L["Se_CreateFromWorkouts_H1"]</h1>
 
 <hr />
 <div class="row">
@@ -13,29 +14,29 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group mb-3">
-                <label asp-for="Title" class="form-label"></label>
+                <label asp-for="Title" class="form-label">@L["Se_Field_Title"]</label>
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
-                <label asp-for="Date" class="form-label"></label>
+                <label asp-for="Date" class="form-label">@L["Se_Field_Date"]</label>
                 <input asp-for="Date" class="form-control" />
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-4">
-                <label asp-for="Description" class="form-label"></label>
+                <label asp-for="Description" class="form-label">@L["Se_Field_Description"]</label>
                 <textarea asp-for="Description" class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <h4>Choose workouts</h4>
+            <h4>@L["Se_FromWorkouts_ChooseWorkouts"]</h4>
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Select</th>
-                        <th>Workout</th>
+                        <th>@L["Se_FromWorkouts_Select"]</th>
+                        <th>@L["Se_FromWorkouts_Workout"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,26 +44,19 @@
                     {
                         <tr>
                             <td>
-                                <input asp-for="Workouts[i].IsSelected"
-                                       class="form-check-input" />
-
-                                <input asp-for="Workouts[i].WorkoutId"
-                                       type="hidden" />
-
-                                <input asp-for="Workouts[i].WorkoutTitle"
-                                       type="hidden" />
+                                <input asp-for="Workouts[i].IsSelected" class="form-check-input" />
+                                <input asp-for="Workouts[i].WorkoutId" type="hidden" />
+                                <input asp-for="Workouts[i].WorkoutTitle" type="hidden" />
                             </td>
-                            <td>
-                                @Model.Workouts[i].WorkoutTitle
-                            </td>
+                            <td>@Model.Workouts[i].WorkoutTitle</td>
                         </tr>
                     }
                 </tbody>
             </table>
 
             <div class="form-group mt-3">
-                <button type="submit" class="btn btn-primary">Create session</button>
-                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">@L["Se_FromWorkouts_CreateBtn"]</button>
+                <a asp-action="Index" class="btn btn-secondary">@L["Common_Cancel"]</a>
             </div>
         </form>
     </div>

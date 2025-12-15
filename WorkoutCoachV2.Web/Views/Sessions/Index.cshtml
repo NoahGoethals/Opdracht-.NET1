@@ -1,27 +1,28 @@
 ﻿@model IEnumerable<WorkoutCoachV2.Model.Models.Session>
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = "Sessions";
+    ViewData["Title"] = L["Se_Index_Title"];
 }
 
-<h1>Sessions</h1>
+<h1>@L["Se_Index_H1"]</h1>
 
 <p>
-    <a asp-action="CreateFromWorkouts" class="btn btn-primary">New session from workouts</a>
+    <a asp-action="CreateFromWorkouts" class="btn btn-primary">@L["Se_Index_NewFromWorkouts"]</a>
 </p>
 
-@if (!Model.Any())
+@if (Model == null || !Model.Any())
 {
-    <p class="text-muted">No sessions yet.</p>
+    <p class="text-muted">@L["Se_NoSessions"]</p>
 }
 else
 {
     <table class="table">
         <thead>
             <tr>
-                <th>@Html.DisplayNameFor(model => model.Title)</th>
-                <th>@Html.DisplayNameFor(model => model.Date)</th>
-                <th>Sets</th>
+                <th>@L["Se_Field_Title"]</th>
+                <th>@L["Se_Field_Date"]</th>
+                <th>@L["Se_Col_Sets"]</th>
                 <th></th>
             </tr>
         </thead>
@@ -33,9 +34,9 @@ else
                     <td>@Html.DisplayFor(_ => item.Date)</td>
                     <td>@(item.Sets?.Count ?? 0)</td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        <a asp-action="Details" asp-route-id="@item.Id">@L["Common_Details"]</a> |
+                        <a asp-action="Edit" asp-route-id="@item.Id">@L["Common_Edit"]</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">@L["Common_Delete"]</a>
                     </td>
                 </tr>
             }
