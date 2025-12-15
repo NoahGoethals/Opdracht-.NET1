@@ -78,7 +78,8 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Stats" asp-action="Index">@L["Stats"]</a>
                             </li>
 
-                            @if (User.IsInRole("Admin"))
+                            @* ✅ Admin menu voor Admin én Moderator *@
+                            @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">@L["Admin"]</a>

@@ -187,6 +187,8 @@
 <data name="Ad_Btn_Unblock" xml:space="preserve"><value>Deblokkeren</value></data>
 <data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Admin wisselen</value></data>
 <data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
+<data name="Ad_Btn_ToggleModerator" xml:space="preserve"><value>Moderator wisselen</value></data>
+
 
 
 	<!-- HOME / PRIVACY -->

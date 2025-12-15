@@ -63,7 +63,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "Moderator"));
 });
 
 var app = builder.Build();
@@ -79,7 +79,7 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var config = services.GetRequiredService<IConfiguration>();
 
-    var roles = new[] { "Admin", "User" };
+    var roles = new[] { "Admin", "Moderator", "User" };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))

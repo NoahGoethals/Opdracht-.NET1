@@ -186,6 +186,8 @@
 	<data name="Ad_Btn_Unblock" xml:space="preserve"><value>Débloquer</value></data>
 	<data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Basculer admin</value></data>
 	<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
+	<data name="Ad_Btn_ToggleModerator" xml:space="preserve"><value>Basculer modérateur</value></data>
+
 
 	<!-- HOME -->
 	<data name="Ho_Title" xml:space="preserve"><value>Accueil</value></data>

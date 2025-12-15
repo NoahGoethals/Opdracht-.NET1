@@ -188,6 +188,8 @@
 <data name="Ad_Btn_Unblock" xml:space="preserve"><value>Unblock</value></data>
 <data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Toggle Admin</value></data>
 <data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
+<data name="Ad_Btn_ToggleModerator" xml:space="preserve"><value>Toggle Moderator</value></data>
+
 
 
 	<!-- HOME / PRIVACY -->
