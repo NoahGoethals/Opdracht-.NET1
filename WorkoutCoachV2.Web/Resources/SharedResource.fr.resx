@@ -214,4 +214,14 @@
 	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Créer un compte</value></data>
 	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Retour à la connexion</value></data>
 
+	<!-- Kleine details bij login en registratie die ik had vergeten -->
+	<data name="Lo_Field_Email" xml:space="preserve"><value>E-mail</value></data>
+	<data name="Lo_Field_Password" xml:space="preserve"><value>Mot de passe</value></data>
+	<data name="Lo_Field_RememberMe" xml:space="preserve"><value>Se souvenir de moi</value></data>
+
+	<data name="Re_Field_DisplayName" xml:space="preserve"><value>Nom affiché</value></data>
+	<data name="Re_Field_Email" xml:space="preserve"><value>E-mail</value></data>
+	<data name="Re_Field_Password" xml:space="preserve"><value>Mot de passe</value></data>
+	<data name="Re_Field_ConfirmPassword" xml:space="preserve"><value>Confirmer le mot de passe</value></data>
+
 </root>

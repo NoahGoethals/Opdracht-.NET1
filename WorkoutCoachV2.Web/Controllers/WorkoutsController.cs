@@ -28,8 +28,10 @@ namespace WorkoutCoachV2.Web.Controllers
         {
             var userId = CurrentUserId;
 
+            // ✅ Include Exercises zodat item.Exercises?.Count klopt in de view
             var workouts = await _context.Workouts
                 .Where(w => w.OwnerId == userId)
+                .Include(w => w.Exercises)
                 .OrderByDescending(w => w.ScheduledOn)
                 .ThenBy(w => w.Title)
                 .ToListAsync();

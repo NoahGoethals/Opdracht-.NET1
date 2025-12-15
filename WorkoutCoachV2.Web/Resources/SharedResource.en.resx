@@ -30,7 +30,7 @@
 	<data name="Language" xml:space="preserve"><value>Language</value></data>
 	<data name="Dutch" xml:space="preserve"><value>Dutch</value></data>
 	<data name="English" xml:space="preserve"><value>English</value></data>
-	<data name="LoggedInAs" xml:space="preserve"><value>Logged in as</value></data>
+	<data name="LoggedInAs" xml:space="preserve"><value>Logged in as {0}</value></data>
 
 	<!-- COMMON (buttons/links/headings) -->
 	<data name="Common_Create" xml:space="preserve"><value>Create</value></data>
