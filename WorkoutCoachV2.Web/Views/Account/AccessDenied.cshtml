@@ -1,7 +1,11 @@
-﻿@{
-    ViewData["Title"] = "Access denied";
+﻿@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+
+@{
+    ViewData["Title"] = L["Ac_Title"];
 }
 
-<h1>Access denied</h1>
-<p class="text-muted">Je hebt geen rechten om deze pagina te bekijken.</p>
-<a asp-controller="Home" asp-action="Index" class="btn btn-primary">Home</a>
+<h1>@L["Ac_H1"]</h1>
+<p class="text-muted">@L["Ac_Text"]</p>
+
+<a asp-controller="Home" asp-action="Index" class="btn btn-primary">@L["Ac_Btn_Home"]</a>

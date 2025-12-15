@@ -185,4 +185,39 @@
 <data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Admin wisselen</value></data>
 <data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
 
+
+	<!-- HOME / PRIVACY -->
+	<data name="Ho_Title" xml:space="preserve"><value>Startpagina</value></data>
+	<data name="Ho_Welcome" xml:space="preserve"><value>Welkom</value></data>
+	<data name="Ho_LearnAboutPrefix" xml:space="preserve"><value>Lees meer over</value></data>
+	<data name="Ho_LearnAboutLinkText" xml:space="preserve"><value>webapps bouwen met ASP.NET Core</value></data>
+
+	<data name="Pr_Title" xml:space="preserve"><value>Privacybeleid</value></data>
+	<data name="Pr_Text" xml:space="preserve"><value>Gebruik deze pagina om het privacybeleid van je website te beschrijven.</value></data>
+
+	<!-- ACCESS DENIED -->
+	<data name="Ac_Title" xml:space="preserve"><value>Toegang geweigerd</value></data>
+	<data name="Ac_H1" xml:space="preserve"><value>Toegang geweigerd</value></data>
+	<data name="Ac_Text" xml:space="preserve"><value>Je hebt geen rechten om deze pagina te bekijken.</value></data>
+	<data name="Ac_Btn_Home" xml:space="preserve"><value>Start</value></data>
+
+	<!-- LOGIN -->
+	<data name="Lo_Title" xml:space="preserve"><value>Inloggen</value></data>
+	<data name="Lo_H1" xml:space="preserve"><value>Inloggen</value></data>
+	<data name="Lo_Field_Email" xml:space="preserve"><value>E-mail</value></data>
+	<data name="Lo_Field_Password" xml:space="preserve"><value>Wachtwoord</value></data>
+	<data name="Lo_Field_RememberMe" xml:space="preserve"><value>Onthoud mij</value></data>
+	<data name="Lo_Btn_Login" xml:space="preserve"><value>Inloggen</value></data>
+	<data name="Lo_Btn_Register" xml:space="preserve"><value>Registreren</value></data>
+
+	<!-- REGISTER -->
+	<data name="Re_Title" xml:space="preserve"><value>Registreren</value></data>
+	<data name="Re_H1" xml:space="preserve"><value>Registreren</value></data>
+	<data name="Re_Field_DisplayName" xml:space="preserve"><value>Weergavenaam</value></data>
+	<data name="Re_Field_Email" xml:space="preserve"><value>E-mail</value></data>
+	<data name="Re_Field_Password" xml:space="preserve"><value>Wachtwoord</value></data>
+	<data name="Re_Field_ConfirmPassword" xml:space="preserve"><value>Bevestig wachtwoord</value></data>
+	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Account aanmaken</value></data>
+	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Terug naar inloggen</value></data>
+
 </root>

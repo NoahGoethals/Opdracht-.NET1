@@ -186,4 +186,39 @@
 <data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Toggle Admin</value></data>
 <data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
 
+
+	<!-- HOME / PRIVACY -->
+	<data name="Ho_Title" xml:space="preserve"><value>Home Page</value></data>
+	<data name="Ho_Welcome" xml:space="preserve"><value>Welcome</value></data>
+	<data name="Ho_LearnAboutPrefix" xml:space="preserve"><value>Learn about</value></data>
+	<data name="Ho_LearnAboutLinkText" xml:space="preserve"><value>building Web apps with ASP.NET Core</value></data>
+
+	<data name="Pr_Title" xml:space="preserve"><value>Privacy Policy</value></data>
+	<data name="Pr_Text" xml:space="preserve"><value>Use this page to detail your site's privacy policy.</value></data>
+
+	<!-- ACCESS DENIED -->
+	<data name="Ac_Title" xml:space="preserve"><value>Access denied</value></data>
+	<data name="Ac_H1" xml:space="preserve"><value>Access denied</value></data>
+	<data name="Ac_Text" xml:space="preserve"><value>You do not have permission to view this page.</value></data>
+	<data name="Ac_Btn_Home" xml:space="preserve"><value>Home</value></data>
+
+	<!-- LOGIN -->
+	<data name="Lo_Title" xml:space="preserve"><value>Login</value></data>
+	<data name="Lo_H1" xml:space="preserve"><value>Login</value></data>
+	<data name="Lo_Field_Email" xml:space="preserve"><value>Email</value></data>
+	<data name="Lo_Field_Password" xml:space="preserve"><value>Password</value></data>
+	<data name="Lo_Field_RememberMe" xml:space="preserve"><value>Remember me</value></data>
+	<data name="Lo_Btn_Login" xml:space="preserve"><value>Login</value></data>
+	<data name="Lo_Btn_Register" xml:space="preserve"><value>Register</value></data>
+
+	<!-- REGISTER -->
+	<data name="Re_Title" xml:space="preserve"><value>Register</value></data>
+	<data name="Re_H1" xml:space="preserve"><value>Register</value></data>
+	<data name="Re_Field_DisplayName" xml:space="preserve"><value>Display name</value></data>
+	<data name="Re_Field_Email" xml:space="preserve"><value>Email</value></data>
+	<data name="Re_Field_Password" xml:space="preserve"><value>Password</value></data>
+	<data name="Re_Field_ConfirmPassword" xml:space="preserve"><value>Confirm password</value></data>
+	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Create account</value></data>
+	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Back to login</value></data>
+
 </root>
