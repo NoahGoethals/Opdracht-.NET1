@@ -1,12 +1,16 @@
 ﻿@model WorkoutCoachV2.Model.Models.Exercise
 
+@using Microsoft.Extensions.Localization
+@using WorkoutCoachV2.Web
+@inject IStringLocalizer<SharedResource> L
+
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = L["Ex_Edit_Title"];
 }
 
-<h1>Edit exercise</h1>
+<h1>@L["Ex_Edit_H1"]</h1>
 
-<h4>Exercise</h4>
+<h4>@L["Common_Exercise"]</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -34,8 +38,8 @@
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Save" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary ms-2">Back to list</a>
+                <input type="submit" value="@L["Common_Save"]" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_BackToList"]</a>
             </div>
         </form>
     </div>

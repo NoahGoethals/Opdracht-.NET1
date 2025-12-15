@@ -1,12 +1,14 @@
 ﻿@model WorkoutCoachV2.Model.Models.Exercise
 
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = L["Ex_Create_Title"];
 }
 
-<h1>Create exercise</h1>
+<h1>@L["Ex_Create_H1"]</h1>
 
-<h4>Exercise</h4>
+<h4>@L["Common_Exercise"]</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -32,8 +34,8 @@
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Create" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary ms-2">Back to list</a>
+                <input type="submit" value="@L["Common_Create"]" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_BackToList"]</a>
             </div>
         </form>
     </div>

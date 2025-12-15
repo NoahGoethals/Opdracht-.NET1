@@ -1,18 +1,22 @@
 ﻿@model IEnumerable<WorkoutCoachV2.Model.Models.Exercise>
 
+@using Microsoft.Extensions.Localization
+@using WorkoutCoachV2.Web
+@inject IStringLocalizer<SharedResource> L
+
 @{
-    ViewData["Title"] = "Exercises";
+    ViewData["Title"] = L["Exercises"];
 }
 
-<h1>Exercises</h1>
+<h1>@L["Exercises"]</h1>
 
 <div class="mb-3">
-    <a asp-action="Create" class="btn btn-primary">Create New Exercise</a>
+    <a asp-action="Create" class="btn btn-primary">@L["Ex_CreateNew"]</a>
 </div>
 
 @if (Model == null || !Model.Any())
 {
-    <p class="text-muted">No exercises yet.</p>
+    <p class="text-muted">@L["Ex_NoExercises"]</p>
 }
 else
 {
@@ -31,9 +35,9 @@ else
                     <td>@Html.DisplayFor(_ => item.Name)</td>
                     <td>@Html.DisplayFor(_ => item.Category)</td>
                     <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        <a asp-action="Details" asp-route-id="@item.Id">@L["Common_Details"]</a> |
+                        <a asp-action="Edit" asp-route-id="@item.Id">@L["Common_Edit"]</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">@L["Common_Delete"]</a>
                     </td>
                 </tr>
             }
