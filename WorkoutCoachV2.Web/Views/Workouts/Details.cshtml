@@ -1,50 +1,43 @@
 ﻿@model WorkoutCoachV2.Model.Models.Workout
 @using WorkoutCoachV2.Model.Models
 @using System.Linq
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = "Workout details";
+    ViewData["Title"] = L["Wk_Details_Title"];
     var workoutExercises = ViewBag.WorkoutExercises as IEnumerable<WorkoutExercise>
                            ?? Enumerable.Empty<WorkoutExercise>();
 }
 
-<h1>Workout details</h1>
+<h1>@L["Wk_Details_H1"]</h1>
 
 <div>
-    <h4>Workout</h4>
+    <h4>@L["Workouts"]</h4>
     <hr />
     <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(m => m.Title)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(m => m.Title)
-        </dd>
+        <dt class="col-sm-2">@L["Wk_Field_Title"]</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(m => m.Title)</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(m => m.ScheduledOn)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(m => m.ScheduledOn)
-        </dd>
+        <dt class="col-sm-2">@L["Wk_Field_ScheduledOn"]</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(m => m.ScheduledOn)</dd>
     </dl>
 </div>
 
-<h4>Exercises in this workout</h4>
+<h4>@L["Wk_Details_ExercisesInWorkout"]</h4>
 <hr />
 
 @if (!workoutExercises.Any())
 {
-    <p>No exercises linked yet.</p>
+    <p>@L["Wk_Details_NoExercisesLinked"]</p>
 }
 else
 {
     <table class="table">
         <thead>
             <tr>
-                <th>Exercise</th>
-                <th>Reps</th>
-                <th>Weight (kg)</th>
+                <th>@L["Wk_Manage_Exercise"]</th>
+                <th>@L["Wk_Manage_Reps"]</th>
+                <th>@L["Wk_Manage_WeightKg"]</th>
             </tr>
         </thead>
         <tbody>
@@ -61,7 +54,7 @@ else
 }
 
 <div class="mt-3">
-    <a asp-action="Exercises" asp-route-id="@Model.Id" class="btn btn-secondary">Manage exercises</a>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit workout</a>
-    <a asp-action="Index" class="btn btn-link">Back to List</a>
+    <a asp-action="Exercises" asp-route-id="@Model.Id" class="btn btn-secondary">@L["Wk_Details_ManageExercises"]</a>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">@L["Wk_Details_EditWorkout"]</a>
+    <a asp-action="Index" class="btn btn-link">@L["Common_BackToList"]</a>
 </div>

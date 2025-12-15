@@ -1,10 +1,11 @@
 ﻿@model WorkoutCoachV2.Web.Models.WorkoutExercisesEditViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = "Manage exercises";
+    ViewData["Title"] = L["Wk_Manage_Title"];
 }
 
-<h1>Manage exercises</h1>
+<h1>@L["Wk_Manage_H1"]</h1>
 <h4>@Model.WorkoutTitle</h4>
 <hr />
 
@@ -19,10 +20,10 @@
     <table class="table">
         <thead>
             <tr>
-                <th>In workout?</th>
-                <th>Exercise</th>
-                <th>Reps</th>
-                <th>Weight (kg)</th>
+                <th>@L["Wk_Manage_InWorkout"]</th>
+                <th>@L["Wk_Manage_Exercise"]</th>
+                <th>@L["Wk_Manage_Reps"]</th>
+                <th>@L["Wk_Manage_WeightKg"]</th>
             </tr>
         </thead>
         <tbody>
@@ -51,8 +52,8 @@
     </table>
 
     <div class="form-group mt-3">
-        <input type="submit" value="Save" class="btn btn-primary" />
-        <a asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">Cancel</a>
+        <input type="submit" value="@L["Common_Save"]" class="btn btn-primary" />
+        <a asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">@L["Common_Cancel"]</a>
     </div>
 </form>
 

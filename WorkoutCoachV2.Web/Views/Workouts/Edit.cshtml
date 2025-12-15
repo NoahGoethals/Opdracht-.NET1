@@ -1,10 +1,11 @@
 ﻿@model WorkoutCoachV2.Model.Models.Workout
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = "Edit workout";
+    ViewData["Title"] = L["Wk_Edit_Title"];
 }
 
-<h1>Edit workout</h1>
+<h1>@L["Wk_Edit_H1"]</h1>
 
 <hr />
 <div class="row">
@@ -15,27 +16,27 @@
             <input type="hidden" asp-for="Id" />
 
             <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
+                <label asp-for="Title" class="control-label">@L["Wk_Field_Title"]</label>
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ScheduledOn" class="control-label"></label>
+                <label asp-for="ScheduledOn" class="control-label">@L["Wk_Field_ScheduledOn"]</label>
                 <input asp-for="ScheduledOn" class="form-control" />
                 <span asp-validation-for="ScheduledOn" class="text-danger"></span>
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Save" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                <input type="submit" value="@L["Common_Save"]" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">@L["Common_Cancel"]</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3">
+    <a asp-action="Index">@L["Common_BackToList"]</a>
 </div>
 
 @section Scripts {

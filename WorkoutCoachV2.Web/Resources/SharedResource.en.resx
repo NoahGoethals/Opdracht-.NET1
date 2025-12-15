@@ -36,12 +36,46 @@
 	<data name="Common_Edit" xml:space="preserve"><value>Edit</value></data>
 	<data name="Common_Details" xml:space="preserve"><value>Details</value></data>
 	<data name="Common_BackToList" xml:space="preserve"><value>Back to list</value></data>
-	<data name="Common_Exercise" xml:space="preserve"><value>Exercise</value></data>
+	<data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
 
-	<!-- EXERCISES -->
+	<!-- EXERCISES (laat ik staan want je had dit al) -->
 	<data name="Ex_Create_Title" xml:space="preserve"><value>Create</value></data>
 	<data name="Ex_Create_H1" xml:space="preserve"><value>Create exercise</value></data>
 	<data name="Ex_CreateNew" xml:space="preserve"><value>Create New Exercise</value></data>
 	<data name="Ex_NoExercises" xml:space="preserve"><value>No exercises yet.</value></data>
 
+	<!-- WORKOUTS -->
+	<data name="Wk_Index_Title" xml:space="preserve"><value>Workouts</value></data>
+	<data name="Wk_Index_H1" xml:space="preserve"><value>Workouts</value></data>
+	<data name="Wk_CreateNew" xml:space="preserve"><value>Create New Workout</value></data>
+	<data name="Wk_NoWorkouts" xml:space="preserve"><value>No workouts yet.</value></data>
+
+	<data name="Wk_Create_Title" xml:space="preserve"><value>Create workout</value></data>
+	<data name="Wk_Create_H1" xml:space="preserve"><value>Create workout</value></data>
+
+	<data name="Wk_Edit_Title" xml:space="preserve"><value>Edit workout</value></data>
+	<data name="Wk_Edit_H1" xml:space="preserve"><value>Edit workout</value></data>
+
+	<data name="Wk_Delete_Title" xml:space="preserve"><value>Delete workout</value></data>
+	<data name="Wk_Delete_H1" xml:space="preserve"><value>Delete workout</value></data>
+	<data name="Wk_Delete_Confirm" xml:space="preserve"><value>Are you sure you want to delete this workout?</value></data>
+
+	<data name="Wk_Details_Title" xml:space="preserve"><value>Workout details</value></data>
+	<data name="Wk_Details_H1" xml:space="preserve"><value>Workout details</value></data>
+
+	<data name="Wk_Field_Title" xml:space="preserve"><value>Title</value></data>
+	<data name="Wk_Field_ScheduledOn" xml:space="preserve"><value>Scheduled On</value></data>
+	<data name="Wk_Col_Exercises" xml:space="preserve"><value>Exercises</value></data>
+
+	<data name="Wk_Details_ExercisesInWorkout" xml:space="preserve"><value>Exercises in this workout</value></data>
+	<data name="Wk_Details_NoExercisesLinked" xml:space="preserve"><value>No exercises linked yet.</value></data>
+	<data name="Wk_Details_ManageExercises" xml:space="preserve"><value>Manage exercises</value></data>
+	<data name="Wk_Details_EditWorkout" xml:space="preserve"><value>Edit workout</value></data>
+
+	<data name="Wk_Manage_Title" xml:space="preserve"><value>Manage exercises</value></data>
+	<data name="Wk_Manage_H1" xml:space="preserve"><value>Manage exercises</value></data>
+	<data name="Wk_Manage_InWorkout" xml:space="preserve"><value>In workout?</value></data>
+	<data name="Wk_Manage_Exercise" xml:space="preserve"><value>Exercise</value></data>
+	<data name="Wk_Manage_Reps" xml:space="preserve"><value>Reps</value></data>
+	<data name="Wk_Manage_WeightKg" xml:space="preserve"><value>Weight (kg)</value></data>
 </root>
