@@ -214,6 +214,8 @@
 	<data name="Lo_Field_RememberMe" xml:space="preserve"><value>Onthoud mij</value></data>
 	<data name="Lo_Btn_Login" xml:space="preserve"><value>Inloggen</value></data>
 	<data name="Lo_Btn_Register" xml:space="preserve"><value>Registreren</value></data>
+	<data name="Lo_BlockedMessage" xml:space="preserve"><value>Deze gebruiker is geblokkeerd. Je bent automatisch uitgelogd.</value></data>
+
 
 	<!-- REGISTER -->
 	<data name="Re_Title" xml:space="preserve"><value>Registreren</value></data>

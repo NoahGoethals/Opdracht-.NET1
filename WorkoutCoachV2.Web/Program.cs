@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Models;
+using WorkoutCoachV2.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -128,6 +129,9 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+
+app.UseMiddleware<BlockedUserMiddleware>();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(

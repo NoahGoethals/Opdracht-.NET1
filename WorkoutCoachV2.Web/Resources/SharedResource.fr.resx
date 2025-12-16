@@ -215,6 +215,8 @@
 	<data name="Re_H1" xml:space="preserve"><value>Inscription</value></data>
 	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Créer un compte</value></data>
 	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Retour à la connexion</value></data>
+	<data name="Lo_BlockedMessage" xml:space="preserve"><value>Cet utilisateur est bloqué. Vous avez été déconnecté automatiquement.</value></data>
+
 
 	<!-- Kleine details bij login en registratie die ik had vergeten -->
 	<data name="Lo_Field_Email" xml:space="preserve"><value>E-mail</value></data>

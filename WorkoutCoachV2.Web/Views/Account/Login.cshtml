@@ -8,6 +8,13 @@
 
 <h1>@L["Lo_H1"]</h1>
 
+@if (Context.Request.Query.ContainsKey("blocked"))
+{
+    <div class="alert alert-danger">
+        @L["Lo_BlockedMessage"]
+    </div>
+}
+
 <form asp-action="Login" method="post" class="mt-3">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ReturnUrl" />

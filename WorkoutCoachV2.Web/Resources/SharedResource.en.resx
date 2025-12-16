@@ -215,6 +215,8 @@
 	<data name="Lo_Field_RememberMe" xml:space="preserve"><value>Remember me</value></data>
 	<data name="Lo_Btn_Login" xml:space="preserve"><value>Login</value></data>
 	<data name="Lo_Btn_Register" xml:space="preserve"><value>Register</value></data>
+	<data name="Lo_BlockedMessage" xml:space="preserve"><value>This user is blocked. You have been signed out.</value></data>
+
 
 	<!-- REGISTER -->
 	<data name="Re_Title" xml:space="preserve"><value>Register</value></data>
