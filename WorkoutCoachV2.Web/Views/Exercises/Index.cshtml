@@ -3,6 +3,11 @@
 
 @{
     ViewData["Title"] = L["Ex_Index_Title"];
+
+    var categories = ViewBag.CategoryOptions as List<string> ?? new List<string>();
+    var currentSearch = ViewData["Search"]?.ToString() ?? "";
+    var currentCategory = ViewData["Category"]?.ToString() ?? "";
+    var currentSort = ViewData["Sort"]?.ToString() ?? "name_asc";
 }
 
 <h1>@L["Ex_Index_H1"]</h1>
@@ -10,6 +15,39 @@
 <div class="mb-3">
     <a asp-action="Create" class="btn btn-primary">@L["Ex_CreateNew"]</a>
 </div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label">@L["Common_Search"]</label>
+        <input name="search" value="@currentSearch" class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">@L["Ex_Field_Category"]</label>
+        <select name="category" class="form-select">
+            <option value="">@L["Common_All"]</option>
+            @foreach (var c in categories)
+            {
+                <option value="@c" selected="@(c == currentCategory ? "selected" : null)">@c</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">@L["Common_Sort"]</label>
+        <select name="sort" class="form-select">
+            <option value="name_asc" selected="@(currentSort == "name_asc" ? "selected" : null)">@L["Ex_Field_Name"] (A→Z)</option>
+            <option value="name_desc" selected="@(currentSort == "name_desc" ? "selected" : null)">@L["Ex_Field_Name"] (Z→A)</option>
+            <option value="cat_asc" selected="@(currentSort == "cat_asc" ? "selected" : null)">@L["Ex_Field_Category"] (A→Z)</option>
+            <option value="cat_desc" selected="@(currentSort == "cat_desc" ? "selected" : null)">@L["Ex_Field_Category"] (Z→A)</option>
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary w-100">@L["Common_Apply"]</button>
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">@L["Common_Reset"]</a>
+    </div>
+</form>
 
 @if (Model == null || !Model.Any())
 {

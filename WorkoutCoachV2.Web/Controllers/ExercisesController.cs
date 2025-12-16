@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -25,15 +26,49 @@ namespace WorkoutCoachV2.Web.Controllers
 
         private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        public async Task<IActionResult> Index()
+        
+        public async Task<IActionResult> Index(string? search, string? category, string? sort)
         {
             var userId = CurrentUserId;
 
-            var exercises = await _context.Exercises
+            var query = _context.Exercises
                 .Where(e => e.OwnerId == userId && !e.IsDeleted)
-                .OrderBy(e => e.Name)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var pattern = $"%{search.Trim()}%";
+                query = query.Where(e => EF.Functions.Like(e.Name, pattern));
+            }
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(e => e.Category == category);
+            }
+
+            sort = string.IsNullOrWhiteSpace(sort) ? "name_asc" : sort;
+
+            query = sort switch
+            {
+                "name_desc" => query.OrderByDescending(e => e.Name),
+                "cat_asc" => query.OrderBy(e => e.Category).ThenBy(e => e.Name),
+                "cat_desc" => query.OrderByDescending(e => e.Category).ThenBy(e => e.Name),
+                _ => query.OrderBy(e => e.Name),
+            };
+
+            var categories = await _context.Exercises
+                .Where(e => e.OwnerId == userId && !e.IsDeleted && e.Category != null && e.Category != "")
+                .Select(e => e.Category!)
+                .Distinct()
+                .OrderBy(c => c)
                 .ToListAsync();
 
+            ViewData["Search"] = search ?? "";
+            ViewData["Category"] = category ?? "";
+            ViewData["Sort"] = sort;
+            ViewBag.CategoryOptions = categories;
+
+            var exercises = await query.ToListAsync();
             return View(exercises);
         }
 
@@ -44,6 +79,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted);
 
             if (exercise == null) return NotFound();
@@ -149,6 +185,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted);
 
             if (exercise == null) return NotFound();

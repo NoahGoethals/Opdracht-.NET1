@@ -238,4 +238,14 @@
 	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Create account</value></data>
 	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Back to login</value></data>
 
+	<!-- ZOEKVELDEN -->
+	<data name="Common_Search" xml:space="preserve"><value>Search</value></data>
+	<data name="Common_Sort" xml:space="preserve"><value>Sort</value></data>
+	<data name="Common_From" xml:space="preserve"><value>From</value></data>
+	<data name="Common_To" xml:space="preserve"><value>To</value></data>
+	<data name="Common_Apply" xml:space="preserve"><value>Apply</value></data>
+	<data name="Common_Reset" xml:space="preserve"><value>Reset</value></data>
+	<data name="Common_All" xml:space="preserve"><value>All</value></data>
+
+
 </root>

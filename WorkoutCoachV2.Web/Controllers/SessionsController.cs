@@ -26,17 +26,50 @@ namespace WorkoutCoachV2.Web.Controllers
 
         private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        public async Task<IActionResult> Index()
+        
+        public async Task<IActionResult> Index(string? search, DateTime? from, DateTime? to, string? sort)
         {
             var userId = CurrentUserId;
 
-            var sessions = await _context.Sessions
+            var query = _context.Sessions
                 .Where(s => s.OwnerId == userId && !s.IsDeleted)
                 .Include(s => s.Sets)
-                .OrderByDescending(s => s.Date)
-                .ThenBy(s => s.Title)
-                .ToListAsync();
+                .AsQueryable();
 
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var pattern = $"%{search.Trim()}%";
+                query = query.Where(s => EF.Functions.Like(s.Title, pattern));
+            }
+
+            if (from.HasValue)
+            {
+                var fromDate = from.Value.Date;
+                query = query.Where(s => s.Date >= fromDate);
+            }
+
+            if (to.HasValue)
+            {
+                var toExclusive = to.Value.Date.AddDays(1);
+                query = query.Where(s => s.Date < toExclusive);
+            }
+
+            sort = string.IsNullOrWhiteSpace(sort) ? "date_desc" : sort;
+
+            query = sort switch
+            {
+                "date_asc" => query.OrderBy(s => s.Date).ThenBy(s => s.Title),
+                "title_asc" => query.OrderBy(s => s.Title),
+                "title_desc" => query.OrderByDescending(s => s.Title),
+                _ => query.OrderByDescending(s => s.Date).ThenBy(s => s.Title),
+            };
+
+            ViewData["Search"] = search ?? "";
+            ViewData["From"] = from?.ToString("yyyy-MM-dd") ?? "";
+            ViewData["To"] = to?.ToString("yyyy-MM-dd") ?? "";
+            ViewData["Sort"] = sort;
+
+            var sessions = await query.ToListAsync();
             return View(sessions);
         }
 
@@ -54,7 +87,6 @@ namespace WorkoutCoachV2.Web.Controllers
 
             if (session == null) return NotFound();
 
-            // Zorg dat de sets altijd in volgorde staan (view kan ook sorteren)
             if (session.Sets != null)
                 session.Sets = session.Sets.OrderBy(x => x.SetNumber).ToList();
 
@@ -94,15 +126,11 @@ namespace WorkoutCoachV2.Web.Controllers
 
             try
             {
-                // 1) Session opslaan zodat we een Id hebben
                 await _context.SaveChangesAsync();
 
-                // 2) Workouts gekozen? -> sets genereren
                 if (selectedWorkoutIds != null && selectedWorkoutIds.Length > 0)
                 {
                     await ReplaceSetsFromWorkoutsAsync(session.Id, userId, selectedWorkoutIds);
-
-                    // 3) sets opslaan
                     await _context.SaveChangesAsync();
 
                     _logger.LogInformation(
@@ -145,7 +173,6 @@ namespace WorkoutCoachV2.Web.Controllers
             if (session == null) return NotFound();
 
             await LoadWorkoutsIntoViewBag(userId);
-
             return View(session);
         }
 
@@ -215,6 +242,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var session = await _context.Sessions
+                .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == userId && !s.IsDeleted);
 
             if (session == null) return NotFound();
@@ -271,7 +299,6 @@ namespace WorkoutCoachV2.Web.Controllers
 
         private async Task ReplaceSetsFromWorkoutsAsync(int sessionId, string userId, int[] selectedWorkoutIds)
         {
-            // Alleen workouts van deze user toelaten
             var allowedWorkoutIds = await _context.Workouts
                 .Where(w => w.OwnerId == userId && !w.IsDeleted)
                 .Select(w => w.Id)
@@ -284,7 +311,6 @@ namespace WorkoutCoachV2.Web.Controllers
 
             if (validIds.Count == 0) return;
 
-            // Oude sets verwijderen
             var existingSets = await _context.SessionSets
                 .Where(ss => ss.SessionId == sessionId)
                 .ToListAsync();
@@ -292,11 +318,10 @@ namespace WorkoutCoachV2.Web.Controllers
             if (existingSets.Count > 0)
                 _context.SessionSets.RemoveRange(existingSets);
 
-            // Oefeningen uit workouts ophalen
             var workoutExercises = await _context.WorkoutExercises
                 .Where(we => validIds.Contains(we.WorkoutId))
                 .OrderBy(we => we.WorkoutId)
-                .ThenBy(we => we.ExerciseId) // WorkoutExercise heeft geen Id (composite key)
+                .ThenBy(we => we.ExerciseId)
                 .ToListAsync();
 
             var newSets = new List<SessionSet>();
@@ -310,7 +335,6 @@ namespace WorkoutCoachV2.Web.Controllers
                     SetNumber = setNumber++,
                     ExerciseId = we.ExerciseId,
                     Reps = we.Reps,
-                    // FIX voor jouw error: WeightKg is double? en SessionSet.Weight is double
                     Weight = we.WeightKg ?? 0.0
                 });
             }

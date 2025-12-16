@@ -27,17 +27,50 @@ namespace WorkoutCoachV2.Web.Controllers
 
         private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        public async Task<IActionResult> Index()
+      
+        public async Task<IActionResult> Index(string? search, DateTime? from, DateTime? to, string? sort)
         {
             var userId = CurrentUserId;
 
-            var workouts = await _context.Workouts
+            var query = _context.Workouts
                 .Where(w => w.OwnerId == userId && !w.IsDeleted)
                 .Include(w => w.Exercises)
-                .OrderByDescending(w => w.ScheduledOn)
-                .ThenBy(w => w.Title)
-                .ToListAsync();
+                .AsQueryable();
 
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var pattern = $"%{search.Trim()}%";
+                query = query.Where(w => EF.Functions.Like(w.Title, pattern));
+            }
+
+            if (from.HasValue)
+            {
+                var fromDate = from.Value.Date;
+                query = query.Where(w => w.ScheduledOn.HasValue && w.ScheduledOn.Value >= fromDate);
+            }
+
+            if (to.HasValue)
+            {
+                var toExclusive = to.Value.Date.AddDays(1);
+                query = query.Where(w => w.ScheduledOn.HasValue && w.ScheduledOn.Value < toExclusive);
+            }
+
+            sort = string.IsNullOrWhiteSpace(sort) ? "date_desc" : sort;
+
+            query = sort switch
+            {
+                "date_asc" => query.OrderBy(w => w.ScheduledOn ?? DateTime.MaxValue).ThenBy(w => w.Title),
+                "title_asc" => query.OrderBy(w => w.Title),
+                "title_desc" => query.OrderByDescending(w => w.Title),
+                _ => query.OrderByDescending(w => w.ScheduledOn ?? DateTime.MinValue).ThenBy(w => w.Title),
+            };
+
+            ViewData["Search"] = search ?? "";
+            ViewData["From"] = from?.ToString("yyyy-MM-dd") ?? "";
+            ViewData["To"] = to?.ToString("yyyy-MM-dd") ?? "";
+            ViewData["Sort"] = sort;
+
+            var workouts = await query.ToListAsync();
             return View(workouts);
         }
 
@@ -162,6 +195,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var workout = await _context.Workouts
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted);
 
             if (workout == null) return NotFound();
@@ -178,31 +212,30 @@ namespace WorkoutCoachV2.Web.Controllers
             var workout = await _context.Workouts
                 .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId && !w.IsDeleted);
 
-            if (workout != null)
+            if (workout == null) return NotFound();
+
+            try
             {
                 workout.IsDeleted = true;
                 workout.UpdatedAt = DateTime.UtcNow;
 
-                try
-                {
-                    await _context.SaveChangesAsync();
-                    _logger.LogInformation("Workout verwijderd (soft). WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
-                }
-                catch (DbUpdateException ex)
-                {
-                    _logger.LogError(ex, "DbUpdateException bij Workout Delete. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
-                    TempData["Error"] = "Er ging iets mis bij het verwijderen in de databank.";
-                    return RedirectToAction(nameof(Delete), new { id });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Onverwachte fout bij Workout Delete. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
-                    TempData["Error"] = "Er ging iets mis bij het verwijderen.";
-                    return RedirectToAction(nameof(Delete), new { id });
-                }
-            }
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Workout verwijderd (soft). WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
 
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "DbUpdateException bij Workout Delete. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                TempData["Error"] = "Er ging iets mis bij het verwijderen in de databank.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Onverwachte fout bij Workout Delete. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                TempData["Error"] = "Er ging iets mis bij het verwijderen.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
         }
 
         [HttpGet]
@@ -283,17 +316,17 @@ namespace WorkoutCoachV2.Web.Controllers
                 .ToList();
 
             if (selected.Count > 0)
-            {
                 _context.WorkoutExercises.AddRange(selected);
-            }
 
             workout.UpdatedAt = DateTime.UtcNow;
 
             try
             {
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Workout oefeningen aangepast. WorkoutId={WorkoutId} OwnerId={OwnerId} Removed={RemovedCount} Added={AddedCount}",
+                _logger.LogInformation(
+                    "Workout oefeningen aangepast. WorkoutId={WorkoutId} OwnerId={OwnerId} Removed={RemovedCount} Added={AddedCount}",
                     workout.Id, workout.OwnerId, existing.Count, selected.Count);
+
                 return RedirectToAction(nameof(Details), new { id = workout.Id });
             }
             catch (DbUpdateException ex)

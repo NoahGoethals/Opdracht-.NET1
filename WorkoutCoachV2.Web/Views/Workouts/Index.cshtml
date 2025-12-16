@@ -3,6 +3,11 @@
 
 @{
     ViewData["Title"] = L["Wk_Index_Title"];
+
+    var currentSearch = ViewData["Search"]?.ToString() ?? "";
+    var currentFrom = ViewData["From"]?.ToString() ?? "";
+    var currentTo = ViewData["To"]?.ToString() ?? "";
+    var currentSort = ViewData["Sort"]?.ToString() ?? "date_desc";
 }
 
 <h1>@L["Wk_Index_H1"]</h1>
@@ -10,6 +15,38 @@
 <p>
     <a asp-action="Create" class="btn btn-primary">@L["Wk_CreateNew"]</a>
 </p>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label">@L["Common_Search"]</label>
+        <input name="search" value="@currentSearch" class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">@L["Common_From"]</label>
+        <input type="date" name="from" value="@currentFrom" class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">@L["Common_To"]</label>
+        <input type="date" name="to" value="@currentTo" class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">@L["Common_Sort"]</label>
+        <select name="sort" class="form-select">
+            <option value="date_desc" selected="@(currentSort == "date_desc" ? "selected" : null)">@L["Wk_Field_ScheduledOn"] (nieuwste)</option>
+            <option value="date_asc" selected="@(currentSort == "date_asc" ? "selected" : null)">@L["Wk_Field_ScheduledOn"] (oudste)</option>
+            <option value="title_asc" selected="@(currentSort == "title_asc" ? "selected" : null)">@L["Wk_Field_Title"] (A→Z)</option>
+            <option value="title_desc" selected="@(currentSort == "title_desc" ? "selected" : null)">@L["Wk_Field_Title"] (Z→A)</option>
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary w-100">@L["Common_Apply"]</button>
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">@L["Common_Reset"]</a>
+    </div>
+</form>
 
 @if (Model == null || !Model.Any())
 {

@@ -237,4 +237,14 @@
 	<data name="Re_Field_Password" xml:space="preserve"><value>Mot de passe</value></data>
 	<data name="Re_Field_ConfirmPassword" xml:space="preserve"><value>Confirmer le mot de passe</value></data>
 
+	<!-- ZOEKVELDEN -->
+
+	<data name="Common_Search" xml:space="preserve"><value>Rechercher</value></data>
+	<data name="Common_Sort" xml:space="preserve"><value>Trier</value></data>
+	<data name="Common_From" xml:space="preserve"><value>Du</value></data>
+	<data name="Common_To" xml:space="preserve"><value>Au</value></data>
+	<data name="Common_Apply" xml:space="preserve"><value>Appliquer</value></data>
+	<data name="Common_Reset" xml:space="preserve"><value>Réinitialiser</value></data>
+	<data name="Common_All" xml:space="preserve"><value>Tous</value></data>
+
 </root>
