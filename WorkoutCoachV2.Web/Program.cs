@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using WorkoutCoachV2.Model.Data;
+using WorkoutCoachV2.Model.Data.Seed;
 using WorkoutCoachV2.Model.Models;
 using WorkoutCoachV2.Web.Middleware;
 
@@ -76,6 +77,9 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    var db = services.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var config = services.GetRequiredService<IConfiguration>();
@@ -91,9 +95,11 @@ using (var scope = app.Services.CreateScope())
     var adminPassword = config["AdminSeed:Password"];
     var adminDisplayName = config["AdminSeed:DisplayName"] ?? "Admin";
 
+    ApplicationUser? adminUser = null;
+
     if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
     {
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        adminUser = await userManager.FindByEmailAsync(adminEmail);
 
         if (adminUser == null)
         {
@@ -113,6 +119,11 @@ using (var scope = app.Services.CreateScope())
         {
             if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
                 await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+
+        if (adminUser != null)
+        {
+            await DemoDataSeeder.SeedDemoDataForUserAsync(db, adminUser.Id);
         }
     }
 }
