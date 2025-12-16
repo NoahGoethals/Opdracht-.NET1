@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Models;
 using WorkoutCoachV2.Web.Models;
@@ -16,10 +17,12 @@ namespace WorkoutCoachV2.Web.Controllers
     public class WorkoutsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<WorkoutsController> _logger;
 
-        public WorkoutsController(AppDbContext context)
+        public WorkoutsController(AppDbContext context, ILogger<WorkoutsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -28,9 +31,8 @@ namespace WorkoutCoachV2.Web.Controllers
         {
             var userId = CurrentUserId;
 
-            // ✅ Include Exercises zodat item.Exercises?.Count klopt in de view
             var workouts = await _context.Workouts
-                .Where(w => w.OwnerId == userId)
+                .Where(w => w.OwnerId == userId && !w.IsDeleted)
                 .Include(w => w.Exercises)
                 .OrderByDescending(w => w.ScheduledOn)
                 .ThenBy(w => w.Title)
@@ -47,7 +49,7 @@ namespace WorkoutCoachV2.Web.Controllers
 
             var workout = await _context.Workouts
                 .AsNoTracking()
-                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId);
+                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId && !w.IsDeleted);
 
             if (workout == null) return NotFound();
 
@@ -80,9 +82,25 @@ namespace WorkoutCoachV2.Web.Controllers
             workout.IsDeleted = false;
 
             _context.Workouts.Add(workout);
-            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Workout aangemaakt. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "DbUpdateException bij Workout Create. OwnerId={OwnerId}", workout.OwnerId);
+                ModelState.AddModelError("", "Er ging iets mis bij het opslaan in de databank.");
+                return View(workout);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Onverwachte fout bij Workout Create. OwnerId={OwnerId}", workout.OwnerId);
+                ModelState.AddModelError("", "Er ging iets mis bij het opslaan.");
+                return View(workout);
+            }
         }
 
         public async Task<IActionResult> Edit(int? id)
@@ -92,7 +110,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var workout = await _context.Workouts
-                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId);
+                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId && !w.IsDeleted);
 
             if (workout == null) return NotFound();
 
@@ -109,7 +127,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var workout = await _context.Workouts
-                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId);
+                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId && !w.IsDeleted);
 
             if (workout == null) return NotFound();
 
@@ -117,8 +135,24 @@ namespace WorkoutCoachV2.Web.Controllers
             workout.ScheduledOn = formWorkout.ScheduledOn;
             workout.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Workout aangepast. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "DbUpdateException bij Workout Edit. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                ModelState.AddModelError("", "Er ging iets mis bij het opslaan in de databank.");
+                return View(formWorkout);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Onverwachte fout bij Workout Edit. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                ModelState.AddModelError("", "Er ging iets mis bij het opslaan.");
+                return View(formWorkout);
+            }
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -128,7 +162,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var workout = await _context.Workouts
-                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId);
+                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted);
 
             if (workout == null) return NotFound();
 
@@ -142,13 +176,30 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var workout = await _context.Workouts
-                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId);
+                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId && !w.IsDeleted);
 
             if (workout != null)
             {
                 workout.IsDeleted = true;
                 workout.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Workout verwijderd (soft). WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "DbUpdateException bij Workout Delete. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                    TempData["Error"] = "Er ging iets mis bij het verwijderen in de databank.";
+                    return RedirectToAction(nameof(Delete), new { id });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Onverwachte fout bij Workout Delete. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                    TempData["Error"] = "Er ging iets mis bij het verwijderen.";
+                    return RedirectToAction(nameof(Delete), new { id });
+                }
             }
 
             return RedirectToAction(nameof(Index));
@@ -162,12 +213,12 @@ namespace WorkoutCoachV2.Web.Controllers
             var workout = await _context.Workouts
                 .Include(w => w.Exercises)
                 .ThenInclude(we => we.Exercise)
-                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId);
+                .FirstOrDefaultAsync(w => w.Id == id && w.OwnerId == userId && !w.IsDeleted);
 
             if (workout == null) return NotFound();
 
             var allExercises = await _context.Exercises
-                .Where(e => e.OwnerId == userId)
+                .Where(e => e.OwnerId == userId && !e.IsDeleted)
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
@@ -205,12 +256,12 @@ namespace WorkoutCoachV2.Web.Controllers
 
             var workout = await _context.Workouts
                 .Include(w => w.Exercises)
-                .FirstOrDefaultAsync(w => w.Id == model.WorkoutId && w.OwnerId == userId);
+                .FirstOrDefaultAsync(w => w.Id == model.WorkoutId && w.OwnerId == userId && !w.IsDeleted);
 
             if (workout == null) return NotFound();
 
             var allowedExerciseIds = await _context.Exercises
-                .Where(e => e.OwnerId == userId)
+                .Where(e => e.OwnerId == userId && !e.IsDeleted)
                 .Select(e => e.Id)
                 .ToListAsync();
 
@@ -237,9 +288,26 @@ namespace WorkoutCoachV2.Web.Controllers
             }
 
             workout.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Details), new { id = workout.Id });
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Workout oefeningen aangepast. WorkoutId={WorkoutId} OwnerId={OwnerId} Removed={RemovedCount} Added={AddedCount}",
+                    workout.Id, workout.OwnerId, existing.Count, selected.Count);
+                return RedirectToAction(nameof(Details), new { id = workout.Id });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "DbUpdateException bij Workout Exercises POST. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                TempData["Error"] = "Er ging iets mis bij het opslaan in de databank.";
+                return RedirectToAction(nameof(Exercises), new { id = workout.Id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Onverwachte fout bij Workout Exercises POST. WorkoutId={WorkoutId} OwnerId={OwnerId}", workout.Id, workout.OwnerId);
+                TempData["Error"] = "Er ging iets mis bij het opslaan.";
+                return RedirectToAction(nameof(Exercises), new { id = workout.Id });
+            }
         }
     }
 }

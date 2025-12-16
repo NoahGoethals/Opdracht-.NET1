@@ -1,5 +1,5 @@
-﻿@model IEnumerable<WorkoutCoachV2.Model.Models.Session>
-@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+﻿@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@model IEnumerable<WorkoutCoachV2.Model.Models.Session>
 
 @{
     ViewData["Title"] = L["Se_Index_Title"];
@@ -8,7 +8,7 @@
 <h1>@L["Se_Index_H1"]</h1>
 
 <p>
-    <a asp-action="CreateFromWorkouts" class="btn btn-primary">@L["Se_Index_NewFromWorkouts"]</a>
+    <a asp-action="Create" class="btn btn-primary">@L["Common_Create"]</a>
 </p>
 
 @if (Model == null || !Model.Any())
@@ -27,16 +27,16 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @foreach (var s in Model)
             {
                 <tr>
-                    <td>@Html.DisplayFor(_ => item.Title)</td>
-                    <td>@Html.DisplayFor(_ => item.Date)</td>
-                    <td>@(item.Sets?.Count ?? 0)</td>
+                    <td>@s.Title</td>
+                    <td>@s.Date.ToString("d")</td>
+                    <td>@(s.Sets?.Count ?? 0)</td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@item.Id">@L["Common_Details"]</a> |
-                        <a asp-action="Edit" asp-route-id="@item.Id">@L["Common_Edit"]</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id">@L["Common_Delete"]</a>
+                        <a asp-action="Details" asp-route-id="@s.Id">@L["Common_Details"]</a> |
+                        <a asp-action="Edit" asp-route-id="@s.Id">@L["Common_Edit"]</a> |
+                        <a asp-action="Delete" asp-route-id="@s.Id">@L["Common_Delete"]</a>
                     </td>
                 </tr>
             }
