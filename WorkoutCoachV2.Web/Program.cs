@@ -1,8 +1,10 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Data.Seed;
 using WorkoutCoachV2.Model.Models;
@@ -14,7 +16,15 @@ var connectionString = builder.Configuration.GetConnectionString("WorkoutCoachCo
     ?? throw new InvalidOperationException("Connection string 'WorkoutCoachConnection' not found.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sql =>
+    {
+        sql.EnableRetryOnFailure(
+            maxRetryCount: 8,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+
+        sql.CommandTimeout(60);
+    }));
 
 builder.Services.AddHttpContextAccessor();
 
@@ -70,7 +80,7 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-var locOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions>>();
+var locOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>();
 app.UseRequestLocalization(locOptions.Value);
 
 using (var scope = app.Services.CreateScope())
@@ -78,7 +88,23 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
 
     var db = services.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+
+    try
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        Console.WriteLine("➡️ Start MigrateAsync...");
+
+        await db.Database.MigrateAsync();
+
+        sw.Stop();
+        Console.WriteLine($"✅ MigrateAsync klaar in {sw.Elapsed.TotalSeconds:n1}s");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("❌ MigrateAsync FAILED:");
+        Console.WriteLine(ex.ToString());
+        throw;
+    }
 
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
@@ -121,10 +147,7 @@ using (var scope = app.Services.CreateScope())
                 await userManager.AddToRoleAsync(adminUser, "Admin");
         }
 
-        if (adminUser != null)
-        {
-            await DemoDataSeeder.SeedDemoDataForUserAsync(db, adminUser.Id);
-        }
+        await DemoDataSeeder.SeedDemoDataForUserAsync(db, adminUser.Id);
     }
 }
 
