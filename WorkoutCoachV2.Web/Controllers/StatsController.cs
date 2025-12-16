@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Web.Models;
 
@@ -15,10 +17,17 @@ namespace WorkoutCoachV2.Web.Controllers
     public class StatsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<StatsController> _logger;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public StatsController(AppDbContext context)
+        public StatsController(
+            AppDbContext context,
+            ILogger<StatsController> logger,
+            IStringLocalizer<SharedResource> localizer)
         {
             _context = context;
+            _logger = logger;
+            _localizer = localizer;
         }
 
         private string? CurrentUserId =>
@@ -38,7 +47,26 @@ namespace WorkoutCoachV2.Web.Controllers
                 Exercises = await BuildExerciseSelectListAsync(exerciseId)
             };
 
-            vm.Results = await BuildResultsAsync(exerciseId, from, to);
+            try
+            {
+                vm.Results = await BuildResultsAsync(exerciseId, from, to);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Stats Index: fout bij BuildResultsAsync. UserId={UserId} ExerciseId={ExerciseId} From={From} To={To}",
+                    CurrentUserId, exerciseId, from, to);
+
+                vm.Results = new StatsResultsViewModel
+                {
+                    ExerciseId = exerciseId,
+                    From = from,
+                    To = to
+                };
+
+                TempData["Error"] = "Er ging iets mis bij het laden van de statistieken.";
+            }
+
             return View(vm);
         }
 
@@ -48,13 +76,33 @@ namespace WorkoutCoachV2.Web.Controllers
             if (string.IsNullOrWhiteSpace(CurrentUserId))
                 return Challenge();
 
-            var results = await BuildResultsAsync(exerciseId, from, to);
-            return PartialView("_StatsResults", results);
+            try
+            {
+                var results = await BuildResultsAsync(exerciseId, from, to);
+                return PartialView("_StatsResults", results);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Stats Results: fout bij BuildResultsAsync. UserId={UserId} ExerciseId={ExerciseId} From={From} To={To}",
+                    CurrentUserId, exerciseId, from, to);
+
+                var empty = new StatsResultsViewModel
+                {
+                    ExerciseId = exerciseId,
+                    From = from,
+                    To = to
+                };
+
+                Response.StatusCode = 500;
+                return PartialView("_StatsResults", empty);
+            }
         }
 
         private async Task<SelectListItem[]> BuildExerciseSelectListAsync(int? selectedId)
         {
             var userId = CurrentUserId!;
+
             var items = await _context.Exercises
                 .AsNoTracking()
                 .Where(e => !e.IsDeleted && e.OwnerId == userId)
@@ -70,7 +118,7 @@ namespace WorkoutCoachV2.Web.Controllers
             items.Insert(0, new SelectListItem
             {
                 Value = "",
-                Text = "All exercises",
+                Text = _localizer["St_AllExercises"], 
                 Selected = !selectedId.HasValue
             });
 
@@ -167,8 +215,8 @@ namespace WorkoutCoachV2.Web.Controllers
                         ExerciseName = g.Key.Name,
                         SetsCount = g.Count(),
                         TotalReps = g.Sum(x => x.Reps),
-                        TotalVolumeKg = g.Sum(x => x.Weight * x.Reps),
-                        MaxWeight = g.Max(x => x.Weight)
+                        TotalVolumeKg = g.Sum(x => x.Weight * x.Reps), // ✅ volume
+                        MaxWeight = g.Max(x => x.Weight)               // ✅ max
                     })
                     .OrderByDescending(x => x.TotalVolumeKg)
                     .Take(10)

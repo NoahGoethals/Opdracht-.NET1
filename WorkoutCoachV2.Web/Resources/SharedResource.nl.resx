@@ -140,6 +140,15 @@
 	<data name="Se_Edit_Workouts" xml:space="preserve"><value>Workouts</value></data>
 	<data name="Se_Edit_Tip" xml:space="preserve"><value>Selecteer workouts om hun oefeningen in deze sessie te laden. Bij opslaan worden de huidige sets vervangen (als je minstens 1 workout aanvinkt).</value></data>
 	<data name="Se_Edit_NoWorkoutsFound" xml:space="preserve"><value>Geen workouts gevonden.</value></data>
+	<data name="Common_Exercise" xml:space="preserve"><value>Oefening</value></data>
+	<data name="Common_Reps" xml:space="preserve"><value>Herhalingen</value></data>
+	<data name="Common_Weight" xml:space="preserve"><value>Gewicht</value></data>
+
+	<data name="Se_Edit_FromWorkouts" xml:space="preserve"><value>Sets importeren uit workouts</value></data>
+	<data name="Se_Edit_FromWorkouts_Help" xml:space="preserve"><value>Selecteer één of meerdere workouts om de sets van deze sessie te vervangen.</value></data>
+
+	<data name="Se_Create_FromWorkouts" xml:space="preserve"><value>Sets importeren uit workouts</value></data>
+	<data name="Se_Create_FromWorkouts_Help" xml:space="preserve"><value>Selecteer één of meerdere workouts om automatisch sets toe te voegen aan deze sessie.</value></data>
 
 	<!-- STATS -->
 	<data name="St_Index_Title" xml:space="preserve"><value>Statistieken</value></data>

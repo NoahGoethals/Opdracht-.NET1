@@ -140,6 +140,16 @@
 	<data name="Se_Edit_Workouts" xml:space="preserve"><value>Workouts</value></data>
 	<data name="Se_Edit_Tip" xml:space="preserve"><value>Select workouts to load their exercises into this session. Saving will replace the current sets (if you select at least 1 workout).</value></data>
 	<data name="Se_Edit_NoWorkoutsFound" xml:space="preserve"><value>No workouts found.</value></data>
+	<data name="Common_Exercise" xml:space="preserve"><value>Exercise</value></data>
+	<data name="Common_Reps" xml:space="preserve"><value>Reps</value></data>
+	<data name="Common_Weight" xml:space="preserve"><value>Weight</value></data>
+
+	<data name="Se_Edit_FromWorkouts" xml:space="preserve"><value>Import sets from workouts</value></data>
+	<data name="Se_Edit_FromWorkouts_Help" xml:space="preserve"><value>Select one or more workouts to replace this session's sets.</value></data>
+
+	<data name="Se_Create_FromWorkouts" xml:space="preserve"><value>Import sets from workouts</value></data>
+	<data name="Se_Create_FromWorkouts_Help" xml:space="preserve"><value>Select one or more workouts to automatically add sets to this session.</value></data>
+
 
 	<!-- STATS -->
 	<data name="St_Index_Title" xml:space="preserve"><value>Stats</value></data>

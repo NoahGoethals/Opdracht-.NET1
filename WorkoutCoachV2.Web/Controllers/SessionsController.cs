@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -47,24 +48,25 @@ namespace WorkoutCoachV2.Web.Controllers
 
             var session = await _context.Sessions
                 .AsNoTracking()
+                .Include(s => s.Sets)
+                    .ThenInclude(ss => ss.Exercise)
                 .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == userId && !s.IsDeleted);
 
             if (session == null) return NotFound();
 
-            var sets = await _context.SessionSets
-                .AsNoTracking()
-                .Include(ss => ss.Exercise)
-                .Where(ss => ss.SessionId == session.Id)
-                .OrderBy(ss => ss.SetNumber)
-                .ToListAsync();
-
-            ViewBag.Sets = sets;
+            // Zorg dat de sets altijd in volgorde staan (view kan ook sorteren)
+            if (session.Sets != null)
+                session.Sets = session.Sets.OrderBy(x => x.SetNumber).ToList();
 
             return View(session);
         }
 
-        public IActionResult Create()
+        [HttpGet]
+        public async Task<IActionResult> Create()
         {
+            var userId = CurrentUserId;
+            await LoadWorkoutsIntoViewBag(userId);
+
             return View(new Session
             {
                 Date = DateTime.Today
@@ -73,11 +75,17 @@ namespace WorkoutCoachV2.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Date,Description")] Session session)
+        public async Task<IActionResult> Create([Bind("Title,Date,Description")] Session session, int[] selectedWorkoutIds)
         {
-            if (!ModelState.IsValid) return View(session);
+            var userId = CurrentUserId;
 
-            session.OwnerId = CurrentUserId;
+            if (!ModelState.IsValid)
+            {
+                await LoadWorkoutsIntoViewBag(userId);
+                return View(session);
+            }
+
+            session.OwnerId = userId;
             session.CreatedAt = DateTime.UtcNow;
             session.UpdatedAt = DateTime.UtcNow;
             session.IsDeleted = false;
@@ -86,24 +94,45 @@ namespace WorkoutCoachV2.Web.Controllers
 
             try
             {
+                // 1) Session opslaan zodat we een Id hebben
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Session aangemaakt. SessionId={SessionId} OwnerId={OwnerId}", session.Id, session.OwnerId);
+
+                // 2) Workouts gekozen? -> sets genereren
+                if (selectedWorkoutIds != null && selectedWorkoutIds.Length > 0)
+                {
+                    await ReplaceSetsFromWorkoutsAsync(session.Id, userId, selectedWorkoutIds);
+
+                    // 3) sets opslaan
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation(
+                        "Session aangemaakt + sets uit workouts. SessionId={SessionId} OwnerId={OwnerId} WorkoutsSelected={Count}",
+                        session.Id, userId, selectedWorkoutIds.Length);
+                }
+                else
+                {
+                    _logger.LogInformation("Session aangemaakt. SessionId={SessionId} OwnerId={OwnerId}", session.Id, userId);
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "DbUpdateException bij Session Create. OwnerId={OwnerId}", session.OwnerId);
+                _logger.LogError(ex, "DbUpdateException bij Session Create. OwnerId={OwnerId}", userId);
                 ModelState.AddModelError("", "Er ging iets mis bij het opslaan in de databank.");
+                await LoadWorkoutsIntoViewBag(userId);
                 return View(session);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Onverwachte fout bij Session Create. OwnerId={OwnerId}", session.OwnerId);
+                _logger.LogError(ex, "Onverwachte fout bij Session Create. OwnerId={OwnerId}", userId);
                 ModelState.AddModelError("", "Er ging iets mis bij het opslaan.");
+                await LoadWorkoutsIntoViewBag(userId);
                 return View(session);
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -115,17 +144,24 @@ namespace WorkoutCoachV2.Web.Controllers
 
             if (session == null) return NotFound();
 
+            await LoadWorkoutsIntoViewBag(userId);
+
             return View(session);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Description")] Session formSession)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Description")] Session formSession, int[] selectedWorkoutIds)
         {
             if (id != formSession.Id) return NotFound();
-            if (!ModelState.IsValid) return View(formSession);
 
             var userId = CurrentUserId;
+
+            if (!ModelState.IsValid)
+            {
+                await LoadWorkoutsIntoViewBag(userId);
+                return View(formSession);
+            }
 
             var session = await _context.Sessions
                 .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == userId && !s.IsDeleted);
@@ -139,20 +175,35 @@ namespace WorkoutCoachV2.Web.Controllers
 
             try
             {
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Session aangepast. SessionId={SessionId} OwnerId={OwnerId}", session.Id, userId);
-                return RedirectToAction(nameof(Index));
+                if (selectedWorkoutIds != null && selectedWorkoutIds.Length > 0)
+                {
+                    await ReplaceSetsFromWorkoutsAsync(session.Id, userId, selectedWorkoutIds);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation(
+                        "Session aangepast + sets vervangen uit workouts. SessionId={SessionId} OwnerId={OwnerId} WorkoutsSelected={Count}",
+                        session.Id, userId, selectedWorkoutIds.Length);
+                }
+                else
+                {
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Session aangepast. SessionId={SessionId} OwnerId={OwnerId}", session.Id, userId);
+                }
+
+                return RedirectToAction(nameof(Details), new { id = session.Id });
             }
             catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "DbUpdateException bij Session Edit. SessionId={SessionId} OwnerId={OwnerId}", session.Id, userId);
                 ModelState.AddModelError("", "Er ging iets mis bij het opslaan in de databank.");
+                await LoadWorkoutsIntoViewBag(userId);
                 return View(formSession);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Onverwachte fout bij Session Edit. SessionId={SessionId} OwnerId={OwnerId}", session.Id, userId);
                 ModelState.AddModelError("", "Er ging iets mis bij het opslaan.");
+                await LoadWorkoutsIntoViewBag(userId);
                 return View(formSession);
             }
         }
@@ -190,6 +241,7 @@ namespace WorkoutCoachV2.Web.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Session verwijderd (soft). SessionId={SessionId} OwnerId={OwnerId}", session.Id, userId);
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException ex)
@@ -204,6 +256,67 @@ namespace WorkoutCoachV2.Web.Controllers
                 TempData["Error"] = "Er ging iets mis bij het verwijderen.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
+        }
+
+        private async Task LoadWorkoutsIntoViewBag(string userId)
+        {
+            var workouts = await _context.Workouts
+                .Where(w => w.OwnerId == userId && !w.IsDeleted)
+                .OrderByDescending(w => w.ScheduledOn)
+                .ThenBy(w => w.Title)
+                .ToListAsync();
+
+            ViewBag.Workouts = workouts;
+        }
+
+        private async Task ReplaceSetsFromWorkoutsAsync(int sessionId, string userId, int[] selectedWorkoutIds)
+        {
+            // Alleen workouts van deze user toelaten
+            var allowedWorkoutIds = await _context.Workouts
+                .Where(w => w.OwnerId == userId && !w.IsDeleted)
+                .Select(w => w.Id)
+                .ToListAsync();
+
+            var validIds = selectedWorkoutIds
+                .Where(id => allowedWorkoutIds.Contains(id))
+                .Distinct()
+                .ToList();
+
+            if (validIds.Count == 0) return;
+
+            // Oude sets verwijderen
+            var existingSets = await _context.SessionSets
+                .Where(ss => ss.SessionId == sessionId)
+                .ToListAsync();
+
+            if (existingSets.Count > 0)
+                _context.SessionSets.RemoveRange(existingSets);
+
+            // Oefeningen uit workouts ophalen
+            var workoutExercises = await _context.WorkoutExercises
+                .Where(we => validIds.Contains(we.WorkoutId))
+                .OrderBy(we => we.WorkoutId)
+                .ThenBy(we => we.ExerciseId) // WorkoutExercise heeft geen Id (composite key)
+                .ToListAsync();
+
+            var newSets = new List<SessionSet>();
+            int setNumber = 1;
+
+            foreach (var we in workoutExercises)
+            {
+                newSets.Add(new SessionSet
+                {
+                    SessionId = sessionId,
+                    SetNumber = setNumber++,
+                    ExerciseId = we.ExerciseId,
+                    Reps = we.Reps,
+                    // FIX voor jouw error: WeightKg is double? en SessionSet.Weight is double
+                    Weight = we.WeightKg ?? 0.0
+                });
+            }
+
+            if (newSets.Count > 0)
+                _context.SessionSets.AddRange(newSets);
         }
     }
 }

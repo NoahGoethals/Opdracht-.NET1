@@ -138,6 +138,15 @@
 	<data name="Se_Edit_Workouts" xml:space="preserve"><value>Entraînements</value></data>
 	<data name="Se_Edit_Tip" xml:space="preserve"><value>Sélectionnez des entraînements pour charger leurs exercices dans cette session. L’enregistrement remplacera les séries actuelles (si vous cochez au moins 1 entraînement).</value></data>
 	<data name="Se_Edit_NoWorkoutsFound" xml:space="preserve"><value>Aucun entraînement trouvé.</value></data>
+	<data name="Common_Exercise" xml:space="preserve"><value>Exercice</value></data>
+	<data name="Common_Reps" xml:space="preserve"><value>Répétitions</value></data>
+	<data name="Common_Weight" xml:space="preserve"><value>Poids</value></data>
+
+	<data name="Se_Edit_FromWorkouts" xml:space="preserve"><value>Importer les séries depuis les entraînements</value></data>
+	<data name="Se_Edit_FromWorkouts_Help" xml:space="preserve"><value>Sélectionnez un ou plusieurs entraînements pour remplacer les séries de cette session.</value></data>
+
+	<data name="Se_Create_FromWorkouts" xml:space="preserve"><value>Importer les séries depuis les entraînements</value></data>
+	<data name="Se_Create_FromWorkouts_Help" xml:space="preserve"><value>Sélectionnez un ou plusieurs entraînements pour ajouter automatiquement des séries à cette session.</value></data>
 
 	<!-- STATS -->
 	<data name="St_Index_Title" xml:space="preserve"><value>Statistiques</value></data>
