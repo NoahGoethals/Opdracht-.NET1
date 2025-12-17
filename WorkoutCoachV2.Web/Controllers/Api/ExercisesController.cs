@@ -9,13 +9,14 @@ using WorkoutCoachV2.Model.Models;
 namespace WorkoutCoachV2.Web.Controllers.Api
 {
     [ApiController]
-    [Route("api/[controller]")]
+    
+    [Route("api/exercises")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class ExercisesController : ControllerBase
+    public class ExercisesApiController : ControllerBase
     {
         private readonly AppDbContext _db;
 
-        public ExercisesController(AppDbContext db) => _db = db;
+        public ExercisesApiController(AppDbContext db) => _db = db;
 
         private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
