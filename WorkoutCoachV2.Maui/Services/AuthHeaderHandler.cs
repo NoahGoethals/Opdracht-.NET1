@@ -4,18 +4,15 @@ namespace WorkoutCoachV2.Maui.Services;
 
 public class AuthHeaderHandler : DelegatingHandler
 {
-    private readonly ITokenStore _tokenStore;
+    private readonly ITokenStore _tokens;
 
-    public AuthHeaderHandler(ITokenStore tokenStore) => _tokenStore = tokenStore;
+    public AuthHeaderHandler(ITokenStore tokens) => _tokens = tokens;
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var (token, exp, _) = await _tokenStore.LoadAsync();
-
-        if (!string.IsNullOrWhiteSpace(token) && exp.HasValue && exp.Value > DateTime.UtcNow.AddMinutes(1))
-        {
+        var token = await _tokens.GetTokenAsync();
+        if (!string.IsNullOrWhiteSpace(token))
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
 
         return await base.SendAsync(request, cancellationToken);
     }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WorkoutCoachV2.Maui.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Login">
+
+    <VerticalStackLayout Padding="20" Spacing="12">
+
+        <Label Text="WorkoutCoach" FontSize="24" />
+
+        <Entry Placeholder="Email"
+               Text="{Binding Email}"
+               Keyboard="Email" />
+
+        <Entry Placeholder="Wachtwoord"
+               Text="{Binding Password}"
+               IsPassword="True" />
+
+        <Button Text="Login"
+                Command="{Binding LoginCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}" />
+
+        <Label Text="{Binding Error}"
+               TextColor="Red"
+               IsVisible="{Binding Error, Converter={StaticResource NotNullOrEmptyConverter}}" />
+
+    </VerticalStackLayout>
+</ContentPage>

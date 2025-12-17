@@ -1,45 +1,37 @@
-﻿using Microsoft.Maui.Storage;
-
-namespace WorkoutCoachV2.Maui.Services;
-
-public interface ITokenStore
-{
-    Task SaveAsync(string token, DateTime expiresUtc, string email);
-    Task<(string? token, DateTime? expiresUtc, string? email)> LoadAsync();
-    Task ClearAsync();
-}
+﻿namespace WorkoutCoachV2.Maui.Services;
 
 public class TokenStore : ITokenStore
 {
-    private const string KeyToken = "auth_token";
-    private const string KeyExpires = "auth_expiresUtc";
-    private const string KeyEmail = "auth_email";
+    private const string TokenKey = "auth_token";
+    private const string ExpKey = "auth_expires_utc";
 
-    public async Task SaveAsync(string token, DateTime expiresUtc, string email)
+    public Task<string?> GetTokenAsync()
     {
-        await SecureStorage.SetAsync(KeyToken, token);
-        await SecureStorage.SetAsync(KeyExpires, expiresUtc.ToString("O"));
-        await SecureStorage.SetAsync(KeyEmail, email);
+        var token = Preferences.Get(TokenKey, null);
+        var expStr = Preferences.Get(ExpKey, null);
+
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(expStr))
+            return Task.FromResult<string?>(null);
+
+        if (DateTime.TryParse(expStr, out var expUtc) && expUtc > DateTime.UtcNow)
+            return Task.FromResult<string?>(token);
+
+        Preferences.Remove(TokenKey);
+        Preferences.Remove(ExpKey);
+        return Task.FromResult<string?>(null);
     }
 
-    public async Task<(string? token, DateTime? expiresUtc, string? email)> LoadAsync()
+    public Task SetTokenAsync(string token, DateTime expiresUtc)
     {
-        var token = await SecureStorage.GetAsync(KeyToken);
-        var expStr = await SecureStorage.GetAsync(KeyExpires);
-        var email = await SecureStorage.GetAsync(KeyEmail);
-
-        DateTime? exp = null;
-        if (DateTime.TryParse(expStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed))
-            exp = parsed;
-
-        return (token, exp, email);
+        Preferences.Set(TokenKey, token);
+        Preferences.Set(ExpKey, expiresUtc.ToString("O"));
+        return Task.CompletedTask;
     }
 
     public Task ClearAsync()
     {
-        SecureStorage.Remove(KeyToken);
-        SecureStorage.Remove(KeyExpires);
-        SecureStorage.Remove(KeyEmail);
+        Preferences.Remove(TokenKey);
+        Preferences.Remove(ExpKey);
         return Task.CompletedTask;
     }
 }

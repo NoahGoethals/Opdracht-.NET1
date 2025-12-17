@@ -1,12 +1,6 @@
 ﻿using System.Net.Http.Json;
-using WorkoutCoachV2.Maui.Models;
 
 namespace WorkoutCoachV2.Maui.Services;
-
-public interface IAuthApi
-{
-    Task<AuthResponse> LoginAsync(string email, string password, CancellationToken ct = default);
-}
 
 public class AuthApi : IAuthApi
 {
@@ -14,16 +8,20 @@ public class AuthApi : IAuthApi
 
     public AuthApi(HttpClient http) => _http = http;
 
-    public async Task<AuthResponse> LoginAsync(string email, string password, CancellationToken ct = default)
+    public async Task<AuthResponse> LoginAsync(string email, string password)
     {
-        var res = await _http.PostAsJsonAsync("api/Auth/login", new LoginRequest(email, password), ct);
-        if (!res.IsSuccessStatusCode)
+        var body = new { Email = email, Password = password };
+
+        var resp = await _http.PostAsJsonAsync("api/auth/login", body);
+        if (!resp.IsSuccessStatusCode)
         {
-            var msg = await res.Content.ReadAsStringAsync(ct);
-            throw new Exception($"Login failed: {(int)res.StatusCode} {msg}");
+            var msg = await resp.Content.ReadAsStringAsync();
+            throw new Exception($"Login failed: {(int)resp.StatusCode} - {msg}");
         }
 
-        var body = await res.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: ct);
-        return body ?? throw new Exception("Login failed: empty response");
+        var data = await resp.Content.ReadFromJsonAsync<AuthResponse>()
+                   ?? throw new Exception("Lege response van server.");
+
+        return data;
     }
 }
