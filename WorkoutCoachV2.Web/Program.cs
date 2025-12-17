@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Data.Seed;
 using WorkoutCoachV2.Model.Models;
@@ -71,6 +74,30 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
+});
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    var key = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key ontbreekt");
+    var issuer = builder.Configuration["Jwt:Issuer"] ?? "WorkoutCoachV2";
+    var audience = builder.Configuration["Jwt:Audience"] ?? "WorkoutCoachV2.Maui";
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ClockSkew = TimeSpan.FromMinutes(2)
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -167,6 +194,8 @@ app.UseAuthentication();
 app.UseMiddleware<BlockedUserMiddleware>();
 
 app.UseAuthorization();
+
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
