@@ -2,6 +2,8 @@
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 using WorkoutCoachV3.Maui.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace WorkoutCoachV3.Maui;
 
