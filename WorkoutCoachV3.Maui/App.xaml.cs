@@ -1,12 +1,18 @@
-﻿using WorkoutCoachV3.Maui.Pages;
+﻿using Microsoft.Extensions.DependencyInjection;
+using WorkoutCoachV3.Maui.Pages;
 
 namespace WorkoutCoachV3.Maui;
 
 public partial class App : Application
 {
-    public App(LoginPage loginPage)
+    private readonly IServiceProvider _services;
+
+    public App(IServiceProvider services)
     {
-        InitializeComponent();
+        InitializeComponent(); 
+        _services = services;
+
+        var loginPage = _services.GetRequiredService<LoginPage>();
         MainPage = new NavigationPage(loginPage);
     }
 }
