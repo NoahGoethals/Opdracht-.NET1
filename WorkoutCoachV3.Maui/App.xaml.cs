@@ -1,6 +1,6 @@
-﻿using WorkoutCoachV2.Maui.Pages;
+﻿using WorkoutCoachV3.Maui.Pages;
 
-namespace WorkoutCoachV2.Maui;
+namespace WorkoutCoachV3.Maui;
 
 public partial class App : Application
 {
