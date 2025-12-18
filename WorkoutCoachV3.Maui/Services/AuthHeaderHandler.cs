@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -10,13 +11,21 @@ public class AuthHeaderHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        if (await _tokens.HasValidTokenAsync())
+        
+        var token = await _tokens.GetTokenAsync();
+
+        if (!string.IsNullOrWhiteSpace(token))
         {
-            var token = await _tokens.GetTokenAsync();
-            if (!string.IsNullOrWhiteSpace(token))
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        return await base.SendAsync(request, cancellationToken);
+        var response = await base.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            await _tokens.ClearAsync();
+        }
+
+        return response;
     }
 }

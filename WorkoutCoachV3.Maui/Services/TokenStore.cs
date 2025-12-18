@@ -11,7 +11,7 @@ public class TokenStore : ITokenStore
 
     public async Task SetAsync(string token, DateTime expiresUtc)
     {
-        var expiresString = expiresUtc.ToString("O");
+        var expiresString = expiresUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
 
         if (!await TrySecureSetAsync(TokenKey, token))
             Preferences.Set(TokenKey, token);
@@ -22,14 +22,21 @@ public class TokenStore : ITokenStore
 
     public async Task<string?> GetTokenAsync()
     {
-        if (!await HasValidTokenAsync())
+        var expires = await GetExpiresUtcAsync();
+        if (expires is null)
             return null;
 
-        var token = await TrySecureGetAsync(TokenKey);
-        if (!string.IsNullOrWhiteSpace(token))
-            return token;
+        var now = DateTime.UtcNow;
+        if (now >= (expires.Value - ExpirySkew))
+        {
+            await ClearAsync();
+            return null;
+        }
 
-        token = Preferences.Get(TokenKey, null as string);
+        var token = await TrySecureGetAsync(TokenKey);
+        if (string.IsNullOrWhiteSpace(token))
+            token = Preferences.Get(TokenKey, null as string);
+
         return string.IsNullOrWhiteSpace(token) ? null : token;
     }
 
@@ -39,12 +46,13 @@ public class TokenStore : ITokenStore
         if (string.IsNullOrWhiteSpace(s))
             s = Preferences.Get(ExpiresKey, null as string);
 
-        if (string.IsNullOrWhiteSpace(s)) return null;
+        if (string.IsNullOrWhiteSpace(s))
+            return null;
 
-        if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt))
-            return dt;
+        if (!DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt))
+            return null;
 
-        return null;
+        return dt.ToUniversalTime();
     }
 
     public async Task<bool> HasValidTokenAsync()
