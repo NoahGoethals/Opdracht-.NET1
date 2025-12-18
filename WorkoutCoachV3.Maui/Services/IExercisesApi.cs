@@ -1,18 +1,13 @@
 ﻿namespace WorkoutCoachV3.Maui.Services;
 
+public record ExerciseDto(int Id, string Name, string? Category, string? Notes);
+public record CreateExerciseDto(string Name, string? Category, string? Notes);
+public record UpdateExerciseDto(string Name, string? Category, string? Notes);
+
 public interface IExercisesApi
 {
-    Task<IReadOnlyList<ExerciseDto>> GetAllAsync(
-        string? search = null,
-        string? category = null,
-        string sort = "name",
-        CancellationToken ct = default);
-
-    Task<ExerciseDto> CreateAsync(ExerciseUpsertDto dto, CancellationToken ct = default);
-    Task UpdateAsync(int id, ExerciseUpsertDto dto, CancellationToken ct = default);
+    Task<List<ExerciseDto>> GetAllAsync(string? search, string? category, string? sort, CancellationToken ct = default);
+    Task<ExerciseDto> CreateAsync(CreateExerciseDto dto, CancellationToken ct = default);
+    Task UpdateAsync(int id, UpdateExerciseDto dto, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
 }
-
-public record ExerciseDto(int Id, string Name, string? Category, string? Notes);
-
-public record ExerciseUpsertDto(string Name, string? Category, string? Notes);

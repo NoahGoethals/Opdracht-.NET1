@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Maui;
+using Microsoft.EntityFrameworkCore;
+using WorkoutCoachV3.Maui.Data;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 using WorkoutCoachV3.Maui.ViewModels;
@@ -17,6 +19,15 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<ITokenStore, TokenStore>();
         builder.Services.AddTransient<AuthHeaderHandler>();
+
+        var dbPath = Path.Combine(FileSystem.AppDataDirectory, "workoutcoach.local.db3");
+
+        builder.Services.AddDbContextFactory<LocalAppDbContext>(options =>
+            options.UseSqlite($"Data Source={dbPath}")
+        );
+
+        builder.Services.AddSingleton<LocalDatabaseService>();
+        builder.Services.AddSingleton<ISyncService, SyncService>();
 
         var baseUrl = ApiConfig.GetBaseUrl();
         System.Diagnostics.Debug.WriteLine($"[API] BaseUrl = {baseUrl}");
@@ -42,17 +53,6 @@ public static class MauiProgram
 #endif
         ;
 
-        builder.Services.AddHttpClient(nameof(ApiHealthService), http =>
-        {
-            http.BaseAddress = new Uri(baseUrl);
-            http.Timeout = TimeSpan.FromSeconds(5);
-        })
-#if DEBUG
-        .ConfigurePrimaryHttpMessageHandler(() => DevHttpHandler())
-#endif
-        ;
-
-        builder.Services.AddSingleton<IApiHealthService, ApiHealthService>();
         builder.Services.AddSingleton<IExercisesApi, ExercisesApi>();
 
         builder.Services.AddTransient<LoginViewModel>();

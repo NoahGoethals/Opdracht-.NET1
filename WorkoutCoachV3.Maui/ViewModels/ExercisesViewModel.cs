@@ -1,9 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
-using WorkoutCoachV3.Maui.Messages;
+using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -11,12 +9,12 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class ExercisesViewModel : ObservableObject
 {
-    private readonly IExercisesApi _api;
-    private readonly ITokenStore _tokens;
+    private readonly LocalDatabaseService _local;
+    private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
-    private readonly IApiHealthService _health;
+    private readonly ITokenStore _tokenStore;
 
-    public ObservableCollection<ExerciseDto> Items { get; } = new();
+    public ObservableCollection<LocalExercise> Items { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
 
     [ObservableProperty] private bool isBusy;
@@ -24,71 +22,55 @@ public partial class ExercisesViewModel : ObservableObject
 
     [ObservableProperty] private string? searchText;
     [ObservableProperty] private string selectedCategory = "All";
-    [ObservableProperty] private string sort = "name";
 
-    public ExercisesViewModel(IExercisesApi api, ITokenStore tokens, IServiceProvider services, IApiHealthService health)
+    public ExercisesViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
     {
-        _api = api;
-        _tokens = tokens;
+        _local = local;
+        _sync = sync;
         _services = services;
-        _health = health;
+        _tokenStore = tokenStore;
 
         Categories.Add("All");
+    }
 
-        WeakReferenceMessenger.Default.Register<ExercisesChangedMessage>(this, async (_, __) =>
-        {
-            await LoadAsync();
-        });
+    public async Task RefreshAsync()
+    {
+        await LoadLocalAsync();
+
+        try { await _sync.SyncAllAsync(); }
+        catch {  }
+
+        await LoadLocalAsync();
     }
 
     [RelayCommand]
-    public async Task LoadAsync()
+    public async Task LoadLocalAsync()
     {
         if (IsBusy) return;
-
         IsBusy = true;
         Error = null;
 
         try
         {
-            for (var attempt = 1; attempt <= 3; attempt++)
-            {
-                var ok = await _health.IsApiReachableAsync();
-                if (ok) break;
+            var cat = SelectedCategory == "All" ? null : SelectedCategory;
+            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText;
 
-                Error = "API is nog aan het opstarten… (probeer opnieuw)";
-                await Task.Delay(2000);
-            }
-
-            if (!await _health.IsApiReachableAsync())
-            {
-                Error = "API is niet bereikbaar. Start WorkoutCoachV2.Web (Multiple startup projects).";
-                return;
-            }
-
-            var category = SelectedCategory == "All" ? null : SelectedCategory;
-
-            var data = await _api.GetAllAsync(
-                search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
-                category: category,
-                sort: Sort
-            );
+            var data = await _local.GetExercisesAsync(search: search, category: cat);
 
             Items.Clear();
             foreach (var x in data)
                 Items.Add(x);
 
-            var distinct = data
+            var distinctCats = data
                 .Select(x => x.Category)
                 .Where(c => !string.IsNullOrWhiteSpace(c))
-                .Select(c => c!.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(c => c)
                 .ToList();
 
             Categories.Clear();
             Categories.Add("All");
-            foreach (var c in distinct)
+            foreach (var c in distinctCats)
                 Categories.Add(c);
 
             if (!Categories.Contains(SelectedCategory))
@@ -104,8 +86,10 @@ public partial class ExercisesViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private async Task RefreshAsync() => await LoadAsync();
+    partial void OnSelectedCategoryChanged(string value)
+    {
+        _ = LoadLocalAsync();
+    }
 
     [RelayCommand]
     private async Task AddAsync()
@@ -118,18 +102,22 @@ public partial class ExercisesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task EditAsync(ExerciseDto item)
+    private async Task EditAsync(LocalExercise? item)
     {
+        if (item is null) return;
+
         var page = _services.GetRequiredService<ExerciseEditPage>();
         var vm = (ExerciseEditViewModel)page.BindingContext!;
-        vm.InitForEdit(item);
+        await vm.InitForEditAsync(item.LocalId);
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(ExerciseDto item)
+    private async Task DeleteAsync(LocalExercise? item)
     {
+        if (item is null) return;
+
         var ok = await Application.Current!.MainPage!.DisplayAlert(
             "Delete exercise",
             $"Delete '{item.Name}'?",
@@ -140,8 +128,11 @@ public partial class ExercisesViewModel : ObservableObject
 
         try
         {
-            await _api.DeleteAsync(item.Id);
-            await LoadAsync();
+            await _local.SoftDeleteExerciseAsync(item.LocalId);
+
+            try { await _sync.SyncAllAsync(); } catch {  }
+
+            await LoadLocalAsync();
         }
         catch (Exception ex)
         {
@@ -152,14 +143,8 @@ public partial class ExercisesViewModel : ObservableObject
     [RelayCommand]
     private async Task LogoutAsync()
     {
-        await _tokens.ClearAsync();
-
+        await _tokenStore.ClearAsync();
         var loginPage = _services.GetRequiredService<LoginPage>();
         Application.Current!.MainPage = new NavigationPage(loginPage);
-    }
-
-    partial void OnSelectedCategoryChanged(string value)
-    {
-        _ = LoadAsync();
     }
 }

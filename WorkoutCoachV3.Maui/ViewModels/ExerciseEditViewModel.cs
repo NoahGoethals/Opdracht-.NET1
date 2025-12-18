@@ -1,75 +1,96 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using WorkoutCoachV3.Maui.Messages;
+using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class ExerciseEditViewModel : ObservableObject
 {
-    private readonly IExercisesApi _api;
-    private int? _id;
+    private readonly LocalDatabaseService _local;
+    private readonly ISyncService _sync;
+
+    private Guid? _editingLocalId;
 
     [ObservableProperty] private string title = "New Exercise";
     [ObservableProperty] private string name = "";
-    [ObservableProperty] private string? category;
+    [ObservableProperty] private string category = "";
     [ObservableProperty] private string? notes;
 
-    [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
+    [ObservableProperty] private bool isBusy;
 
-    public ExerciseEditViewModel(IExercisesApi api) => _api = api;
+    public ExerciseEditViewModel(LocalDatabaseService local, ISyncService sync)
+    {
+        _local = local;
+        _sync = sync;
+    }
 
     public void InitForCreate()
     {
-        _id = null;
+        _editingLocalId = null;
         Title = "New Exercise";
         Name = "";
         Category = "";
-        Notes = "";
+        Notes = null;
         Error = null;
     }
 
-    public void InitForEdit(ExerciseDto dto)
+    public async Task InitForEditAsync(Guid localId)
     {
-        _id = dto.Id;
+        _editingLocalId = localId;
         Title = "Edit Exercise";
-        Name = dto.Name;
-        Category = dto.Category;
-        Notes = dto.Notes;
         Error = null;
+
+        await LoadAsync(localId);
+    }
+
+    private async Task LoadAsync(Guid localId)
+    {
+        try
+        {
+            var e = await _local.GetExerciseByLocalIdAsync(localId);
+            if (e is null) return;
+
+            Name = e.Name;
+            Category = e.Category ?? "";
+            Notes = e.Notes;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
     }
 
     [RelayCommand]
-    private async Task SaveAsync()
+    public async Task SaveAsync()
     {
         if (IsBusy) return;
-
-        Error = null;
-
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            Error = "Name is required.";
-            return;
-        }
-
         IsBusy = true;
+        Error = null;
 
         try
         {
-            var dto = new ExerciseUpsertDto(
-                Name.Trim(),
-                string.IsNullOrWhiteSpace(Category) ? "" : Category!.Trim(),
-                string.IsNullOrWhiteSpace(Notes) ? null : Notes!.Trim()
-            );
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                Error = "Name is required.";
+                return;
+            }
 
-            if (_id is null)
-                await _api.CreateAsync(dto);
-            else
-                await _api.UpdateAsync(_id.Value, dto);
+            var entity = new LocalExercise
+            {
+                LocalId = _editingLocalId ?? Guid.NewGuid(),
+                Name = Name.Trim(),
+                Category = Category?.Trim() ?? "",
+                Notes = Notes,
+                IsDeleted = false
+            };
 
-            WeakReferenceMessenger.Default.Send(new ExercisesChangedMessage());
+            await _local.UpsertExerciseAsync(entity);
+
+            try { await _sync.SyncAllAsync(); }
+            catch {  }
+
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }
         catch (Exception ex)
@@ -83,7 +104,7 @@ public partial class ExerciseEditViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task CancelAsync()
+    public async Task CancelAsync()
     {
         await Application.Current!.MainPage!.Navigation.PopAsync();
     }

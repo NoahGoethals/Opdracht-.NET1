@@ -1,58 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using WorkoutCoachV3.Maui.Pages;
+﻿using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui;
 
 public partial class App : Application
 {
-    private readonly IServiceProvider _services;
-
-    public App(IServiceProvider services)
+    public App(LocalDatabaseService localDb, LoginPage loginPage)
     {
         InitializeComponent();
-        _services = services;
 
-        MainPage = new ContentPage
-        {
-            Content = new Grid
-            {
-                Children =
-                {
-                    new ActivityIndicator
-                    {
-                        IsRunning = true,
-                        VerticalOptions = LayoutOptions.Center,
-                        HorizontalOptions = LayoutOptions.Center
-                    }
-                }
-            }
-        };
+        _ = Task.Run(async () => await localDb.EnsureCreatedAndSeedAsync());
 
-        _ = InitializeAsync();
-    }
-
-    private async Task InitializeAsync()
-    {
-        try
-        {
-            var tokens = _services.GetRequiredService<ITokenStore>();
-
-            if (await tokens.HasValidTokenAsync())
-            {
-                var exercisesPage = _services.GetRequiredService<ExercisesPage>();
-                MainPage = new NavigationPage(exercisesPage);
-            }
-            else
-            {
-                var loginPage = _services.GetRequiredService<LoginPage>();
-                MainPage = new NavigationPage(loginPage);
-            }
-        }
-        catch
-        {
-            var loginPage = _services.GetRequiredService<LoginPage>();
-            MainPage = new NavigationPage(loginPage);
-        }
+        MainPage = new NavigationPage(loginPage);
     }
 }

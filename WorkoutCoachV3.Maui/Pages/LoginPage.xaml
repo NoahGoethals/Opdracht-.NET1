@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
-    x:Class="WorkoutCoachV3.Maui.Pages.LoginPage"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Login">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:WorkoutCoachV3.Maui.Converters"
+             x:Class="WorkoutCoachV3.Maui.Pages.LoginPage"
+             Title="Login">
 
-    <VerticalStackLayout Padding="20" Spacing="12">
-        <Label Text="WorkoutCoach Login" FontSize="24" />
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-        <Entry Placeholder="Email" Text="{Binding Email}" Keyboard="Email" />
-        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="24">
 
-        <Button Text="Login"
-                Command="{Binding LoginCommand}"
-                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+            <Label Text="WorkoutCoach Login" FontSize="28" />
 
-        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Entry Placeholder="Email"
+                   Text="{Binding Email}" />
 
-        <Label Text="{Binding Message}" TextColor="Green" />
-        <Label Text="{Binding Error}" TextColor="Red" />
-    </VerticalStackLayout>
+            <Entry Placeholder="Password"
+                   IsPassword="True"
+                   Text="{Binding Password}" />
+
+            <Button Text="Login"
+                    Command="{Binding LoginCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
