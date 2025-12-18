@@ -18,7 +18,6 @@ public partial class WorkoutsViewModel : ObservableObject
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
-
     [ObservableProperty] private string? searchText;
 
     public WorkoutsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
@@ -64,6 +63,9 @@ public partial class WorkoutsViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    [RelayCommand]
+    public async Task RefreshAsyncCommand() => await RefreshAsync();
 
     [RelayCommand]
     private async Task AddAsync()
@@ -115,7 +117,7 @@ public partial class WorkoutsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task OpenDetailsAsync(LocalWorkout? item)
+    private async Task OpenDetailAsync(LocalWorkout? item)
     {
         if (item is null) return;
 

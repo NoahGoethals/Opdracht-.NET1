@@ -1,5 +1,5 @@
 ﻿using Microsoft.Maui.Networking;
-using WorkoutCoachV3.Maui.Data;
+using WorkoutCoachV3.Maui.Apis;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
 
 namespace WorkoutCoachV3.Maui.Services;
@@ -22,11 +22,14 @@ public class SyncService : ISyncService
         if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
             return;
 
-        await SyncExercisesAsync(ct);
-        await SyncWorkoutsAsync(ct);
+        await SyncExercisesPushAsync(ct);
+        await SyncWorkoutsPushAsync(ct);
+
+        await SyncExercisesPullAsync(ct);
+        await SyncWorkoutsPullAsync(ct);
     }
 
-    private async Task SyncExercisesAsync(CancellationToken ct)
+    private async Task SyncExercisesPushAsync(CancellationToken ct)
     {
         var dirty = await _local.GetDirtyExercisesAsync();
 
@@ -67,12 +70,9 @@ public class SyncService : ISyncService
             {
             }
         }
-
-        var remote = await _exercisesApi.GetAllAsync(search: null, category: null, sort: "name", ct: ct);
-        await _local.MergeRemoteExercisesAsync(remote.Select(x => (x.Id, x.Name, x.Category, x.Notes)).ToList());
     }
 
-    private async Task SyncWorkoutsAsync(CancellationToken ct)
+    private async Task SyncWorkoutsPushAsync(CancellationToken ct)
     {
         var dirty = await _local.GetDirtyWorkoutsAsync();
 
@@ -113,8 +113,21 @@ public class SyncService : ISyncService
             {
             }
         }
+    }
 
+    private async Task SyncExercisesPullAsync(CancellationToken ct)
+    {
+        var remote = await _exercisesApi.GetAllAsync(search: null, category: null, sort: "name", ct: ct);
+
+        await _local.MergeRemoteExercisesAsync(
+            remote.Select(x => (x.Id, x.Name, x.Category, x.Notes)).ToList());
+    }
+
+    private async Task SyncWorkoutsPullAsync(CancellationToken ct)
+    {
         var remote = await _workoutsApi.GetAllAsync(search: null, sort: "title", ct: ct);
-        await _local.MergeRemoteWorkoutsAsync(remote.Select(x => (x.Id, x.Title)).ToList());
+
+        await _local.MergeRemoteWorkoutsAsync(
+            remote.Select(x => (x.Id, x.Title)).ToList());
     }
 }

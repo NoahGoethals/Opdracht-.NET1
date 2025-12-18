@@ -66,6 +66,8 @@ public static class MauiProgram
 
         builder.Services.AddTransient<WorkoutsViewModel>();
         builder.Services.AddTransient<WorkoutEditViewModel>();
+
+        
         builder.Services.AddTransient<WorkoutDetailViewModel>();
         builder.Services.AddTransient<WorkoutExercisesManageViewModel>();
 
@@ -76,6 +78,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<WorkoutsPage>();
         builder.Services.AddTransient<WorkoutEditPage>();
+
         builder.Services.AddTransient<WorkoutDetailPage>();
         builder.Services.AddTransient<WorkoutExercisesManagePage>();
 
@@ -87,8 +90,7 @@ public static class MauiProgram
     {
         return new HttpClientHandler
         {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         };
     }
 #endif

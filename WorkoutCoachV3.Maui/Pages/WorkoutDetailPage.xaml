@@ -1,69 +1,44 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:conv="clr-namespace:WorkoutCoachV3.Maui.Converters"
              x:Class="WorkoutCoachV3.Maui.Pages.WorkoutDetailPage"
              Title="Workout">
-
-    <ContentPage.Resources>
-        <ResourceDictionary>
-            <conv:InverseBoolConverter x:Key="InverseBoolConverter" />
-            <conv:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter" />
-        </ResourceDictionary>
-    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
         <Grid ColumnDefinitions="*,Auto" Grid.Row="0">
-            <Label Text="{Binding TitleText}" FontSize="28" VerticalOptions="Center" />
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding WorkoutTitle}" FontSize="28"/>
+                <Label Text="{Binding Notes}" Opacity="0.7"/>
+                <Label Text="{Binding Error}" TextColor="Red" />
+            </VerticalStackLayout>
+
             <Button Grid.Column="1"
                     Text="Manage"
-                    Command="{Binding ManageExercisesCommand}"
-                    VerticalOptions="Center" />
+                    Command="{Binding ManageCommand}" />
         </Grid>
 
         <Label Grid.Row="1"
-               Text="{Binding Notes}"
-               IsVisible="{Binding Notes, Converter={StaticResource StringNotNullOrEmptyConverter}}"
-               FontAttributes="Italic" />
+               Text="Exercises in this workout"
+               FontAttributes="Bold"
+               FontSize="16" />
 
-        <VerticalStackLayout Grid.Row="2" Spacing="10">
-
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}" />
-
-            <Label Text="{Binding Error}"
-                   TextColor="Red"
-                   IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
-
-            <Label Text="Exercises in this workout"
-                   FontAttributes="Bold"
-                   FontSize="16"
-                   IsVisible="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
-
-            <CollectionView ItemsSource="{Binding Items}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame Margin="0,0,0,10"
-                               Padding="14"
-                               CornerRadius="12"
-                               BorderColor="#DDD">
-                            <VerticalStackLayout Spacing="6">
-                                <Label Text="{Binding ExerciseName}" FontSize="18"/>
-                                <Label Text="{Binding Category}" FontAttributes="Italic" FontSize="12"/>
-                                <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="10">
-                                    <Label Text="Reps:" VerticalOptions="Center"/>
-                                    <Label Grid.Column="1" Text="{Binding Reps}" VerticalOptions="Center"/>
-                                    <Label Grid.Column="2" Text="Kg:" VerticalOptions="Center"/>
-                                    <Label Grid.Column="3" Text="{Binding WeightKg}" VerticalOptions="Center"/>
-                                </Grid>
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-        </VerticalStackLayout>
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Items}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,10"
+                           Padding="14"
+                           CornerRadius="12"
+                           BorderColor="#DDD">
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="14">
+                            <Label Text="{Binding Name}" FontSize="16"/>
+                            <Label Grid.Column="1" Text="{Binding Repetitions}" />
+                            <Label Grid.Column="2" Text="{Binding WeightKg}" />
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
     </Grid>
 </ContentPage>

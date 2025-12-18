@@ -2,27 +2,32 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.WorkoutsPage"
+             x:Name="PageRoot"
              Title="Workouts">
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" Grid.Row="0">
-            <Label Text="Workouts" FontSize="28" VerticalOptions="Center" />
-
-            <Button Grid.Column="1"
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" Grid.Row="0" ColumnSpacing="8">
+            <Button Grid.Column="0"
                     Text="Exercises"
-                    Command="{Binding GoExercisesCommand}"
-                    Margin="8,0,0,0"/>
+                    Command="{Binding GoExercisesCommand}" />
+
+            <Label Grid.Column="1"
+                   Text="Workouts"
+                   FontSize="28"
+                   VerticalOptions="Center" />
 
             <Button Grid.Column="2"
                     Text="Add"
-                    Command="{Binding AddCommand}"
-                    Margin="8,0,0,0"/>
+                    Command="{Binding AddCommand}" />
 
             <Button Grid.Column="3"
+                    Text="Refresh"
+                    Command="{Binding RefreshCommand}" />
+
+            <Button Grid.Column="4"
                     Text="Logout"
-                    Command="{Binding LogoutCommand}"
-                    Margin="8,0,0,0"/>
+                    Command="{Binding LogoutCommand}" />
         </Grid>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -40,13 +45,14 @@
                         ItemsSource="{Binding Items}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
+
                     <SwipeView>
 
                         <SwipeView.LeftItems>
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Edit"
                                            BackgroundColor="#3B82F6"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                           Command="{Binding BindingContext.EditCommand, Source={x:Reference PageRoot}}"
                                            CommandParameter="{Binding .}" />
                             </SwipeItems>
                         </SwipeView.LeftItems>
@@ -55,7 +61,7 @@
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Delete"
                                            BackgroundColor="#EF4444"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                           Command="{Binding BindingContext.DeleteCommand, Source={x:Reference PageRoot}}"
                                            CommandParameter="{Binding .}" />
                             </SwipeItems>
                         </SwipeView.RightItems>
@@ -66,14 +72,16 @@
                                BorderColor="#DDD">
 
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailsCommand}"
-                                    CommandParameter="{Binding .}" />
+                                <TapGestureRecognizer Command="{Binding BindingContext.OpenDetailCommand, Source={x:Reference PageRoot}}"
+                                                      CommandParameter="{Binding .}" />
                             </Frame.GestureRecognizers>
 
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Title}" FontSize="18"/>
                                 <Label Text="{Binding Notes}" FontAttributes="Italic"/>
+                                <Label Text="Tap to open"
+                                       FontSize="12"
+                                       Opacity="0.6" />
                             </VerticalStackLayout>
                         </Frame>
 

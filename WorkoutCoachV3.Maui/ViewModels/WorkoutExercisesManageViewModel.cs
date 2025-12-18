@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
-using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui.ViewModels;
@@ -10,11 +9,10 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
 
-    private Guid? _workoutLocalId;
+    private Guid _workoutLocalId;
 
-    public ObservableCollection<WorkoutExerciseLineItem> Items { get; } = new();
+    public ObservableCollection<RowVm> Rows { get; } = new();
 
-    [ObservableProperty] private string titleText = "Manage Exercises";
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
@@ -29,39 +27,24 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
         await LoadAsync();
     }
 
-    private async Task LoadAsync()
+    [RelayCommand]
+    public async Task LoadAsync()
     {
-        if (_workoutLocalId is null) return;
-
+        if (IsBusy) return;
         IsBusy = true;
         Error = null;
 
         try
         {
-            var workout = await _local.GetWorkoutByLocalIdAsync(_workoutLocalId.Value);
-            TitleText = workout is null ? "Manage Exercises" : $"Manage: {workout.Title}";
-
-            var allExercises = await _local.GetExercisesAsync();
-            var links = await _local.GetWorkoutExerciseLinksAsync(_workoutLocalId.Value);
-
-            var activeLinks = links.Where(x => !x.IsDeleted).ToDictionary(x => x.ExerciseLocalId, x => x);
-            var deletedLinks = links.Where(x => x.IsDeleted).ToDictionary(x => x.ExerciseLocalId, x => x);
-
-            Items.Clear();
-            foreach (var ex in allExercises)
+            var rows = await _local.GetWorkoutExerciseManageRowsAsync(_workoutLocalId);
+            Rows.Clear();
+            foreach (var r in rows)
             {
-                var hasActive = activeLinks.TryGetValue(ex.LocalId, out var link);
-                var hasDeleted = !hasActive && deletedLinks.TryGetValue(ex.LocalId, out link);
-
-                Items.Add(new WorkoutExerciseLineItem
+                Rows.Add(new RowVm(r.ExerciseLocalId, r.Name)
                 {
-                    ExerciseLocalId = ex.LocalId,
-                    ExerciseName = ex.Name,
-                    Category = ex.Category,
-                    IsInWorkout = hasActive,
-                    Reps = (hasActive || hasDeleted) ? link!.Reps : 0,
-                    WeightKg = (hasActive || hasDeleted) ? link!.WeightKg : 0,
-                    ExistingLinkLocalId = (hasActive || hasDeleted) ? link!.LocalId : (Guid?)null
+                    IsInWorkout = r.IsInWorkout,
+                    RepetitionsText = r.Repetitions.ToString(),
+                    WeightText = r.WeightKg.ToString()
                 });
             }
         }
@@ -78,43 +61,24 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (_workoutLocalId is null) return;
         if (IsBusy) return;
-
         IsBusy = true;
         Error = null;
 
         try
         {
-            foreach (var item in Items)
+            var data = Rows.Select(r =>
             {
-                // Ignore invalid reps/weight when not selected
-                if (!item.IsInWorkout)
-                {
-                    // If it existed before => soft delete
-                    if (item.ExistingLinkLocalId is not null)
-                    {
-                        await _local.SoftDeleteWorkoutExerciseAsync(item.ExistingLinkLocalId.Value);
-                    }
-                    continue;
-                }
+                var reps = 0;
+                _ = int.TryParse(r.RepetitionsText, out reps);
 
-                // Selected: create/update
-                var reps = item.Reps < 0 ? 0 : item.Reps;
-                var weight = item.WeightKg < 0 ? 0 : item.WeightKg;
+                var weight = 0d;
+                _ = double.TryParse(r.WeightText, out weight);
 
-                var link = new LocalWorkoutExercise
-                {
-                    LocalId = item.ExistingLinkLocalId ?? Guid.NewGuid(),
-                    WorkoutLocalId = _workoutLocalId.Value,
-                    ExerciseLocalId = item.ExerciseLocalId,
-                    Reps = reps,
-                    WeightKg = weight,
-                    IsDeleted = false
-                };
+                return (r.ExerciseLocalId, r.IsInWorkout, reps, weight);
+            }).ToList();
 
-                await _local.UpsertWorkoutExerciseAsync(link);
-            }
+            await _local.SaveWorkoutExercisesAsync(_workoutLocalId, data);
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }
@@ -134,17 +98,19 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
         await Application.Current!.MainPage!.Navigation.PopAsync();
     }
 
-    public partial class WorkoutExerciseLineItem : ObservableObject
+    public partial class RowVm : ObservableObject
     {
-        public Guid ExerciseLocalId { get; set; }
-        public Guid? ExistingLinkLocalId { get; set; }
-
-        [ObservableProperty] private string exerciseName = "";
-        [ObservableProperty] private string category = "";
+        public Guid ExerciseLocalId { get; }
+        public string Name { get; }
 
         [ObservableProperty] private bool isInWorkout;
+        [ObservableProperty] private string repetitionsText = "0";
+        [ObservableProperty] private string weightText = "0";
 
-        [ObservableProperty] private int reps;
-        [ObservableProperty] private double weightKg;
+        public RowVm(Guid exerciseLocalId, string name)
+        {
+            ExerciseLocalId = exerciseLocalId;
+            Name = name;
+        }
     }
 }

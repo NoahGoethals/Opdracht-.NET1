@@ -1,12 +1,15 @@
-﻿namespace WorkoutCoachV3.Maui.Data.LocalEntities;
+﻿using System.ComponentModel.DataAnnotations;
 
+namespace WorkoutCoachV3.Maui.Data.LocalEntities;
 
-public class LocalWorkoutExercise : BaseLocalEntity
+public class LocalWorkoutExercise
 {
-    public Guid WorkoutLocalId { get; set; }
+    [Key]
+    public Guid LocalId { get; set; } = Guid.NewGuid();
 
+    public Guid WorkoutLocalId { get; set; }
     public Guid ExerciseLocalId { get; set; }
 
-    public int Reps { get; set; }
+    public int Repetitions { get; set; }
     public double WeightKg { get; set; }
 }

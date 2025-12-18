@@ -15,6 +15,6 @@ public partial class WorkoutDetailPage : ContentPage
         base.OnAppearing();
 
         if (BindingContext is WorkoutDetailViewModel vm)
-            await vm.RefreshAsync();
+            await vm.LoadAsync();
     }
 }

@@ -9,20 +9,12 @@ public class LocalAppDbContext : DbContext
 
     public DbSet<LocalExercise> Exercises => Set<LocalExercise>();
     public DbSet<LocalWorkout> Workouts => Set<LocalWorkout>();
+
     public DbSet<LocalWorkoutExercise> WorkoutExercises => Set<LocalWorkoutExercise>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<LocalExercise>()
-            .HasIndex(x => x.RemoteId);
-
-        modelBuilder.Entity<LocalWorkout>()
-            .HasIndex(x => x.RemoteId);
-
-        modelBuilder.Entity<LocalWorkoutExercise>()
-            .HasIndex(x => x.RemoteId);
 
         modelBuilder.Entity<LocalWorkoutExercise>()
             .HasIndex(x => new { x.WorkoutLocalId, x.ExerciseLocalId })

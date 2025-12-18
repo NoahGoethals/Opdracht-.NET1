@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
-using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -12,12 +11,13 @@ public partial class WorkoutDetailViewModel : ObservableObject
     private readonly LocalDatabaseService _local;
     private readonly IServiceProvider _services;
 
-    private Guid? _workoutLocalId;
+    private Guid _workoutLocalId;
 
-    public ObservableCollection<WorkoutExerciseRow> Items { get; } = new();
-
-    [ObservableProperty] private string titleText = "Workout";
+    [ObservableProperty] private string workoutTitle = "";
     [ObservableProperty] private string? notes;
+
+    public ObservableCollection<LocalDatabaseService.WorkoutExerciseDisplay> Items { get; } = new();
+
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
@@ -30,41 +30,32 @@ public partial class WorkoutDetailViewModel : ObservableObject
     public async Task InitAsync(Guid workoutLocalId)
     {
         _workoutLocalId = workoutLocalId;
-        await RefreshAsync();
+        await LoadAsync();
     }
 
-    public async Task RefreshAsync()
+    [RelayCommand]
+    public async Task LoadAsync()
     {
-        if (_workoutLocalId is null) return;
-
+        if (IsBusy) return;
         IsBusy = true;
         Error = null;
 
         try
         {
-            var w = await _local.GetWorkoutByLocalIdAsync(_workoutLocalId.Value);
+            var w = await _local.GetWorkoutByLocalIdAsync(_workoutLocalId);
             if (w is null)
             {
                 Error = "Workout not found.";
                 return;
             }
 
-            TitleText = w.Title;
+            WorkoutTitle = w.Title;
             Notes = w.Notes;
 
-            var rows = await _local.GetWorkoutExercisesAsync(_workoutLocalId.Value);
-
+            var data = await _local.GetWorkoutExercisesAsync(_workoutLocalId);
             Items.Clear();
-            foreach (var (link, ex) in rows)
-            {
-                Items.Add(new WorkoutExerciseRow
-                {
-                    ExerciseName = ex.Name,
-                    Category = ex.Category,
-                    Reps = link.Reps,
-                    WeightKg = link.WeightKg
-                });
-            }
+            foreach (var x in data)
+                Items.Add(x);
         }
         catch (Exception ex)
         {
@@ -77,22 +68,12 @@ public partial class WorkoutDetailViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task ManageExercisesAsync()
+    private async Task ManageAsync()
     {
-        if (_workoutLocalId is null) return;
-
         var page = _services.GetRequiredService<WorkoutExercisesManagePage>();
         var vm = (WorkoutExercisesManageViewModel)page.BindingContext!;
-        await vm.InitAsync(_workoutLocalId.Value);
+        await vm.InitAsync(_workoutLocalId);
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
-
-    public class WorkoutExerciseRow
-    {
-        public string ExerciseName { get; set; } = "";
-        public string Category { get; set; } = "";
-        public int Reps { get; set; }
-        public double WeightKg { get; set; }
     }
 }
