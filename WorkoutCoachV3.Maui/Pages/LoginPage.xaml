@@ -17,6 +17,7 @@
 
         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
 
+        <Label Text="{Binding Message}" TextColor="Green" />
         <Label Text="{Binding Error}" TextColor="Red" />
     </VerticalStackLayout>
 </ContentPage>

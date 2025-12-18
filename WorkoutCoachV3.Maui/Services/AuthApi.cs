@@ -10,6 +10,7 @@ public class AuthApi : IAuthApi
     public async Task<AuthResponse> LoginAsync(string email, string password)
     {
         var res = await _http.PostAsJsonAsync("api/auth/login", new { email, password });
+
         if (!res.IsSuccessStatusCode)
         {
             var msg = await res.Content.ReadAsStringAsync();

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WorkoutCoachV3.Maui.Pages.ExercisesPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Exercises">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Logout" Command="{Binding LogoutCommand}" Priority="0" Order="Primary" />
+    </ContentPage.ToolbarItems>
+
+    <Grid Padding="12" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
+
+        <Label Grid.Row="0" Text="Exercises" FontSize="24" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <SearchBar
+                Grid.Column="0"
+                Placeholder="Search..."
+                Text="{Binding SearchText}" />
+
+            <Button
+                Grid.Column="1"
+                Text="Search"
+                Command="{Binding LoadCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+            <Label Text="Category:" VerticalOptions="Center" />
+            <Picker
+                Grid.Column="1"
+                ItemsSource="{Binding Categories}"
+                SelectedItem="{Binding SelectedCategory}" />
+        </Grid>
+
+        <RefreshView Grid.Row="3" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsBusy}">
+            <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <Label Text="{Binding Error}" TextColor="Red" />
+
+                <CollectionView ItemsSource="{Binding Items}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Padding="12" Margin="0,6" BorderColor="{AppThemeBinding Light=#E5E5E5, Dark=#333333}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Name}" FontSize="18" />
+                                    <Label Text="{Binding Category}" FontAttributes="Italic" Opacity="0.8" />
+                                    <Label Text="{Binding Notes}" Opacity="0.9" LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </RefreshView>
+
+    </Grid>
+</ContentPage>

@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 using WorkoutCoachV3.Maui.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
-
 
 namespace WorkoutCoachV3.Maui;
 
@@ -41,8 +40,13 @@ public static class MauiProgram
 #endif
         ;
 
+        builder.Services.AddSingleton<IExercisesApi, ExercisesApi>();
+
         builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<ExercisesViewModel>();
+
         builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<ExercisesPage>();
 
         return builder.Build();
     }
