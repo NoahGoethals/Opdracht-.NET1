@@ -7,30 +7,26 @@ using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui.ViewModels;
 
-public partial class ExercisesViewModel : ObservableObject
+public partial class WorkoutsViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
     private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
     private readonly ITokenStore _tokenStore;
 
-    public ObservableCollection<LocalExercise> Items { get; } = new();
-    public ObservableCollection<string> Categories { get; } = new();
+    public ObservableCollection<LocalWorkout> Items { get; } = new();
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
     [ObservableProperty] private string? searchText;
-    [ObservableProperty] private string selectedCategory = "All";
 
-    public ExercisesViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
+    public WorkoutsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
     {
         _local = local;
         _sync = sync;
         _services = services;
         _tokenStore = tokenStore;
-
-        Categories.Add("All");
     }
 
     public async Task RefreshAsync()
@@ -52,29 +48,12 @@ public partial class ExercisesViewModel : ObservableObject
 
         try
         {
-            var cat = SelectedCategory == "All" ? null : SelectedCategory;
             var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText;
-
-            var data = await _local.GetExercisesAsync(search: search, category: cat);
+            var data = await _local.GetWorkoutsAsync(search);
 
             Items.Clear();
             foreach (var x in data)
                 Items.Add(x);
-
-            var distinctCats = data
-                .Select(x => x.Category)
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(c => c)
-                .ToList();
-
-            Categories.Clear();
-            Categories.Add("All");
-            foreach (var c in distinctCats)
-                Categories.Add(c);
-
-            if (!Categories.Contains(SelectedCategory))
-                SelectedCategory = "All";
         }
         catch (Exception ex)
         {
@@ -86,41 +65,36 @@ public partial class ExercisesViewModel : ObservableObject
         }
     }
 
-    partial void OnSelectedCategoryChanged(string value)
-    {
-        _ = LoadLocalAsync();
-    }
-
     [RelayCommand]
     private async Task AddAsync()
     {
-        var page = _services.GetRequiredService<ExerciseEditPage>();
-        var vm = (ExerciseEditViewModel)page.BindingContext!;
+        var page = _services.GetRequiredService<WorkoutEditPage>();
+        var vm = (WorkoutEditViewModel)page.BindingContext!;
         vm.InitForCreate();
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
-    private async Task EditAsync(LocalExercise? item)
+    private async Task EditAsync(LocalWorkout? item)
     {
         if (item is null) return;
 
-        var page = _services.GetRequiredService<ExerciseEditPage>();
-        var vm = (ExerciseEditViewModel)page.BindingContext!;
+        var page = _services.GetRequiredService<WorkoutEditPage>();
+        var vm = (WorkoutEditViewModel)page.BindingContext!;
         await vm.InitForEditAsync(item.LocalId);
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(LocalExercise? item)
+    private async Task DeleteAsync(LocalWorkout? item)
     {
         if (item is null) return;
 
         var ok = await Application.Current!.MainPage!.DisplayAlert(
-            "Delete exercise",
-            $"Delete '{item.Name}'?",
+            "Delete workout",
+            $"Delete '{item.Title}'?",
             "Delete",
             "Cancel");
 
@@ -128,7 +102,7 @@ public partial class ExercisesViewModel : ObservableObject
 
         try
         {
-            await _local.SoftDeleteExerciseAsync(item.LocalId);
+            await _local.SoftDeleteWorkoutAsync(item.LocalId);
 
             try { await _sync.SyncAllAsync(); } catch { }
 
@@ -138,13 +112,6 @@ public partial class ExercisesViewModel : ObservableObject
         {
             Error = ex.Message;
         }
-    }
-
-    [RelayCommand]
-    private async Task GoToWorkoutsAsync()
-    {
-        var page = _services.GetRequiredService<WorkoutsPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]

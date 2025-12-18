@@ -54,14 +54,21 @@ public static class MauiProgram
         ;
 
         builder.Services.AddSingleton<IExercisesApi, ExercisesApi>();
+        builder.Services.AddSingleton<IWorkoutsApi, WorkoutsApi>();
 
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<ExercisesViewModel>();
         builder.Services.AddTransient<ExerciseEditViewModel>();
 
+        builder.Services.AddTransient<WorkoutsViewModel>();
+        builder.Services.AddTransient<WorkoutEditViewModel>();
+
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ExercisesPage>();
         builder.Services.AddTransient<ExerciseEditPage>();
+
+        builder.Services.AddTransient<WorkoutsPage>();
+        builder.Services.AddTransient<WorkoutEditPage>();
 
         return builder.Build();
     }

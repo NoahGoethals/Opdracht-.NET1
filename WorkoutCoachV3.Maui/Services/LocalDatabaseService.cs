@@ -32,7 +32,7 @@ public class LocalDatabaseService
         }
     }
 
-
+   
     public async Task<List<LocalExercise>> GetExercisesAsync(string? search = null, string? category = null)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -151,7 +151,7 @@ public class LocalDatabaseService
             else
             {
                 if (local.SyncState == SyncState.Dirty)
-                    continue; 
+                    continue;
 
                 local.Name = r.name;
                 local.Category = r.category ?? "";
@@ -173,6 +173,145 @@ public class LocalDatabaseService
                 continue;
 
             db.Exercises.Remove(l);
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    
+    public async Task<List<LocalWorkout>> GetWorkoutsAsync(string? search = null)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var q = db.Workouts.Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            q = q.Where(x => x.Title.Contains(search));
+
+        return await q
+            .OrderBy(x => x.Title)
+            .ToListAsync();
+    }
+
+    public async Task<LocalWorkout?> GetWorkoutByLocalIdAsync(Guid localId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.Workouts.FirstOrDefaultAsync(x => x.LocalId == localId);
+    }
+
+    public async Task UpsertWorkoutAsync(LocalWorkout w)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var existing = await db.Workouts.FirstOrDefaultAsync(x => x.LocalId == w.LocalId);
+        if (existing is null)
+        {
+            w.LastModifiedUtc = DateTime.UtcNow;
+            w.SyncState = SyncState.Dirty;
+            db.Workouts.Add(w);
+        }
+        else
+        {
+            existing.Title = w.Title;
+            existing.Notes = w.Notes;
+            existing.IsDeleted = w.IsDeleted;
+
+            existing.LastModifiedUtc = DateTime.UtcNow;
+            existing.SyncState = SyncState.Dirty;
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task SoftDeleteWorkoutAsync(Guid localId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var w = await db.Workouts.FirstOrDefaultAsync(x => x.LocalId == localId);
+        if (w is null) return;
+
+        w.IsDeleted = true;
+        w.LastModifiedUtc = DateTime.UtcNow;
+        w.SyncState = SyncState.Dirty;
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<List<LocalWorkout>> GetDirtyWorkoutsAsync()
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.Workouts.Where(x => x.SyncState == SyncState.Dirty).ToListAsync();
+    }
+
+    public async Task MarkWorkoutSyncedAsync(Guid localId, int? remoteId = null)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var w = await db.Workouts.FirstOrDefaultAsync(x => x.LocalId == localId);
+        if (w is null) return;
+
+        if (remoteId.HasValue)
+            w.RemoteId = remoteId;
+
+        w.SyncState = SyncState.Synced;
+        w.LastSyncedUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task HardDeleteWorkoutAsync(Guid localId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var w = await db.Workouts.FirstOrDefaultAsync(x => x.LocalId == localId);
+        if (w is null) return;
+
+        db.Workouts.Remove(w);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task MergeRemoteWorkoutsAsync(List<(int id, string title)> remote)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var remoteIds = remote.Select(r => r.id).ToHashSet();
+
+        foreach (var r in remote)
+        {
+            var local = await db.Workouts.FirstOrDefaultAsync(x => x.RemoteId == r.id);
+            if (local is null)
+            {
+                db.Workouts.Add(new LocalWorkout
+                {
+                    RemoteId = r.id,
+                    Title = r.title,
+                    Notes = null,
+                    IsDeleted = false,
+                    SyncState = SyncState.Synced,
+                    LastModifiedUtc = DateTime.UtcNow,
+                    LastSyncedUtc = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                if (local.SyncState == SyncState.Dirty)
+                    continue;
+
+                local.Title = r.title;
+                local.IsDeleted = false;
+
+                local.SyncState = SyncState.Synced;
+                local.LastSyncedUtc = DateTime.UtcNow;
+            }
+        }
+
+        var localsWithRemote = await db.Workouts.Where(x => x.RemoteId != null).ToListAsync();
+        foreach (var l in localsWithRemote)
+        {
+            if (l.RemoteId is null) continue;
+            if (remoteIds.Contains(l.RemoteId.Value)) continue;
+
+            if (l.SyncState == SyncState.Dirty)
+                continue;
+
+            db.Workouts.Remove(l);
         }
 
         await db.SaveChangesAsync();

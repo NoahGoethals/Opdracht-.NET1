@@ -8,11 +8,13 @@ public class SyncService : ISyncService
 {
     private readonly LocalDatabaseService _local;
     private readonly IExercisesApi _exercisesApi;
+    private readonly IWorkoutsApi _workoutsApi;
 
-    public SyncService(LocalDatabaseService local, IExercisesApi exercisesApi)
+    public SyncService(LocalDatabaseService local, IExercisesApi exercisesApi, IWorkoutsApi workoutsApi)
     {
         _local = local;
         _exercisesApi = exercisesApi;
+        _workoutsApi = workoutsApi;
     }
 
     public async Task SyncAllAsync(CancellationToken ct = default)
@@ -21,8 +23,7 @@ public class SyncService : ISyncService
             return;
 
         await SyncExercisesAsync(ct);
-
-        
+        await SyncWorkoutsAsync(ct);
     }
 
     private async Task SyncExercisesAsync(CancellationToken ct)
@@ -38,9 +39,7 @@ public class SyncService : ISyncService
                 if (e.IsDeleted)
                 {
                     if (e.RemoteId.HasValue)
-                    {
                         await _exercisesApi.DeleteAsync(e.RemoteId.Value, ct);
-                    }
 
                     await _local.HardDeleteExerciseAsync(e.LocalId);
                     continue;
@@ -70,8 +69,52 @@ public class SyncService : ISyncService
         }
 
         var remote = await _exercisesApi.GetAllAsync(search: null, category: null, sort: "name", ct: ct);
+        await _local.MergeRemoteExercisesAsync(remote.Select(x => (x.Id, x.Name, x.Category, x.Notes)).ToList());
+    }
 
-        await _local.MergeRemoteExercisesAsync(
-            remote.Select(x => (x.Id, x.Name, x.Category, x.Notes)).ToList());
+    private async Task SyncWorkoutsAsync(CancellationToken ct)
+    {
+        var dirty = await _local.GetDirtyWorkoutsAsync();
+
+        foreach (var w in dirty)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                if (w.IsDeleted)
+                {
+                    if (w.RemoteId.HasValue)
+                        await _workoutsApi.DeleteAsync(w.RemoteId.Value, ct);
+
+                    await _local.HardDeleteWorkoutAsync(w.LocalId);
+                    continue;
+                }
+
+                if (!w.RemoteId.HasValue)
+                {
+                    var created = await _workoutsApi.CreateAsync(
+                        new CreateWorkoutDto(w.Title, ScheduledOn: null),
+                        ct);
+
+                    await _local.MarkWorkoutSyncedAsync(w.LocalId, created.Id);
+                }
+                else
+                {
+                    await _workoutsApi.UpdateAsync(
+                        w.RemoteId.Value,
+                        new UpdateWorkoutDto(w.Title, ScheduledOn: null),
+                        ct);
+
+                    await _local.MarkWorkoutSyncedAsync(w.LocalId);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        var remote = await _workoutsApi.GetAllAsync(search: null, sort: "title", ct: ct);
+        await _local.MergeRemoteWorkoutsAsync(remote.Select(x => (x.Id, x.Title)).ToList());
     }
 }

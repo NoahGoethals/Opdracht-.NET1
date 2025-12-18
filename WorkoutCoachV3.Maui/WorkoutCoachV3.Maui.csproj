@@ -52,10 +52,22 @@
 	  <Compile Update="Pages\ExerciseEditPage.xaml.cs">
 	    <DependentUpon>ExerciseEditPage.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Pages\WorkoutEditPage.xaml.cs">
+	    <DependentUpon>WorkoutEditPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\WorkoutsPage.xaml.cs">
+	    <DependentUpon>WorkoutsPage.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
 		<MauiXaml Update="Pages\ExerciseEditPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\WorkoutEditPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\WorkoutsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\LoginPage.xaml">
