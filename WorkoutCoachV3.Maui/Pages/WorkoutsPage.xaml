@@ -2,19 +2,25 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.WorkoutsPage"
+             x:Name="PageRoot"
              Title="Workouts">
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto,Auto" Grid.Row="0">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto" Grid.Row="0">
             <Label Text="Workouts" FontSize="28" VerticalOptions="Center" />
 
             <Button Grid.Column="1"
+                    Text="Exercises"
+                    Command="{Binding GoExercisesCommand}"
+                    Margin="8,0,0,0" />
+
+            <Button Grid.Column="2"
                     Text="Add"
                     Command="{Binding AddCommand}"
                     Margin="8,0,0,0"/>
 
-            <Button Grid.Column="2"
+            <Button Grid.Column="3"
                     Text="Logout"
                     Command="{Binding LogoutCommand}"
                     Margin="8,0,0,0"/>
@@ -35,18 +41,18 @@
                         ItemsSource="{Binding Items}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-
                     <SwipeView>
+
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Edit"
                                            BackgroundColor="#3B82F6"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                           Command="{Binding BindingContext.EditCommand, Source={x:Reference PageRoot}}"
                                            CommandParameter="{Binding .}" />
 
                                 <SwipeItem Text="Delete"
                                            BackgroundColor="#EF4444"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                           Command="{Binding BindingContext.DeleteCommand, Source={x:Reference PageRoot}}"
                                            CommandParameter="{Binding .}" />
                             </SwipeItems>
                         </SwipeView.RightItems>

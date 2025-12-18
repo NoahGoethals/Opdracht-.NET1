@@ -13,6 +13,7 @@ public partial class WorkoutEditViewModel : ObservableObject
     private Guid? _editingLocalId;
 
     [ObservableProperty] private string title = "New Workout";
+
     [ObservableProperty] private string workoutTitle = "";
     [ObservableProperty] private string? notes;
 
@@ -84,7 +85,7 @@ public partial class WorkoutEditViewModel : ObservableObject
 
             await _local.UpsertWorkoutAsync(entity);
 
-            try { await _sync.SyncAllAsync(); } catch { }
+            try { await _sync.SyncAllAsync(); } catch {  }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }
