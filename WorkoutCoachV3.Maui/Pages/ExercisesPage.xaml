@@ -6,7 +6,8 @@
     Title="Exercises">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Logout" Command="{Binding LogoutCommand}" Priority="0" Order="Primary" />
+        <ToolbarItem Text="Add" Command="{Binding AddCommand}" Priority="0" Order="Primary" />
+        <ToolbarItem Text="Logout" Command="{Binding LogoutCommand}" Priority="1" Order="Primary" />
     </ContentPage.ToolbarItems>
 
     <Grid Padding="12" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
@@ -14,24 +15,21 @@
         <Label Grid.Row="0" Text="Exercises" FontSize="24" />
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <SearchBar
-                Grid.Column="0"
-                Placeholder="Search..."
-                Text="{Binding SearchText}" />
+            <SearchBar Grid.Column="0"
+                       Placeholder="Search..."
+                       Text="{Binding SearchText}" />
 
-            <Button
-                Grid.Column="1"
-                Text="Search"
-                Command="{Binding LoadCommand}"
-                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+            <Button Grid.Column="1"
+                    Text="Search"
+                    Command="{Binding LoadCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
         </Grid>
 
         <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="10">
             <Label Text="Category:" VerticalOptions="Center" />
-            <Picker
-                Grid.Column="1"
-                ItemsSource="{Binding Categories}"
-                SelectedItem="{Binding SelectedCategory}" />
+            <Picker Grid.Column="1"
+                    ItemsSource="{Binding Categories}"
+                    SelectedItem="{Binding SelectedCategory}" />
         </Grid>
 
         <RefreshView Grid.Row="3" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsBusy}">
@@ -41,13 +39,27 @@
                 <CollectionView ItemsSource="{Binding Items}" SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame Padding="12" Margin="0,6" BorderColor="{AppThemeBinding Light=#E5E5E5, Dark=#333333}">
-                                <VerticalStackLayout Spacing="2">
-                                    <Label Text="{Binding Name}" FontSize="18" />
-                                    <Label Text="{Binding Category}" FontAttributes="Italic" Opacity="0.8" />
-                                    <Label Text="{Binding Notes}" Opacity="0.9" LineBreakMode="TailTruncation" />
-                                </VerticalStackLayout>
-                            </Frame>
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems Mode="Reveal">
+                                        <SwipeItem Text="Edit"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                                   CommandParameter="{Binding .}" />
+                                        <SwipeItem Text="Delete"
+                                                   BackgroundColor="#C62828"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                                   CommandParameter="{Binding .}" />
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+
+                                <Frame Padding="12" Margin="0,6" BorderColor="{AppThemeBinding Light=#E5E5E5, Dark=#333333}">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Name}" FontSize="18" />
+                                        <Label Text="{Binding Category}" FontAttributes="Italic" Opacity="0.8" />
+                                        <Label Text="{Binding Notes}" Opacity="0.9" LineBreakMode="TailTruncation" />
+                                    </VerticalStackLayout>
+                                </Frame>
+                            </SwipeView>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>

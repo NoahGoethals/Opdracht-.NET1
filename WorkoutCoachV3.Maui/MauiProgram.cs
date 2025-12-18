@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Maui;
-using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 using WorkoutCoachV3.Maui.ViewModels;
@@ -19,11 +18,13 @@ public static class MauiProgram
         builder.Services.AddSingleton<ITokenStore, TokenStore>();
         builder.Services.AddTransient<AuthHeaderHandler>();
 
-        var baseUrl = GetApiBaseUrl();
+        var baseUrl = ApiConfig.GetBaseUrl();
+        System.Diagnostics.Debug.WriteLine($"[API] BaseUrl = {baseUrl}");
 
         builder.Services.AddHttpClient<IAuthApi, AuthApi>(http =>
         {
             http.BaseAddress = new Uri(baseUrl);
+            http.Timeout = TimeSpan.FromSeconds(30);
         })
 #if DEBUG
         .ConfigurePrimaryHttpMessageHandler(() => DevHttpHandler())
@@ -33,6 +34,7 @@ public static class MauiProgram
         builder.Services.AddHttpClient("Api", http =>
         {
             http.BaseAddress = new Uri(baseUrl);
+            http.Timeout = TimeSpan.FromSeconds(30);
         })
         .AddHttpMessageHandler<AuthHeaderHandler>()
 #if DEBUG
@@ -40,24 +42,28 @@ public static class MauiProgram
 #endif
         ;
 
+        builder.Services.AddHttpClient(nameof(ApiHealthService), http =>
+        {
+            http.BaseAddress = new Uri(baseUrl);
+            http.Timeout = TimeSpan.FromSeconds(5);
+        })
+#if DEBUG
+        .ConfigurePrimaryHttpMessageHandler(() => DevHttpHandler())
+#endif
+        ;
+
+        builder.Services.AddSingleton<IApiHealthService, ApiHealthService>();
         builder.Services.AddSingleton<IExercisesApi, ExercisesApi>();
 
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<ExercisesViewModel>();
+        builder.Services.AddTransient<ExerciseEditViewModel>();
 
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<ExercisesPage>();
+        builder.Services.AddTransient<ExerciseEditPage>();
 
         return builder.Build();
-    }
-
-    private static string GetApiBaseUrl()
-    {
-#if ANDROID
-        return "https://10.0.2.2:7289/";
-#else
-        return "https://localhost:7289/";
-#endif
     }
 
 #if DEBUG
