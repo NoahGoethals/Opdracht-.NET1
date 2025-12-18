@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WorkoutCoachV3.Maui.Pages.WorkoutExercisesManagePage"
+             Title="Manage Exercises">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <Label Text="{Binding TitleText}" FontSize="22" VerticalOptions="Center"/>
+
+            <Button Grid.Column="1"
+                    Text="Save"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+
+            <Button Grid.Column="2"
+                    Text="Cancel"
+                    Command="{Binding CancelCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+        </Grid>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Items}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,10"
+                           Padding="12"
+                           CornerRadius="12"
+                           BorderColor="#DDD">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" RowDefinitions="Auto,Auto">
+
+                            <CheckBox Grid.RowSpan="2"
+                                      IsChecked="{Binding IsInWorkout}" />
+
+                            <VerticalStackLayout Grid.Column="1" Grid.RowSpan="2" Spacing="2">
+                                <Label Text="{Binding ExerciseName}" FontSize="16" />
+                                <Label Text="{Binding Category}" FontSize="12" FontAttributes="Italic" />
+                            </VerticalStackLayout>
+
+                            <Entry Grid.Column="2"
+                                   Placeholder="Reps"
+                                   Keyboard="Numeric"
+                                   Text="{Binding Reps}" />
+
+                            <Entry Grid.Column="3"
+                                   Placeholder="Kg"
+                                   Keyboard="Numeric"
+                                   Text="{Binding WeightKg}" />
+
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

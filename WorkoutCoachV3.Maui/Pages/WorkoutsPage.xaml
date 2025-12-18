@@ -2,7 +2,6 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.WorkoutsPage"
-             x:Name="PageRoot"
              Title="Workouts">
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
@@ -13,7 +12,7 @@
             <Button Grid.Column="1"
                     Text="Exercises"
                     Command="{Binding GoExercisesCommand}"
-                    Margin="8,0,0,0" />
+                    Margin="8,0,0,0"/>
 
             <Button Grid.Column="2"
                     Text="Add"
@@ -43,16 +42,20 @@
                 <DataTemplate>
                     <SwipeView>
 
-                        <SwipeView.RightItems>
+                        <SwipeView.LeftItems>
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Edit"
                                            BackgroundColor="#3B82F6"
-                                           Command="{Binding BindingContext.EditCommand, Source={x:Reference PageRoot}}"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
                                            CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
 
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Delete"
                                            BackgroundColor="#EF4444"
-                                           Command="{Binding BindingContext.DeleteCommand, Source={x:Reference PageRoot}}"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
                                            CommandParameter="{Binding .}" />
                             </SwipeItems>
                         </SwipeView.RightItems>
@@ -61,6 +64,13 @@
                                Padding="14"
                                CornerRadius="12"
                                BorderColor="#DDD">
+
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailsCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Title}" FontSize="18"/>
                                 <Label Text="{Binding Notes}" FontAttributes="Italic"/>

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WorkoutCoachV3.Maui.Data;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
@@ -16,6 +17,8 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit();
+
+        builder.Logging.AddDebug();
 
         builder.Services.AddSingleton<ITokenStore, TokenStore>();
         builder.Services.AddTransient<AuthHeaderHandler>();
@@ -53,28 +56,34 @@ public static class MauiProgram
 #endif
         ;
 
-        builder.Services.AddSingleton<IExercisesApi, ExercisesApi>();
-        builder.Services.AddSingleton<IWorkoutsApi, WorkoutsApi>();
+        builder.Services.AddTransient<IExercisesApi, ExercisesApi>();
+        builder.Services.AddTransient<IWorkoutsApi, WorkoutsApi>();
 
         builder.Services.AddTransient<LoginViewModel>();
+
         builder.Services.AddTransient<ExercisesViewModel>();
         builder.Services.AddTransient<ExerciseEditViewModel>();
 
         builder.Services.AddTransient<WorkoutsViewModel>();
         builder.Services.AddTransient<WorkoutEditViewModel>();
+        builder.Services.AddTransient<WorkoutDetailViewModel>();
+        builder.Services.AddTransient<WorkoutExercisesManageViewModel>();
 
         builder.Services.AddTransient<LoginPage>();
+
         builder.Services.AddTransient<ExercisesPage>();
         builder.Services.AddTransient<ExerciseEditPage>();
 
         builder.Services.AddTransient<WorkoutsPage>();
         builder.Services.AddTransient<WorkoutEditPage>();
+        builder.Services.AddTransient<WorkoutDetailPage>();
+        builder.Services.AddTransient<WorkoutExercisesManagePage>();
 
         return builder.Build();
     }
 
 #if DEBUG
-    private static HttpClientHandler DevHttpHandler()
+    private static HttpMessageHandler DevHttpHandler()
     {
         return new HttpClientHandler
         {

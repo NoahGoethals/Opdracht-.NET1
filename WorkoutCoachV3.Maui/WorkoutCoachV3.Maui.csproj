@@ -49,6 +49,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Pages\WorkoutExercisesManagePage.xaml.cs">
+	    <DependentUpon>WorkoutExercisesManagePage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\WorkoutDetailPage.xaml.cs">
+	    <DependentUpon>WorkoutDetailPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\ExerciseEditPage.xaml.cs">
 	    <DependentUpon>ExerciseEditPage.xaml</DependentUpon>
 	  </Compile>
@@ -61,6 +67,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<MauiXaml Update="Pages\WorkoutExercisesManagePage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\WorkoutDetailPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\ExerciseEditPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -74,6 +86,24 @@
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\ExercisesPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Pages\WorkoutDetailPage.xaml.cs">
+			<DependentUpon>WorkoutDetailPage.xaml</DependentUpon>
+		</Compile>
+		<Compile Update="Pages\WorkoutExercisesManagePage.xaml.cs">
+			<DependentUpon>WorkoutExercisesManagePage.xaml</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<MauiXaml Update="Pages\WorkoutDetailPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\WorkoutExercisesManagePage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>

@@ -18,13 +18,10 @@ public partial class WorkoutsViewModel : ObservableObject
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
+
     [ObservableProperty] private string? searchText;
 
-    public WorkoutsViewModel(
-        LocalDatabaseService local,
-        ISyncService sync,
-        IServiceProvider services,
-        ITokenStore tokenStore)
+    public WorkoutsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
     {
         _local = local;
         _sync = sync;
@@ -51,7 +48,7 @@ public partial class WorkoutsViewModel : ObservableObject
 
         try
         {
-            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim();
+            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText;
             var data = await _local.GetWorkoutsAsync(search);
 
             Items.Clear();
@@ -107,7 +104,7 @@ public partial class WorkoutsViewModel : ObservableObject
         {
             await _local.SoftDeleteWorkoutAsync(item.LocalId);
 
-            try { await _sync.SyncAllAsync(); } catch {  }
+            try { await _sync.SyncAllAsync(); } catch { }
 
             await LoadLocalAsync();
         }
@@ -118,17 +115,22 @@ public partial class WorkoutsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenDetailsAsync(LocalWorkout? item)
+    {
+        if (item is null) return;
+
+        var page = _services.GetRequiredService<WorkoutDetailPage>();
+        var vm = (WorkoutDetailViewModel)page.BindingContext!;
+        await vm.InitAsync(item.LocalId);
+
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
     private async Task GoExercisesAsync()
     {
-        var nav = Application.Current!.MainPage!.Navigation;
-        if (nav.NavigationStack.Count > 1)
-        {
-            await nav.PopAsync();
-            return;
-        }
-
         var page = _services.GetRequiredService<ExercisesPage>();
-        Application.Current!.MainPage = new NavigationPage(page);
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
