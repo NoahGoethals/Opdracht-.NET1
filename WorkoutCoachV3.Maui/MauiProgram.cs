@@ -59,6 +59,7 @@ public static class MauiProgram
         builder.Services.AddTransient<IExercisesApi, ExercisesApi>();
         builder.Services.AddTransient<IWorkoutsApi, WorkoutsApi>();
         builder.Services.AddTransient<IWorkoutExercisesApi, WorkoutExercisesApi>();
+        builder.Services.AddTransient<ISessionsApi, SessionsApi>();
 
         builder.Services.AddTransient<LoginViewModel>();
 
@@ -73,7 +74,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<SessionsViewModel>();
         builder.Services.AddTransient<SessionEditViewModel>();
-        builder.Services.AddTransient<SessionDetailViewModel>(); 
+        builder.Services.AddTransient<SessionDetailViewModel>();
 
         builder.Services.AddTransient<LoginPage>();
 

@@ -9,17 +9,20 @@ public class SyncService : ISyncService
     private readonly IExercisesApi _exercisesApi;
     private readonly IWorkoutsApi _workoutsApi;
     private readonly IWorkoutExercisesApi _workoutExercisesApi;
+    private readonly ISessionsApi _sessionsApi;
 
     public SyncService(
         LocalDatabaseService local,
         IExercisesApi exercisesApi,
         IWorkoutsApi workoutsApi,
-        IWorkoutExercisesApi workoutExercisesApi)
+        IWorkoutExercisesApi workoutExercisesApi,
+        ISessionsApi sessionsApi)
     {
         _local = local;
         _exercisesApi = exercisesApi;
         _workoutsApi = workoutsApi;
         _workoutExercisesApi = workoutExercisesApi;
+        _sessionsApi = sessionsApi;
     }
 
     public async Task SyncAllAsync(CancellationToken ct = default)
@@ -27,13 +30,17 @@ public class SyncService : ISyncService
         if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
             return;
 
+        // Push first (offline changes)
         await SyncExercisesPushAsync(ct);
         await SyncWorkoutsPushAsync(ct);
         await SyncWorkoutExercisesPushAsync(ct);
+        await SyncSessionsPushAsync(ct);
 
+        // Pull afterwards (server truth)
         await SyncExercisesPullAsync(ct);
         await SyncWorkoutsPullAsync(ct);
         await SyncWorkoutExercisesPullAsync(ct);
+        await SyncSessionsPullAsync(ct);
     }
 
     private async Task SyncExercisesPushAsync(CancellationToken ct)
@@ -173,6 +180,86 @@ public class SyncService : ISyncService
         }
     }
 
+    private async Task SyncSessionsPushAsync(CancellationToken ct)
+    {
+        var dirty = await _local.GetDirtySessionsAsync();
+        if (dirty.Count == 0) return;
+
+        // Build local exercise -> remote exercise id map once
+        var localExercises = await _local.GetExercisesAsync();
+        var exLocalToRemote = localExercises
+            .Where(e => e.RemoteId.HasValue && !e.IsDeleted)
+            .ToDictionary(e => e.LocalId, e => e.RemoteId!.Value);
+
+        foreach (var s in dirty)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                if (s.IsDeleted)
+                {
+                    if (s.RemoteId.HasValue)
+                        await _sessionsApi.DeleteAsync(s.RemoteId.Value, ct);
+
+                    await _local.HardDeleteSessionAsync(s.LocalId);
+                    continue;
+                }
+
+                // Collect sets for this session and map exercise local ids -> remote ids
+                var setEntities = await _local.GetSessionSetsEntitiesAsync(s.LocalId, includeDeleted: false);
+
+                // If session contains at least one exercise that isn't synced yet, skip pushing.
+                // It will be pushed after Exercises sync gives those exercises a RemoteId.
+                if (setEntities.Any(x => !exLocalToRemote.ContainsKey(x.ExerciseLocalId)))
+                    continue;
+
+                var sets = setEntities
+                    .Select(x => new SessionSetDto(
+                        ExerciseId: exLocalToRemote[x.ExerciseLocalId],
+                        SetNumber: Math.Max(1, x.SetNumber),
+                        Reps: Math.Max(0, x.Reps),
+                        Weight: Math.Max(0.0, x.Weight)
+                    ))
+                    .OrderBy(x => x.ExerciseId)
+                    .ThenBy(x => x.SetNumber)
+                    .ToList();
+
+                if (!s.RemoteId.HasValue)
+                {
+                    var created = await _sessionsApi.CreateAsync(
+                        new CreateSessionDto(
+                            Title: s.Title,
+                            Date: s.Date,
+                            Description: s.Description,
+                            Sets: sets
+                        ),
+                        ct);
+
+                    await _local.MarkSessionSyncedAsync(s.LocalId, created.Id);
+                }
+                else
+                {
+                    await _sessionsApi.UpdateAsync(
+                        s.RemoteId.Value,
+                        new UpdateSessionDto(
+                            Title: s.Title,
+                            Date: s.Date,
+                            Description: s.Description,
+                            Sets: sets
+                        ),
+                        ct);
+
+                    await _local.MarkSessionSyncedAsync(s.LocalId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SYNC][PUSH][SESSIONS] " + ex);
+            }
+        }
+    }
+
     private async Task SyncExercisesPullAsync(CancellationToken ct)
     {
         try
@@ -244,6 +331,26 @@ public class SyncService : ISyncService
         catch (Exception ex)
         {
             Debug.WriteLine("[SYNC][PULL][WORKOUT-EXERCISES] " + ex);
+        }
+    }
+
+    private async Task SyncSessionsPullAsync(CancellationToken ct)
+    {
+        try
+        {
+            var remote = await _sessionsApi.GetAllAsync(
+                search: null,
+                from: null,
+                to: null,
+                sort: "date_desc",
+                includeSets: true,
+                ct: ct);
+
+            await _local.MergeRemoteSessionsAsync(remote);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("[SYNC][PULL][SESSIONS] " + ex);
         }
     }
 }

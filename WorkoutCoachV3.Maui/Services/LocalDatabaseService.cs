@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using System.Linq;
 using WorkoutCoachV3.Maui.Data;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
 
@@ -719,7 +720,7 @@ WHERE rowid NOT IN (
             .ToList();
     }
 
-    
+
     public async Task<Guid> CreateSessionFromWorkoutsAsync(
         string title,
         DateTime date,
@@ -780,10 +781,178 @@ WHERE rowid NOT IN (
 
             return session.LocalId;
         }
+        catch (DbUpdateException ex)
+        {
+            await tx.RollbackAsync();
+            throw new InvalidOperationException(BuildDbUpdateDetails(ex), ex);
+        }
         catch
         {
             await tx.RollbackAsync();
             throw;
         }
     }
+
+
+    public async Task<List<LocalSession>> GetDirtySessionsAsync()
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var dirtySessionIdsFromSets = await db.SessionSets
+            .Where(s => s.SyncState == SyncState.Dirty)
+            .Select(s => s.SessionLocalId)
+            .Distinct()
+            .ToListAsync();
+
+        return await db.Sessions
+            .Where(s =>
+                s.SyncState == SyncState.Dirty ||
+                s.IsDeleted ||
+                !s.RemoteId.HasValue ||
+                dirtySessionIdsFromSets.Contains(s.LocalId))
+            .ToListAsync();
+    }
+
+    public async Task<List<LocalSessionSet>> GetSessionSetsEntitiesAsync(Guid sessionLocalId, bool includeDeleted = false)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var q = db.SessionSets.Where(x => x.SessionLocalId == sessionLocalId);
+        if (!includeDeleted) q = q.Where(x => !x.IsDeleted);
+        return await q.OrderBy(x => x.ExerciseLocalId).ThenBy(x => x.SetNumber).ToListAsync();
+    }
+
+    public async Task HardDeleteSessionAsync(Guid localId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var sets = await db.SessionSets.Where(x => x.SessionLocalId == localId).ToListAsync();
+        if (sets.Count > 0) db.SessionSets.RemoveRange(sets);
+
+        var entity = await db.Sessions.FirstOrDefaultAsync(x => x.LocalId == localId);
+        if (entity != null)
+        {
+            db.Sessions.Remove(entity);
+            await db.SaveChangesAsync();
+        }
+        else if (sets.Count > 0)
+        {
+            await db.SaveChangesAsync();
+        }
+    }
+
+    public async Task MarkSessionSyncedAsync(Guid localId, int? remoteId = null)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var s = await db.Sessions.FirstOrDefaultAsync(x => x.LocalId == localId);
+        if (s is null) return;
+
+        if (remoteId.HasValue) s.RemoteId = remoteId.Value;
+
+        s.SyncState = SyncState.Synced;
+        s.LastSyncedUtc = DateTime.UtcNow;
+
+        var sets = await db.SessionSets.Where(x => x.SessionLocalId == localId).ToListAsync();
+        foreach (var set in sets)
+        {
+            set.SyncState = SyncState.Synced;
+            set.LastSyncedUtc = DateTime.UtcNow;
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task MergeRemoteSessionsAsync(List<SessionDto> remote)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var now = DateTime.UtcNow;
+
+        var remoteIds = remote.Select(r => r.Id).ToHashSet();
+
+        var exMap = await db.Exercises
+            .Where(e => e.RemoteId != null && !e.IsDeleted)
+            .ToDictionaryAsync(e => e.RemoteId!.Value, e => e.LocalId);
+
+        foreach (var r in remote)
+        {
+            var local = await db.Sessions.FirstOrDefaultAsync(x => x.RemoteId == r.Id);
+
+            if (local is null)
+            {
+                local = new LocalSession
+                {
+                    LocalId = Guid.NewGuid(),
+                    RemoteId = r.Id,
+                    Title = r.Title,
+                    Date = r.Date,
+                    Description = r.Description,
+                    IsDeleted = false,
+                    SyncState = SyncState.Synced,
+                    LastModifiedUtc = now,
+                    LastSyncedUtc = now
+                };
+
+                db.Sessions.Add(local);
+                await db.SaveChangesAsync();
+            }
+            else
+            {
+                if (local.SyncState == SyncState.Dirty)
+                    continue;
+
+                local.Title = r.Title;
+                local.Date = r.Date;
+                local.Description = r.Description;
+                local.IsDeleted = false;
+                local.SyncState = SyncState.Synced;
+                local.LastSyncedUtc = now;
+            }
+
+            if (local.SyncState == SyncState.Dirty)
+                continue;
+
+            var existingSets = await db.SessionSets.Where(x => x.SessionLocalId == local.LocalId).ToListAsync();
+            if (existingSets.Count > 0)
+                db.SessionSets.RemoveRange(existingSets);
+
+            if (r.Sets is not null)
+            {
+                foreach (var rs in r.Sets)
+                {
+                    if (!exMap.TryGetValue(rs.ExerciseId, out var localExerciseId))
+                        continue;
+
+                    db.SessionSets.Add(new LocalSessionSet
+                    {
+                        LocalId = Guid.NewGuid(),
+                        SessionLocalId = local.LocalId,
+                        ExerciseLocalId = localExerciseId,
+                        SetNumber = Math.Max(1, rs.SetNumber),
+                        Reps = Math.Max(0, rs.Reps),
+                        Weight = Math.Max(0.0, rs.Weight),
+                        IsDeleted = false,
+                        SyncState = SyncState.Synced,
+                        LastModifiedUtc = now,
+                        LastSyncedUtc = now
+                    });
+                }
+            }
+        }
+
+        var localsWithRemote = await db.Sessions.Where(x => x.RemoteId != null).ToListAsync();
+        foreach (var l in localsWithRemote)
+        {
+            if (l.RemoteId is null) continue;
+            if (remoteIds.Contains(l.RemoteId.Value)) continue;
+            if (l.SyncState == SyncState.Dirty) continue;
+
+            var sets = await db.SessionSets.Where(x => x.SessionLocalId == l.LocalId).ToListAsync();
+            if (sets.Count > 0) db.SessionSets.RemoveRange(sets);
+
+            db.Sessions.Remove(l);
+        }
+
+        await db.SaveChangesAsync();
+    }
+
 }
