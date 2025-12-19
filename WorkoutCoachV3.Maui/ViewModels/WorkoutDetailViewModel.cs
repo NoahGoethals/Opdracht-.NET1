@@ -10,6 +10,7 @@ public partial class WorkoutDetailViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
     private readonly IServiceProvider _services;
+    private readonly ISyncService _sync;
 
     private Guid _workoutLocalId;
 
@@ -21,15 +22,19 @@ public partial class WorkoutDetailViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
-    public WorkoutDetailViewModel(LocalDatabaseService local, IServiceProvider services)
+    public WorkoutDetailViewModel(LocalDatabaseService local, IServiceProvider services, ISyncService sync)
     {
         _local = local;
         _services = services;
+        _sync = sync;
     }
 
     public async Task InitAsync(Guid workoutLocalId)
     {
         _workoutLocalId = workoutLocalId;
+
+        try { await _sync.SyncAllAsync(); } catch { }
+
         await LoadAsync();
     }
 
@@ -46,6 +51,7 @@ public partial class WorkoutDetailViewModel : ObservableObject
             if (w is null)
             {
                 Error = "Workout not found.";
+                Items.Clear();
                 return;
             }
 
@@ -53,6 +59,7 @@ public partial class WorkoutDetailViewModel : ObservableObject
             Notes = w.Notes;
 
             var data = await _local.GetWorkoutExercisesAsync(_workoutLocalId);
+
             Items.Clear();
             foreach (var x in data)
                 Items.Add(x);

@@ -1,53 +1,83 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WorkoutCoachV3.Maui.Pages.WorkoutExercisesManagePage"
-             Title="Manage Exercises">
+<ContentPage
+    x:Class="WorkoutCoachV3.Maui.Pages.WorkoutExercisesManagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="{Binding Title}">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
+    <Grid RowDefinitions="*,Auto" Padding="16">
 
-        <Label Grid.Row="0"
-               Text="{Binding Error}"
-               TextColor="Red" />
+        <VerticalStackLayout Spacing="12">
 
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Rows}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="0,0,0,10"
-                           Padding="12"
-                           CornerRadius="12"
-                           BorderColor="#DDD">
-                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
-                            <CheckBox Grid.RowSpan="2"
-                                      IsChecked="{Binding IsInWorkout}" />
+            <Label
+                Text="{Binding Error}"
+                TextColor="Red"
+                IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}"/>
 
-                            <Label Grid.Column="1"
-                                   Text="{Binding Name}"
-                                   FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Rows}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,6" Padding="12" CornerRadius="16" HasShadow="False" BorderColor="#DDDDDD">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
 
-                            <Label Grid.Row="1" Grid.Column="1"
-                                   Text="Reps / Weight (kg)"
-                                   FontSize="12"
-                                   Opacity="0.6" />
+                                <CheckBox
+                                    Grid.RowSpan="2"
+                                    IsChecked="{Binding IsInWorkout}" />
 
-                            <Entry Grid.Column="2"
-                                   Placeholder="Reps"
-                                   Keyboard="Numeric"
-                                   Text="{Binding RepetitionsText}" />
+                                <Label
+                                    Grid.Column="1"
+                                    Text="{Binding Name}"
+                                    FontAttributes="Bold"
+                                    FontSize="16" />
 
-                            <Entry Grid.Column="3"
-                                   Placeholder="Kg"
-                                   Keyboard="Numeric"
-                                   Text="{Binding WeightText}" />
-                        </Grid>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                                <Entry
+                                    Grid.Column="2"
+                                    Text="{Binding RepetitionsText, Mode=TwoWay}"
+                                    Keyboard="Numeric"
+                                    HorizontalTextAlignment="Center"
+                                    WidthRequest="70"
+                                    Placeholder="Reps" />
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
-            <Button Text="Save" Command="{Binding SaveCommand}" />
-            <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelCommand}" />
+                                <Grid Grid.Column="3" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
+                                    <Entry
+                                        Grid.Column="0"
+                                        Text="{Binding WeightKgText, Mode=TwoWay}"
+                                        Keyboard="Numeric"
+                                        HorizontalTextAlignment="Center"
+                                        WidthRequest="80"
+                                        Placeholder="Kg" />
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="kg"
+                                        VerticalTextAlignment="Center"
+                                        TextColor="#888888"/>
+                                </Grid>
+
+                                <Label
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Text="Reps / Weight (kg)"
+                                    FontSize="12"
+                                    TextColor="#888888" />
+
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,0">
+            <Button
+                Grid.Column="0"
+                Text="Save"
+                Command="{Binding SaveCommand}" />
+
+            <Button
+                Grid.Column="1"
+                Text="Cancel"
+                Command="{Binding CancelCommand}" />
         </Grid>
 
     </Grid>

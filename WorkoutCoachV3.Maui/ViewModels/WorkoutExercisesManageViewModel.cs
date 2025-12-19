@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui.ViewModels;
@@ -7,32 +9,32 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 public partial class WorkoutExercisesManageViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
+    private readonly ISyncService _sync;
+
     private Guid _workoutLocalId;
 
     [ObservableProperty] private string? title;
     [ObservableProperty] private string? error;
     [ObservableProperty] private bool isBusy;
 
-    public class ManageRowVm : ObservableObject
+    public partial class ManageRowVm : ObservableObject
     {
         public Guid ExerciseLocalId { get; init; }
         public string Name { get; init; } = "";
 
-        private bool _isInWorkout;
-        public bool IsInWorkout { get => _isInWorkout; set => SetProperty(ref _isInWorkout, value); }
+        [ObservableProperty] private bool isInWorkout;
 
-        private string _repetitionsText = "0";
-        public string RepetitionsText { get => _repetitionsText; set => SetProperty(ref _repetitionsText, value); }
+        [ObservableProperty] private string repetitionsText = "0";
 
-        private string _weightKgText = "0";
-        public string WeightKgText { get => _weightKgText; set => SetProperty(ref _weightKgText, value); }
+        [ObservableProperty] private string weightKgText = "0";
     }
 
-    public IList<ManageRowVm> Rows { get; } = new List<ManageRowVm>();
+    public ObservableCollection<ManageRowVm> Rows { get; } = new();
 
-    public WorkoutExercisesManageViewModel(LocalDatabaseService local)
+    public WorkoutExercisesManageViewModel(LocalDatabaseService local, ISyncService sync)
     {
         _local = local;
+        _sync = sync;
     }
 
     public async Task InitAsync(Guid workoutLocalId, string workoutTitle)
@@ -41,27 +43,43 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
         Title = $"Manage Exercises - {workoutTitle}";
         Error = null;
 
+        // ✅ Zorg dat je “live” exercises hebt (ook als ze net op web of elders zijn toegevoegd)
+        try { await _sync.SyncAllAsync(); } catch { }
+
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
-        Rows.Clear();
+        if (IsBusy) return;
+        IsBusy = true;
+        Error = null;
 
-        var rows = await _local.GetWorkoutExerciseManageRowsAsync(_workoutLocalId);
-        foreach (var r in rows)
+        try
         {
-            Rows.Add(new ManageRowVm
-            {
-                ExerciseLocalId = r.ExerciseLocalId,
-                Name = r.Name,
-                IsInWorkout = r.IsInWorkout,
-                RepetitionsText = r.Repetitions.ToString(),
-                WeightKgText = r.WeightKg.ToString()
-            });
-        }
+            Rows.Clear();
 
-        OnPropertyChanged(nameof(Rows));
+            var rows = await _local.GetWorkoutExerciseManageRowsAsync(_workoutLocalId);
+            foreach (var r in rows)
+            {
+                Rows.Add(new ManageRowVm
+                {
+                    ExerciseLocalId = r.ExerciseLocalId,
+                    Name = r.Name,
+                    IsInWorkout = r.IsInWorkout,
+                    RepetitionsText = r.Repetitions.ToString(CultureInfo.InvariantCulture),
+                    WeightKgText = r.WeightKg.ToString(CultureInfo.InvariantCulture)
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]
@@ -75,8 +93,8 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
         {
             var data = Rows.Select(r =>
             {
-                int.TryParse(r.RepetitionsText, out var reps);
-                double.TryParse(r.WeightKgText, out var weight);
+                var reps = ParseIntSafe(r.RepetitionsText);
+                var weight = ParseDoubleSafe(r.WeightKgText);
 
                 return (
                     ExerciseLocalId: r.ExerciseLocalId,
@@ -87,6 +105,9 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
             }).ToList();
 
             await _local.SaveWorkoutExercisesAsync(_workoutLocalId, data);
+
+            // ✅ Push direct naar web + pull terug zodat je web & maui snel gelijk lopen
+            try { await _sync.SyncAllAsync(); } catch { }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }
@@ -104,5 +125,34 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
     private async Task CancelAsync()
     {
         await Application.Current!.MainPage!.Navigation.PopAsync();
+    }
+
+    private static int ParseIntSafe(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return 0;
+        input = input.Trim();
+
+        return int.TryParse(input, NumberStyles.Integer, CultureInfo.CurrentCulture, out var v)
+            ? Math.Max(0, v)
+            : int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out v)
+                ? Math.Max(0, v)
+                : 0;
+    }
+
+    private static double ParseDoubleSafe(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return 0.0;
+        input = input.Trim();
+
+        if (double.TryParse(input, NumberStyles.Float, CultureInfo.CurrentCulture, out var v))
+            return Math.Max(0.0, v);
+
+        if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out v))
+            return Math.Max(0.0, v);
+
+        input = input.Replace(',', '.');
+        return double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out v)
+            ? Math.Max(0.0, v)
+            : 0.0;
     }
 }
