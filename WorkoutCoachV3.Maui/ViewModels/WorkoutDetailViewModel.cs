@@ -72,7 +72,8 @@ public partial class WorkoutDetailViewModel : ObservableObject
     {
         var page = _services.GetRequiredService<WorkoutExercisesManagePage>();
         var vm = (WorkoutExercisesManageViewModel)page.BindingContext!;
-        await vm.InitAsync(_workoutLocalId);
+
+        await vm.InitAsync(_workoutLocalId, WorkoutTitle);
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Maui.Networking;
-using WorkoutCoachV3.Maui.Apis;
-using WorkoutCoachV3.Maui.Data.LocalEntities;
+using System.Diagnostics;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -9,12 +8,18 @@ public class SyncService : ISyncService
     private readonly LocalDatabaseService _local;
     private readonly IExercisesApi _exercisesApi;
     private readonly IWorkoutsApi _workoutsApi;
+    private readonly IWorkoutExercisesApi _workoutExercisesApi;
 
-    public SyncService(LocalDatabaseService local, IExercisesApi exercisesApi, IWorkoutsApi workoutsApi)
+    public SyncService(
+        LocalDatabaseService local,
+        IExercisesApi exercisesApi,
+        IWorkoutsApi workoutsApi,
+        IWorkoutExercisesApi workoutExercisesApi)
     {
         _local = local;
         _exercisesApi = exercisesApi;
         _workoutsApi = workoutsApi;
+        _workoutExercisesApi = workoutExercisesApi;
     }
 
     public async Task SyncAllAsync(CancellationToken ct = default)
@@ -24,9 +29,11 @@ public class SyncService : ISyncService
 
         await SyncExercisesPushAsync(ct);
         await SyncWorkoutsPushAsync(ct);
+        await SyncWorkoutExercisesPushAsync(ct);
 
         await SyncExercisesPullAsync(ct);
         await SyncWorkoutsPullAsync(ct);
+        await SyncWorkoutExercisesPullAsync(ct);
     }
 
     private async Task SyncExercisesPushAsync(CancellationToken ct)
@@ -66,8 +73,9 @@ public class SyncService : ISyncService
                     await _local.MarkExerciseSyncedAsync(e.LocalId);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine("[SYNC][PUSH][EXERCISES] " + ex);
             }
         }
     }
@@ -109,25 +117,133 @@ public class SyncService : ISyncService
                     await _local.MarkWorkoutSyncedAsync(w.LocalId);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine("[SYNC][PUSH][WORKOUTS] " + ex);
+            }
+        }
+    }
+
+    private async Task SyncWorkoutExercisesPushAsync(CancellationToken ct)
+    {
+        var dirtyLinks = await _local.GetDirtyWorkoutExercisesAsync();
+        if (dirtyLinks.Count == 0) return;
+
+        var workoutIds = dirtyLinks.Select(x => x.WorkoutLocalId).Distinct().ToList();
+
+        foreach (var workoutLocalId in workoutIds)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                var workout = await _local.GetWorkoutByLocalIdAsync(workoutLocalId);
+                if (workout?.RemoteId is null) continue;
+
+                var allLinks = await _local.GetWorkoutExercisesAllStatesAsync(workoutLocalId);
+                var active = allLinks.Where(x => !x.IsDeleted).ToList();
+
+                var allExercises = await _local.GetExercisesAsync();
+                var exMap = allExercises
+                    .Where(e => e.RemoteId.HasValue && !e.IsDeleted)
+                    .ToDictionary(e => e.LocalId, e => e.RemoteId!.Value);
+
+                var payload = new List<UpsertWorkoutExerciseLinkDto>();
+
+                foreach (var link in active)
+                {
+                    if (!exMap.TryGetValue(link.ExerciseLocalId, out var remoteExerciseId))
+                        continue;
+
+                    payload.Add(new UpsertWorkoutExerciseLinkDto
+                    {
+                        ExerciseId = remoteExerciseId,
+                        Reps = Math.Max(0, link.Repetitions),
+                        WeightKg = Math.Max(0.0, link.WeightKg)
+                    });
+                }
+
+                await _workoutExercisesApi.ReplaceAllAsync(workout.RemoteId.Value, payload, ct);
+                await _local.MarkWorkoutExercisesSyncedAsync(workoutLocalId);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SYNC][PUSH][WORKOUT-EXERCISES] " + ex);
             }
         }
     }
 
     private async Task SyncExercisesPullAsync(CancellationToken ct)
     {
-        var remote = await _exercisesApi.GetAllAsync(search: null, category: null, sort: "name", ct: ct);
+        try
+        {
+            var remote = await _exercisesApi.GetAllAsync(search: null, category: null, sort: "name", ct: ct);
 
-        await _local.MergeRemoteExercisesAsync(
-            remote.Select(x => (x.Id, x.Name, x.Category, x.Notes)).ToList());
+            await _local.MergeRemoteExercisesAsync(
+                remote.Select(x => (x.Id, x.Name, x.Category, x.Notes)).ToList());
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("[SYNC][PULL][EXERCISES] " + ex);
+        }
     }
 
     private async Task SyncWorkoutsPullAsync(CancellationToken ct)
     {
-        var remote = await _workoutsApi.GetAllAsync(search: null, sort: "title", ct: ct);
+        try
+        {
+            var remote = await _workoutsApi.GetAllAsync(search: null, sort: "title", ct: ct);
 
-        await _local.MergeRemoteWorkoutsAsync(
-            remote.Select(x => (x.Id, x.Title)).ToList());
+            await _local.MergeRemoteWorkoutsAsync(
+                remote.Select(x => (x.Id, x.Title)).ToList());
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("[SYNC][PULL][WORKOUTS] " + ex);
+        }
+    }
+
+    private async Task SyncWorkoutExercisesPullAsync(CancellationToken ct)
+    {
+        try
+        {
+            var localWorkouts = await _local.GetWorkoutsAsync();
+            var withRemote = localWorkouts.Where(w => w.RemoteId.HasValue && !w.IsDeleted).ToList();
+            if (withRemote.Count == 0) return;
+
+            var localExercises = await _local.GetExercisesAsync();
+            var exerciseRemoteToLocal = localExercises
+                .Where(e => e.RemoteId.HasValue && !e.IsDeleted)
+                .ToDictionary(e => e.RemoteId!.Value, e => e.LocalId);
+
+            foreach (var w in withRemote)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                try
+                {
+                    var remoteLinks = await _workoutExercisesApi.GetAllAsync(w.RemoteId!.Value, ct);
+
+                    var mapped = remoteLinks
+                        .Where(r => exerciseRemoteToLocal.ContainsKey(r.ExerciseId))
+                        .Select(r => (
+                            ExerciseLocalId: exerciseRemoteToLocal[r.ExerciseId],
+                            Repetitions: Math.Max(0, r.Reps),
+                            WeightKg: Math.Max(0.0, r.WeightKg ?? 0.0)
+                        ))
+                        .ToList();
+
+                    await _local.ReplaceWorkoutExercisesFromRemoteAsync(w.LocalId, mapped);
+                }
+                catch (Exception exWorkout)
+                {
+                    Debug.WriteLine($"[SYNC][PULL][WORKOUT-EXERCISES][workoutRemoteId={w.RemoteId}] " + exWorkout);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("[SYNC][PULL][WORKOUT-EXERCISES] " + ex);
+        }
     }
 }

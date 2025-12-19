@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui.ViewModels;
@@ -8,54 +7,61 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 public partial class WorkoutExercisesManageViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
-
     private Guid _workoutLocalId;
 
-    public ObservableCollection<RowVm> Rows { get; } = new();
-
-    [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private string? title;
     [ObservableProperty] private string? error;
+    [ObservableProperty] private bool isBusy;
+
+    public class ManageRowVm : ObservableObject
+    {
+        public Guid ExerciseLocalId { get; init; }
+        public string Name { get; init; } = "";
+
+        private bool _isInWorkout;
+        public bool IsInWorkout { get => _isInWorkout; set => SetProperty(ref _isInWorkout, value); }
+
+        private string _repetitionsText = "0";
+        public string RepetitionsText { get => _repetitionsText; set => SetProperty(ref _repetitionsText, value); }
+
+        private string _weightKgText = "0";
+        public string WeightKgText { get => _weightKgText; set => SetProperty(ref _weightKgText, value); }
+    }
+
+    public IList<ManageRowVm> Rows { get; } = new List<ManageRowVm>();
 
     public WorkoutExercisesManageViewModel(LocalDatabaseService local)
     {
         _local = local;
     }
 
-    public async Task InitAsync(Guid workoutLocalId)
+    public async Task InitAsync(Guid workoutLocalId, string workoutTitle)
     {
         _workoutLocalId = workoutLocalId;
+        Title = $"Manage Exercises - {workoutTitle}";
+        Error = null;
+
         await LoadAsync();
     }
 
-    [RelayCommand]
-    public async Task LoadAsync()
+    private async Task LoadAsync()
     {
-        if (IsBusy) return;
-        IsBusy = true;
-        Error = null;
+        Rows.Clear();
 
-        try
+        var rows = await _local.GetWorkoutExerciseManageRowsAsync(_workoutLocalId);
+        foreach (var r in rows)
         {
-            var rows = await _local.GetWorkoutExerciseManageRowsAsync(_workoutLocalId);
-            Rows.Clear();
-            foreach (var r in rows)
+            Rows.Add(new ManageRowVm
             {
-                Rows.Add(new RowVm(r.ExerciseLocalId, r.Name)
-                {
-                    IsInWorkout = r.IsInWorkout,
-                    RepetitionsText = r.Repetitions.ToString(),
-                    WeightText = r.WeightKg.ToString()
-                });
-            }
+                ExerciseLocalId = r.ExerciseLocalId,
+                Name = r.Name,
+                IsInWorkout = r.IsInWorkout,
+                RepetitionsText = r.Repetitions.ToString(),
+                WeightKgText = r.WeightKg.ToString()
+            });
         }
-        catch (Exception ex)
-        {
-            Error = ex.Message;
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+
+        OnPropertyChanged(nameof(Rows));
     }
 
     [RelayCommand]
@@ -69,13 +75,15 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
         {
             var data = Rows.Select(r =>
             {
-                var reps = 0;
-                _ = int.TryParse(r.RepetitionsText, out reps);
+                int.TryParse(r.RepetitionsText, out var reps);
+                double.TryParse(r.WeightKgText, out var weight);
 
-                var weight = 0d;
-                _ = double.TryParse(r.WeightText, out weight);
-
-                return (r.ExerciseLocalId, r.IsInWorkout, reps, weight);
+                return (
+                    ExerciseLocalId: r.ExerciseLocalId,
+                    IsInWorkout: r.IsInWorkout,
+                    Repetitions: reps,
+                    WeightKg: weight
+                );
             }).ToList();
 
             await _local.SaveWorkoutExercisesAsync(_workoutLocalId, data);
@@ -84,7 +92,7 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            Error = ex.Message + (ex.InnerException != null ? "\n\nInner:\n" + ex.InnerException.Message : "");
         }
         finally
         {
@@ -96,21 +104,5 @@ public partial class WorkoutExercisesManageViewModel : ObservableObject
     private async Task CancelAsync()
     {
         await Application.Current!.MainPage!.Navigation.PopAsync();
-    }
-
-    public partial class RowVm : ObservableObject
-    {
-        public Guid ExerciseLocalId { get; }
-        public string Name { get; }
-
-        [ObservableProperty] private bool isInWorkout;
-        [ObservableProperty] private string repetitionsText = "0";
-        [ObservableProperty] private string weightText = "0";
-
-        public RowVm(Guid exerciseLocalId, string name)
-        {
-            ExerciseLocalId = exerciseLocalId;
-            Name = name;
-        }
     }
 }
