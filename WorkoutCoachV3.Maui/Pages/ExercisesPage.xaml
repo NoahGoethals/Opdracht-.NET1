@@ -6,7 +6,7 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" Grid.Row="0">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Grid.Row="0">
             <Label Text="Exercises" FontSize="28" VerticalOptions="Center" />
 
             <Button Grid.Column="1"
@@ -15,11 +15,16 @@
                     Margin="8,0,0,0"/>
 
             <Button Grid.Column="2"
+                    Text="Sessions"
+                    Command="{Binding GoToSessionsCommand}"
+                    Margin="8,0,0,0"/>
+
+            <Button Grid.Column="3"
                     Text="Add"
                     Command="{Binding AddCommand}"
                     Margin="8,0,0,0"/>
 
-            <Button Grid.Column="3"
+            <Button Grid.Column="4"
                     Text="Logout"
                     Command="{Binding LogoutCommand}"
                     Margin="8,0,0,0"/>
@@ -43,42 +48,45 @@
                     SelectedItem="{Binding SelectedCategory}" />
         </Grid>
 
-        <CollectionView Grid.Row="3"
-                        ItemsSource="{Binding Items}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
+        <RefreshView Grid.Row="3"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommandCommand}">
+            <CollectionView ItemsSource="{Binding Items}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
 
-                    <SwipeView>
+                        <SwipeView>
 
-                        <SwipeView.RightItems>
-                            <SwipeItems Mode="Reveal">
-                                <SwipeItem Text="Edit"
-                                           BackgroundColor="#3B82F6"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
-                                           CommandParameter="{Binding .}" />
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Edit"
+                                               BackgroundColor="#3B82F6"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCommand}"
+                                               CommandParameter="{Binding .}" />
 
-                                <SwipeItem Text="Delete"
-                                           BackgroundColor="#EF4444"
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
-                                           CommandParameter="{Binding .}" />
-                            </SwipeItems>
-                        </SwipeView.RightItems>
+                                    <SwipeItem Text="Delete"
+                                               BackgroundColor="#EF4444"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCommand}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
 
-                        <Frame Margin="0,0,0,10"
-                               Padding="14"
-                               CornerRadius="12"
-                               BorderColor="#DDD">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Name}" FontSize="18"/>
-                                <Label Text="{Binding Category}" FontAttributes="Italic"/>
-                                <Label Text="{Binding Notes}" />
-                            </VerticalStackLayout>
-                        </Frame>
+                            <Frame Margin="0,0,0,10"
+                                   Padding="14"
+                                   CornerRadius="12"
+                                   BorderColor="#DDD">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Name}" FontSize="18"/>
+                                    <Label Text="{Binding Category}" FontAttributes="Italic"/>
+                                    <Label Text="{Binding Notes}" />
+                                </VerticalStackLayout>
+                            </Frame>
 
-                    </SwipeView>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
 
     </Grid>
 </ContentPage>

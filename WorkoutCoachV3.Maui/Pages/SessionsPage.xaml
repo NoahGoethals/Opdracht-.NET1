@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WorkoutCoachV3.Maui.Pages.SessionsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Sessions">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16">
+        <Label Text="Sessions" FontSize="28" FontAttributes="Bold" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,12,0,12">
+            <Entry Placeholder="Search..."
+                   Text="{Binding Search}" />
+
+            <Button Grid.Column="1"
+                    Text="Add"
+                    Margin="12,0,0,0"
+                    Command="{Binding AddCommand}" />
+        </Grid>
+
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Items}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItem Text="Edit"
+                                           Command="{Binding BindingContext.EditCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                           CommandParameter="{Binding SessionLocalId}" />
+                                <SwipeItem Text="Delete"
+                                           Command="{Binding BindingContext.DeleteCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                           CommandParameter="{Binding SessionLocalId}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Frame Margin="0,0,0,12" Padding="14" CornerRadius="16">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18"/>
+                                    <Label Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}" Opacity="0.7"/>
+                                </VerticalStackLayout>
+
+                                <Button Grid.Column="1"
+                                        Text="Open"
+                                        Command="{Binding BindingContext.OpenCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                        CommandParameter="{Binding SessionLocalId}" />
+                            </Grid>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

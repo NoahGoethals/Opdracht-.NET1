@@ -8,7 +8,7 @@ namespace WorkoutCoachV3.Maui.Services;
 
 public class LocalDatabaseService
 {
-    private const int CurrentSchemaVersion = 4; // verhoog bij schema wijziging
+    private const int CurrentSchemaVersion = 4; 
     private const string SchemaPrefKey = "LocalDbSchemaVersion";
     private const string DbFileName = "workoutcoach.local.db3";
 
@@ -38,11 +38,11 @@ public class LocalDatabaseService
 
         await RepairWorkoutExercisesAsync(db);
 
-        // Seed enkel als je OFFLINE bent en db leeg is (anders krijg je duplicates met web-data)
         var hasAnyExercises = await db.Exercises.AnyAsync();
         var hasAnyWorkouts = await db.Workouts.AnyAsync();
 
-        var online = Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.Internet;
+        var online = Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess ==
+                     Microsoft.Maui.Networking.NetworkAccess.Internet;
 
         if (!online && (!hasAnyExercises || !hasAnyWorkouts))
         {
@@ -91,12 +91,10 @@ public class LocalDatabaseService
         {
             await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=ON;");
 
-            // Unique index (defensief)
             await db.Database.ExecuteSqlRawAsync(@"
 CREATE UNIQUE INDEX IF NOT EXISTS UX_WorkoutExercises_Workout_Exercise
 ON WorkoutExercises(WorkoutLocalId, ExerciseLocalId);");
 
-            // Remove duplicates (defensief)
             await db.Database.ExecuteSqlRawAsync(@"
 DELETE FROM WorkoutExercises
 WHERE rowid NOT IN (
@@ -111,7 +109,6 @@ WHERE rowid NOT IN (
         }
     }
 
-    // ---------------- EXERCISES ----------------
 
     public async Task<List<LocalExercise>> GetExercisesAsync(string? search = null, string? category = null)
     {
@@ -243,7 +240,6 @@ WHERE rowid NOT IN (
             }
         }
 
-        // remove vanished remote
         var localsWithRemote = await db.Exercises.Where(x => x.RemoteId != null).ToListAsync();
         foreach (var l in localsWithRemote)
         {
@@ -257,7 +253,6 @@ WHERE rowid NOT IN (
         await db.SaveChangesAsync();
     }
 
-    // ---------------- WORKOUTS ----------------
 
     public async Task<List<LocalWorkout>> GetWorkoutsAsync(string? search = null)
     {
@@ -395,7 +390,6 @@ WHERE rowid NOT IN (
         await db.SaveChangesAsync();
     }
 
-    // ---------------- JOIN: WORKOUT EXERCISES ----------------
 
     public async Task<List<WorkoutExerciseDisplay>> GetWorkoutExercisesAsync(Guid workoutLocalId)
     {
@@ -518,7 +512,6 @@ WHERE rowid NOT IN (
         }
     }
 
-    // ---- helpers voor SyncService ----
 
     public async Task<List<LocalWorkoutExercise>> GetDirtyWorkoutExercisesAsync()
     {
@@ -550,7 +543,6 @@ WHERE rowid NOT IN (
             r.LastSyncedUtc = DateTime.UtcNow;
         }
 
-        // optioneel: hard delete soft-deleted rows na succesvolle push
         var toHardDelete = rows.Where(x => x.IsDeleted).ToList();
         db.WorkoutExercises.RemoveRange(toHardDelete);
 
@@ -564,7 +556,6 @@ WHERE rowid NOT IN (
         await using var db = await _dbFactory.CreateDbContextAsync();
         await using var tx = await db.Database.BeginTransactionAsync();
 
-        // mark all existing as deleted (then re-add/update)
         var existing = await db.WorkoutExercises
             .Where(x => x.WorkoutLocalId == workoutLocalId)
             .ToListAsync();
@@ -621,5 +612,180 @@ WHERE rowid NOT IN (
         }
 
         return $"Database fout bij opslaan.\nMessage: {ex.Message}\nInner: {ex.InnerException?.Message}";
+    }
+
+
+    public sealed record SessionListDisplay(
+        Guid SessionLocalId,
+        string Title,
+        DateTime Date
+    );
+
+    public sealed record SessionSetDisplay(
+        int SetNumber,
+        string ExerciseName,
+        int Reps,
+        double Weight
+    );
+
+    public async Task<List<SessionListDisplay>> GetSessionsAsync(string? search = null)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var q = db.Sessions.Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            q = q.Where(x => x.Title.Contains(search));
+
+        var list = await q
+            .OrderByDescending(x => x.Date)
+            .ThenBy(x => x.Title)
+            .ToListAsync();
+
+        return list.Select(x => new SessionListDisplay(x.LocalId, x.Title, x.Date)).ToList();
+    }
+
+    public async Task<LocalSession?> GetSessionByLocalIdAsync(Guid sessionLocalId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.Sessions.FirstOrDefaultAsync(x => x.LocalId == sessionLocalId);
+    }
+
+    public async Task UpsertSessionAsync(LocalSession s)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var existing = await db.Sessions.FirstOrDefaultAsync(x => x.LocalId == s.LocalId);
+        if (existing is null)
+        {
+            s.LastModifiedUtc = DateTime.UtcNow;
+            s.SyncState = SyncState.Dirty;
+            db.Sessions.Add(s);
+        }
+        else
+        {
+            existing.Title = s.Title;
+            existing.Date = s.Date;
+            existing.Description = s.Description;
+            existing.Notes = s.Notes;
+
+            existing.IsDeleted = s.IsDeleted;
+
+            existing.LastModifiedUtc = DateTime.UtcNow;
+            existing.SyncState = SyncState.Dirty;
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task SoftDeleteSessionAsync(Guid sessionLocalId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var s = await db.Sessions.FirstOrDefaultAsync(x => x.LocalId == sessionLocalId);
+        if (s is null) return;
+
+        s.IsDeleted = true;
+        s.LastModifiedUtc = DateTime.UtcNow;
+        s.SyncState = SyncState.Dirty;
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<List<SessionSetDisplay>> GetSessionSetsAsync(Guid sessionLocalId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var sets = await db.SessionSets
+            .Where(x => !x.IsDeleted && x.SessionLocalId == sessionLocalId)
+            .OrderBy(x => x.ExerciseLocalId)
+            .ThenBy(x => x.SetNumber)
+            .ToListAsync();
+
+        var exIds = sets.Select(x => x.ExerciseLocalId).Distinct().ToList();
+
+        var exMap = await db.Exercises
+            .Where(e => !e.IsDeleted && exIds.Contains(e.LocalId))
+            .ToDictionaryAsync(e => e.LocalId, e => e.Name);
+
+        return sets
+            .Where(s => exMap.ContainsKey(s.ExerciseLocalId))
+            .Select(s => new SessionSetDisplay(
+                s.SetNumber,
+                exMap[s.ExerciseLocalId],
+                s.Reps,
+                s.Weight
+            ))
+            .OrderBy(x => x.ExerciseName)
+            .ThenBy(x => x.SetNumber)
+            .ToList();
+    }
+
+ 
+    public async Task<Guid> CreateSessionFromWorkoutsAsync(
+        string title,
+        DateTime date,
+        string? description,
+        List<Guid> selectedWorkoutLocalIds)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        await using var tx = await db.Database.BeginTransactionAsync();
+
+        try
+        {
+            var session = new LocalSession
+            {
+                LocalId = Guid.NewGuid(),
+                Title = title.Trim(),
+                Date = date,
+                Description = description,
+                IsDeleted = false,
+                SyncState = SyncState.Dirty,
+                LastModifiedUtc = DateTime.UtcNow
+            };
+
+            db.Sessions.Add(session);
+            await db.SaveChangesAsync();
+
+            var workoutExercises = await db.WorkoutExercises
+                .Where(x => !x.IsDeleted && selectedWorkoutLocalIds.Contains(x.WorkoutLocalId))
+                .OrderBy(x => x.WorkoutLocalId)
+                .ThenBy(x => x.ExerciseLocalId)
+                .ToListAsync();
+
+            var nextSetNr = new Dictionary<Guid, int>();
+
+            foreach (var we in workoutExercises)
+            {
+                if (!nextSetNr.TryGetValue(we.ExerciseLocalId, out var nr))
+                    nr = 1;
+
+                db.SessionSets.Add(new LocalSessionSet
+                {
+                    LocalId = Guid.NewGuid(),
+                    SessionLocalId = session.LocalId,
+                    ExerciseLocalId = we.ExerciseLocalId,
+                    SetNumber = nr,
+                    Reps = Math.Max(0, we.Repetitions),
+                    Weight = Math.Max(0.0, we.WeightKg),
+                    Completed = false,
+                    IsDeleted = false,
+                    SyncState = SyncState.Dirty,
+                    LastModifiedUtc = DateTime.UtcNow
+                });
+
+                nextSetNr[we.ExerciseLocalId] = nr + 1;
+            }
+
+            await db.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return session.LocalId;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 }

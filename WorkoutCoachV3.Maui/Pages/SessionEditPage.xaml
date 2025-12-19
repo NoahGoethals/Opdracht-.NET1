@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WorkoutCoachV3.Maui.Pages.SessionEditPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="{Binding Title}">
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+        <Label Text="{Binding Title}" FontSize="24" FontAttributes="Bold"/>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12">
+
+                <Entry Placeholder="Session title"
+                       Text="{Binding SessionTitle}" />
+
+                <DatePicker Date="{Binding SessionDate}" />
+
+                <Editor Placeholder="Description"
+                        AutoSize="TextChanges"
+                        HeightRequest="90"
+                        Text="{Binding Description}" />
+
+                <Label Text="Select workouts"
+                       IsVisible="{Binding IsCreate}"
+                       FontAttributes="Bold"
+                       Margin="0,6,0,0"/>
+
+                <CollectionView ItemsSource="{Binding Workouts}"
+                                IsVisible="{Binding IsCreate}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="Auto,*" Padding="8">
+                                <CheckBox IsChecked="{Binding IsSelected}" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding WorkoutTitle}"
+                                       VerticalTextAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Grid ColumnDefinitions="*,*" Margin="0,12,0,0">
+                    <Button Text="Save" Command="{Binding SaveCommand}" />
+                    <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelCommand}" />
+                </Grid>
+
+                <Label Text="{Binding Error}" TextColor="Red" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

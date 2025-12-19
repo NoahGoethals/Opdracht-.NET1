@@ -14,16 +14,23 @@ public partial class ExercisesViewModel : ObservableObject
     private readonly IServiceProvider _services;
     private readonly ITokenStore _tokenStore;
 
+    private CancellationTokenSource? _searchDebounceCts;
+
     public ObservableCollection<LocalExercise> Items { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
 
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isRefreshing;
     [ObservableProperty] private string? error;
 
     [ObservableProperty] private string? searchText;
     [ObservableProperty] private string selectedCategory = "All";
 
-    public ExercisesViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
+    public ExercisesViewModel(
+        LocalDatabaseService local,
+        ISyncService sync,
+        IServiceProvider services,
+        ITokenStore tokenStore)
     {
         _local = local;
         _sync = sync;
@@ -38,7 +45,7 @@ public partial class ExercisesViewModel : ObservableObject
         await LoadLocalAsync();
 
         try { await _sync.SyncAllAsync(); }
-        catch { }
+        catch { /* silent */ }
 
         await LoadLocalAsync();
     }
@@ -53,7 +60,7 @@ public partial class ExercisesViewModel : ObservableObject
         try
         {
             var cat = SelectedCategory == "All" ? null : SelectedCategory;
-            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText;
+            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim();
 
             var data = await _local.GetExercisesAsync(search: search, category: cat);
 
@@ -86,9 +93,47 @@ public partial class ExercisesViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private async Task RefreshCommandAsync()
+    {
+        if (IsBusy) return;
+
+        IsRefreshing = true;
+        try
+        {
+            await RefreshAsync();
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
+    }
+
     partial void OnSelectedCategoryChanged(string value)
     {
         _ = LoadLocalAsync();
+    }
+
+    partial void OnSearchTextChanged(string? value)
+    {
+        _searchDebounceCts?.Cancel();
+        _searchDebounceCts = new CancellationTokenSource();
+        var token = _searchDebounceCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(350, token);
+                if (token.IsCancellationRequested) return;
+
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await LoadLocalAsync();
+                });
+            }
+            catch {  }
+        }, token);
     }
 
     [RelayCommand]
@@ -140,10 +185,18 @@ public partial class ExercisesViewModel : ObservableObject
         }
     }
 
+
     [RelayCommand]
     private async Task GoToWorkoutsAsync()
     {
         var page = _services.GetRequiredService<WorkoutsPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private async Task GoToSessionsAsync()
+    {
+        var page = _services.GetRequiredService<SessionsPage>();
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 

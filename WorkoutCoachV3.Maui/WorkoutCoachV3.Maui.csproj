@@ -49,6 +49,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Pages\SessionDetailPage.xaml.cs">
+	    <DependentUpon>SessionDetailPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\SessionsPage.xaml.cs">
+	    <DependentUpon>SessionsPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\SessionEditPage.xaml.cs">
+	    <DependentUpon>SessionEditPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\WorkoutExercisesManagePage.xaml.cs">
 	    <DependentUpon>WorkoutExercisesManagePage.xaml</DependentUpon>
 	  </Compile>
@@ -67,6 +76,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<MauiXaml Update="Pages\SessionDetailPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\SessionsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\SessionEditPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\WorkoutExercisesManagePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

@@ -11,6 +11,9 @@ public class LocalAppDbContext : DbContext
     public DbSet<LocalWorkout> Workouts => Set<LocalWorkout>();
     public DbSet<LocalWorkoutExercise> WorkoutExercises => Set<LocalWorkoutExercise>();
 
+    public DbSet<LocalSession> Sessions => Set<LocalSession>();
+    public DbSet<LocalSessionSet> SessionSets => Set<LocalSessionSet>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -31,6 +34,17 @@ public class LocalAppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.ExerciseLocalId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LocalSession>(b =>
+        {
+            b.Property(x => x.Title).IsRequired();
+        });
+
+        modelBuilder.Entity<LocalSessionSet>(b =>
+        {
+            b.HasIndex(x => new { x.SessionLocalId, x.ExerciseLocalId, x.SetNumber })
+             .IsUnique();
         });
     }
 }

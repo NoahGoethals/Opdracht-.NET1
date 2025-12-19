@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WorkoutCoachV3.Maui.Pages.SessionDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Session">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16">
+        <Label Text="{Binding Title}" FontSize="26" FontAttributes="Bold"/>
+        <Label Grid.Row="1" Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}" Opacity="0.7"/>
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Sets}" Margin="0,12,0,0">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,10" Padding="14" CornerRadius="16">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                            <Label Text="{Binding ExerciseName}" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Text="{Binding Reps}" Margin="12,0,0,0"/>
+                            <Label Grid.Column="2" Text="{Binding Weight, StringFormat='{0:0.#} kg'}" Margin="12,0,0,0"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>
