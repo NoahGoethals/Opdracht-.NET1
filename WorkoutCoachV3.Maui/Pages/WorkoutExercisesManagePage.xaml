@@ -5,70 +5,74 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="{Binding Title}">
 
-    <Grid RowDefinitions="*,Auto" Padding="16">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
 
-        <VerticalStackLayout Spacing="12">
+        <Label
+            Grid.Row="0"
+            Text="{Binding Error}"
+            TextColor="Red"
+            IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
 
-            <Label
-                Text="{Binding Error}"
-                TextColor="Red"
-                IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}"/>
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding Rows}"
+            VerticalOptions="FillAndExpand"
+            VerticalScrollBarVisibility="Always">
 
-            <CollectionView ItemsSource="{Binding Rows}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame Margin="0,6" Padding="12" CornerRadius="16" HasShadow="False" BorderColor="#DDDDDD">
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,6" Padding="12" CornerRadius="16" HasShadow="False" BorderColor="#DDDDDD">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                              RowDefinitions="Auto,Auto"
+                              ColumnSpacing="12">
 
-                                <CheckBox
-                                    Grid.RowSpan="2"
-                                    IsChecked="{Binding IsInWorkout}" />
+                            <CheckBox
+                                Grid.RowSpan="2"
+                                IsChecked="{Binding IsInWorkout}" />
 
-                                <Label
-                                    Grid.Column="1"
-                                    Text="{Binding Name}"
-                                    FontAttributes="Bold"
-                                    FontSize="16" />
+                            <Label
+                                Grid.Column="1"
+                                Text="{Binding Name}"
+                                FontAttributes="Bold"
+                                FontSize="16" />
 
+                            <Entry
+                                Grid.Column="2"
+                                Text="{Binding RepetitionsText, Mode=TwoWay}"
+                                Keyboard="Numeric"
+                                HorizontalTextAlignment="Center"
+                                WidthRequest="70"
+                                Placeholder="Reps" />
+
+                            <Grid Grid.Column="3" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
                                 <Entry
-                                    Grid.Column="2"
-                                    Text="{Binding RepetitionsText, Mode=TwoWay}"
+                                    Grid.Column="0"
+                                    Text="{Binding WeightKgText, Mode=TwoWay}"
                                     Keyboard="Numeric"
                                     HorizontalTextAlignment="Center"
-                                    WidthRequest="70"
-                                    Placeholder="Reps" />
-
-                                <Grid Grid.Column="3" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
-                                    <Entry
-                                        Grid.Column="0"
-                                        Text="{Binding WeightKgText, Mode=TwoWay}"
-                                        Keyboard="Numeric"
-                                        HorizontalTextAlignment="Center"
-                                        WidthRequest="80"
-                                        Placeholder="Kg" />
-                                    <Label
-                                        Grid.Column="1"
-                                        Text="kg"
-                                        VerticalTextAlignment="Center"
-                                        TextColor="#888888"/>
-                                </Grid>
-
+                                    WidthRequest="80"
+                                    Placeholder="Kg" />
                                 <Label
-                                    Grid.Row="1"
                                     Grid.Column="1"
-                                    Text="Reps / Weight (kg)"
-                                    FontSize="12"
+                                    Text="kg"
+                                    VerticalTextAlignment="Center"
                                     TextColor="#888888" />
-
                             </Grid>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
 
-        </VerticalStackLayout>
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Text="Reps / Weight (kg)"
+                                FontSize="12"
+                                TextColor="#888888" />
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,0">
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
             <Button
                 Grid.Column="0"
                 Text="Save"
