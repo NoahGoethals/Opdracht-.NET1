@@ -20,6 +20,8 @@ public class LocalAppDbContext : DbContext
 
         modelBuilder.Entity<LocalExercise>().HasIndex(x => x.RemoteId);
         modelBuilder.Entity<LocalWorkout>().HasIndex(x => x.RemoteId);
+        modelBuilder.Entity<LocalSession>().HasIndex(x => x.RemoteId);
+        modelBuilder.Entity<LocalSessionSet>().HasIndex(x => x.RemoteId);
 
         modelBuilder.Entity<LocalWorkoutExercise>(b =>
         {
@@ -45,6 +47,16 @@ public class LocalAppDbContext : DbContext
         {
             b.HasIndex(x => new { x.SessionLocalId, x.ExerciseLocalId, x.SetNumber })
              .IsUnique();
+
+            b.HasOne<LocalSession>()
+                .WithMany()
+                .HasForeignKey(x => x.SessionLocalId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne<LocalExercise>()
+                .WithMany()
+                .HasForeignKey(x => x.ExerciseLocalId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

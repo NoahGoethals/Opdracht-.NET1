@@ -8,7 +8,7 @@ namespace WorkoutCoachV3.Maui.Services;
 
 public class LocalDatabaseService
 {
-    private const int CurrentSchemaVersion = 4; 
+    private const int CurrentSchemaVersion = 5;
     private const string SchemaPrefKey = "LocalDbSchemaVersion";
     private const string DbFileName = "workoutcoach.local.db3";
 
@@ -41,8 +41,7 @@ public class LocalDatabaseService
         var hasAnyExercises = await db.Exercises.AnyAsync();
         var hasAnyWorkouts = await db.Workouts.AnyAsync();
 
-        var online = Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess ==
-                     Microsoft.Maui.Networking.NetworkAccess.Internet;
+        var online = Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.Internet;
 
         if (!online && (!hasAnyExercises || !hasAnyWorkouts))
         {
@@ -614,7 +613,6 @@ WHERE rowid NOT IN (
         return $"Database fout bij opslaan.\nMessage: {ex.Message}\nInner: {ex.InnerException?.Message}";
     }
 
-
     public sealed record SessionListDisplay(
         Guid SessionLocalId,
         string Title,
@@ -721,7 +719,7 @@ WHERE rowid NOT IN (
             .ToList();
     }
 
- 
+    
     public async Task<Guid> CreateSessionFromWorkoutsAsync(
         string title,
         DateTime date,

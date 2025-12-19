@@ -10,10 +10,8 @@ public partial class SessionDetailViewModel : ObservableObject
     private readonly LocalDatabaseService _local;
     private Guid _sessionLocalId;
 
-    [ObservableProperty] private string pageTitle = "Session";
-
-    [ObservableProperty] private string sessionTitle = "";
-    [ObservableProperty] private DateTime sessionDate = DateTime.Today;
+    [ObservableProperty] private string title = "Session";
+    [ObservableProperty] private DateTime date = DateTime.Today;
     [ObservableProperty] private string? description;
 
     [ObservableProperty] private bool isBusy;
@@ -48,12 +46,9 @@ public partial class SessionDetailViewModel : ObservableObject
                 return;
             }
 
-            SessionTitle = s.Title;
-            SessionDate = s.Date;
+            Title = s.Title;
+            Date = s.Date;
             Description = s.Description;
-
-            pageTitle = $"{s.Title} ({s.Date:dd/MM/yyyy})";
-            OnPropertyChanged(nameof(PageTitle));
 
             var sets = await _local.GetSessionSetsAsync(_sessionLocalId);
             Sets.Clear();
@@ -62,7 +57,7 @@ public partial class SessionDetailViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            Error = ex.InnerException?.Message ?? ex.Message;
         }
         finally
         {

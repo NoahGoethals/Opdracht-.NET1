@@ -1,6 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
+using Microsoft.EntityFrameworkCore;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Services;
 
@@ -12,6 +13,7 @@ public partial class SessionEditViewModel : ObservableObject
     private Guid? _editingSessionLocalId;
 
     [ObservableProperty] private string title = "New Session";
+
     [ObservableProperty] private string sessionTitle = "";
     [ObservableProperty] private DateTime sessionDate = DateTime.Today;
     [ObservableProperty] private string? description;
@@ -26,7 +28,11 @@ public partial class SessionEditViewModel : ObservableObject
         public string WorkoutTitle { get; init; } = "";
 
         private bool _isSelected;
-        public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 
     public ObservableCollection<WorkoutPickRowVm> Workouts { get; } = new();
@@ -105,7 +111,7 @@ public partial class SessionEditViewModel : ObservableObject
 
             if (IsCreate)
             {
-                var selected = Workouts.Where(x => x.IsSelected).Select(x => x.WorkoutLocalId).ToList();
+                var selected = Workouts.Where(x => x.IsSelected).Select(x => x.WorkoutLocalId).Distinct().ToList();
                 if (selected.Count == 0)
                 {
                     Error = "Select at least 1 workout.";
@@ -129,6 +135,10 @@ public partial class SessionEditViewModel : ObservableObject
             }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
+        }
+        catch (DbUpdateException dbEx)
+        {
+            Error = dbEx.InnerException?.Message ?? dbEx.Message;
         }
         catch (Exception ex)
         {

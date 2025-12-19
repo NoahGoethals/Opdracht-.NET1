@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -53,28 +53,26 @@ public partial class SessionsViewModel : ObservableObject
         var page = _services.GetRequiredService<SessionEditPage>();
         var vm = (SessionEditViewModel)page.BindingContext!;
         await vm.InitForCreateAsync();
+
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
-    private async Task EditAsync(LocalDatabaseService.SessionListDisplay? item)
+    private async Task EditAsync(Guid sessionLocalId)
     {
-        if (item is null) return;
-
         var page = _services.GetRequiredService<SessionEditPage>();
         var vm = (SessionEditViewModel)page.BindingContext!;
-        await vm.InitForEditAsync(item.SessionLocalId);
+        await vm.InitForEditAsync(sessionLocalId);
+
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(LocalDatabaseService.SessionListDisplay? item)
+    private async Task DeleteAsync(Guid sessionLocalId)
     {
-        if (item is null) return;
-
         try
         {
-            await _local.SoftDeleteSessionAsync(item.SessionLocalId);
+            await _local.SoftDeleteSessionAsync(sessionLocalId);
             await LoadAsync();
         }
         catch (Exception ex)
@@ -84,13 +82,12 @@ public partial class SessionsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task OpenAsync(LocalDatabaseService.SessionListDisplay? item)
+    private async Task OpenAsync(Guid sessionLocalId)
     {
-        if (item is null) return;
-
         var page = _services.GetRequiredService<SessionDetailPage>();
         var vm = (SessionDetailViewModel)page.BindingContext!;
-        await vm.InitAsync(item.SessionLocalId);
+        await vm.InitAsync(sessionLocalId);
+
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 }
