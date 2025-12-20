@@ -15,6 +15,7 @@ public partial class SessionsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await Vm.LoadAsync();
+
+        await Vm.RefreshAsync();
     }
 }

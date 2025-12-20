@@ -9,6 +9,7 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 public partial class SessionsViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
+    private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
 
     public ObservableCollection<LocalDatabaseService.SessionListDisplay> Items { get; } = new();
@@ -17,9 +18,10 @@ public partial class SessionsViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
-    public SessionsViewModel(LocalDatabaseService local, IServiceProvider services)
+    public SessionsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services)
     {
         _local = local;
+        _sync = sync;
         _services = services;
     }
 
@@ -32,6 +34,38 @@ public partial class SessionsViewModel : ObservableObject
 
         try
         {
+            var data = await _local.GetSessionsAsync(Search);
+            Items.Clear();
+            foreach (var s in data)
+                Items.Add(s);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task RefreshAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        Error = null;
+
+        try
+        {
+            try
+            {
+                await _sync.SyncAllAsync();
+            }
+            catch
+            {
+            }
+
             var data = await _local.GetSessionsAsync(Search);
             Items.Clear();
             foreach (var s in data)
@@ -73,7 +107,10 @@ public partial class SessionsViewModel : ObservableObject
         try
         {
             await _local.SoftDeleteSessionAsync(sessionLocalId);
-            await LoadAsync();
+
+            try { await _sync.SyncAllAsync(); } catch { }
+
+            await RefreshAsync();
         }
         catch (Exception ex)
         {

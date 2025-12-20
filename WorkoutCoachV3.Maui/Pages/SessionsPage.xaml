@@ -5,16 +5,38 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Sessions">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16">
+    <ContentPage.Resources>
+        <!-- Match the purple buttons used on ExercisesPage -->
+        <Style x:Key="PrimaryPillButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#5B3BEA" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+
+        <Style x:Key="SecondaryPillButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#6A5AF9" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
         <Label Text="Sessions" FontSize="28" FontAttributes="Bold" />
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,12,0,12">
+        <!-- Search + Add (same vibe as Exercises buttons) -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <Entry Placeholder="Search..."
                    Text="{Binding Search}" />
 
             <Button Grid.Column="1"
                     Text="Add"
-                    Margin="12,0,0,0"
+                    Style="{StaticResource PrimaryPillButton}"
                     Command="{Binding AddCommand}" />
         </Grid>
 
@@ -26,16 +48,20 @@
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Edit"
+                                           BackgroundColor="#3B82F6"
                                            Command="{Binding BindingContext.EditCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
                                            CommandParameter="{Binding SessionLocalId}" />
                                 <SwipeItem Text="Delete"
+                                           BackgroundColor="#EF4444"
                                            Command="{Binding BindingContext.DeleteCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
                                            CommandParameter="{Binding SessionLocalId}" />
                             </SwipeItems>
                         </SwipeView.RightItems>
 
-                        <Frame Margin="0,0,0,12" Padding="14" CornerRadius="16">
-                            <Grid ColumnDefinitions="*,Auto">
+                        <Frame Margin="0,0,0,12"
+                               Padding="14"
+                               CornerRadius="16">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                 <VerticalStackLayout>
                                     <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18"/>
                                     <Label Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}" Opacity="0.7"/>
@@ -43,6 +69,7 @@
 
                                 <Button Grid.Column="1"
                                         Text="Open"
+                                        Style="{StaticResource SecondaryPillButton}"
                                         Command="{Binding BindingContext.OpenCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
                                         CommandParameter="{Binding SessionLocalId}" />
                             </Grid>
@@ -51,6 +78,5 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
     </Grid>
 </ContentPage>

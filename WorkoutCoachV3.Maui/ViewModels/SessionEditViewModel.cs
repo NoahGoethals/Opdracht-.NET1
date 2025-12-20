@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
-using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui.ViewModels;
@@ -10,13 +9,15 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 public partial class SessionEditViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
+    private readonly ISyncService _sync;
     private Guid? _editingSessionLocalId;
 
     [ObservableProperty] private string title = "New Session";
-
     [ObservableProperty] private string sessionTitle = "";
     [ObservableProperty] private DateTime sessionDate = DateTime.Today;
     [ObservableProperty] private string? description;
+
+    public ObservableCollection<WorkoutPickRowVm> Workouts { get; } = new();
 
     [ObservableProperty] private bool isCreate;
     [ObservableProperty] private bool isBusy;
@@ -35,11 +36,10 @@ public partial class SessionEditViewModel : ObservableObject
         }
     }
 
-    public ObservableCollection<WorkoutPickRowVm> Workouts { get; } = new();
-
-    public SessionEditViewModel(LocalDatabaseService local)
+    public SessionEditViewModel(LocalDatabaseService local, ISyncService sync)
     {
         _local = local;
+        _sync = sync;
     }
 
     public async Task InitForCreateAsync()
@@ -61,28 +61,16 @@ public partial class SessionEditViewModel : ObservableObject
         _editingSessionLocalId = sessionLocalId;
         IsCreate = false;
 
-        Title = "Edit Session";
         Error = null;
 
-        var s = await _local.GetSessionByLocalIdAsync(sessionLocalId);
-        if (s is null)
-        {
-            Error = "Session not found.";
-            return;
-        }
-
-        SessionTitle = s.Title;
-        SessionDate = s.Date;
-        Description = s.Description;
-
-        Workouts.Clear(); 
+        await LoadWorkoutsAsync();
     }
 
     private async Task LoadWorkoutsAsync()
     {
         Workouts.Clear();
-        var workouts = await _local.GetWorkoutsAsync();
 
+        var workouts = await _local.GetWorkoutsAsync(search: null);
         foreach (var w in workouts)
         {
             Workouts.Add(new WorkoutPickRowVm
@@ -111,7 +99,12 @@ public partial class SessionEditViewModel : ObservableObject
 
             if (IsCreate)
             {
-                var selected = Workouts.Where(x => x.IsSelected).Select(x => x.WorkoutLocalId).Distinct().ToList();
+                var selected = Workouts
+                    .Where(x => x.IsSelected)
+                    .Select(x => x.WorkoutLocalId)
+                    .Distinct()
+                    .ToList();
+
                 if (selected.Count == 0)
                 {
                     Error = "Select at least 1 workout.";
@@ -122,16 +115,22 @@ public partial class SessionEditViewModel : ObservableObject
             }
             else
             {
-                var entity = new LocalSession
+                if (_editingSessionLocalId is null)
                 {
-                    LocalId = _editingSessionLocalId!.Value,
-                    Title = SessionTitle.Trim(),
-                    Date = SessionDate,
-                    Description = Description,
-                    IsDeleted = false
-                };
+                    Error = "Invalid session.";
+                    return;
+                }
 
-                await _local.UpsertSessionAsync(entity);
+                Error = "Editing sessions is not implemented yet.";
+                return;
+            }
+
+            try
+            {
+                await _sync.SyncAllAsync();
+            }
+            catch
+            {
             }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();

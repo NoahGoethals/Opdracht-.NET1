@@ -48,21 +48,19 @@
 
                     <SwipeView>
 
-                        <SwipeView.LeftItems>
+                        <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
+
                                 <SwipeItem Text="Edit"
                                            BackgroundColor="#3B82F6"
                                            Command="{Binding BindingContext.EditCommand, Source={x:Reference PageRoot}}"
                                            CommandParameter="{Binding .}" />
-                            </SwipeItems>
-                        </SwipeView.LeftItems>
 
-                        <SwipeView.RightItems>
-                            <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Delete"
                                            BackgroundColor="#EF4444"
                                            Command="{Binding BindingContext.DeleteCommand, Source={x:Reference PageRoot}}"
                                            CommandParameter="{Binding .}" />
+
                             </SwipeItems>
                         </SwipeView.RightItems>
 
@@ -77,8 +75,8 @@
                             </Frame.GestureRecognizers>
 
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Title}" FontSize="18"/>
-                                <Label Text="{Binding Notes}" FontAttributes="Italic"/>
+                                <Label Text="{Binding Title}" FontSize="18" />
+                                <Label Text="{Binding Notes}" FontAttributes="Italic" />
                                 <Label Text="Tap to open"
                                        FontSize="12"
                                        Opacity="0.6" />
