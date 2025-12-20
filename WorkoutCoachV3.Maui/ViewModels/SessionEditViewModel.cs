@@ -61,23 +61,49 @@ public partial class SessionEditViewModel : ObservableObject
         _editingSessionLocalId = sessionLocalId;
         IsCreate = false;
 
+        Title = "Edit Session";
         Error = null;
 
-        await LoadWorkoutsAsync();
+        var session = await _local.GetSessionByLocalIdAsync(sessionLocalId);
+        if (session is null)
+        {
+            Error = "Session not found.";
+            return;
+        }
+
+        SessionTitle = session.Title;
+        SessionDate = session.Date;
+        Description = session.Description;
+
+        var sets = await _local.GetSessionSetsEntitiesAsync(sessionLocalId, includeDeleted: false);
+        var exerciseIdsInSession = sets
+            .Select(x => x.ExerciseLocalId)
+            .Distinct()
+            .ToHashSet();
+
+        await LoadWorkoutsAsync(exerciseIdsInSession);
     }
 
-    private async Task LoadWorkoutsAsync()
+    private async Task LoadWorkoutsAsync(HashSet<Guid>? preselectExerciseLocalIds = null)
     {
         Workouts.Clear();
 
         var workouts = await _local.GetWorkoutsAsync(search: null);
         foreach (var w in workouts)
         {
+            var isSelected = false;
+
+            if (preselectExerciseLocalIds is not null && preselectExerciseLocalIds.Count > 0)
+            {
+                var links = await _local.GetWorkoutExercisesAllStatesAsync(w.LocalId);
+                isSelected = links.Any(l => !l.IsDeleted && preselectExerciseLocalIds.Contains(l.ExerciseLocalId));
+            }
+
             Workouts.Add(new WorkoutPickRowVm
             {
                 WorkoutLocalId = w.LocalId,
                 WorkoutTitle = w.Title,
-                IsSelected = false
+                IsSelected = isSelected
             });
         }
     }
@@ -97,20 +123,20 @@ public partial class SessionEditViewModel : ObservableObject
                 return;
             }
 
+            var selected = Workouts
+                .Where(x => x.IsSelected)
+                .Select(x => x.WorkoutLocalId)
+                .Distinct()
+                .ToList();
+
+            if (selected.Count == 0)
+            {
+                Error = "Select at least 1 workout.";
+                return;
+            }
+
             if (IsCreate)
             {
-                var selected = Workouts
-                    .Where(x => x.IsSelected)
-                    .Select(x => x.WorkoutLocalId)
-                    .Distinct()
-                    .ToList();
-
-                if (selected.Count == 0)
-                {
-                    Error = "Select at least 1 workout.";
-                    return;
-                }
-
                 await _local.CreateSessionFromWorkoutsAsync(SessionTitle, SessionDate, Description, selected);
             }
             else
@@ -121,8 +147,12 @@ public partial class SessionEditViewModel : ObservableObject
                     return;
                 }
 
-                Error = "Editing sessions is not implemented yet.";
-                return;
+                await _local.UpdateSessionFromWorkoutsAsync(
+                    _editingSessionLocalId.Value,
+                    SessionTitle,
+                    SessionDate,
+                    Description,
+                    selected);
             }
 
             try
