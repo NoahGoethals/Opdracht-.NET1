@@ -10,6 +10,7 @@ public partial class SessionEditViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _local;
     private readonly ISyncService _sync;
+
     private Guid? _editingSessionLocalId;
 
     [ObservableProperty] private string title = "New Session";
@@ -53,7 +54,7 @@ public partial class SessionEditViewModel : ObservableObject
         Description = null;
         Error = null;
 
-        await LoadWorkoutsAsync();
+        await LoadWorkoutsAsync(preselectWorkoutLocalIds: null, preselectExerciseLocalIds: null);
     }
 
     public async Task InitForEditAsync(Guid sessionLocalId)
@@ -75,34 +76,64 @@ public partial class SessionEditViewModel : ObservableObject
         SessionDate = session.Date;
         Description = session.Description;
 
+        var preselectWorkoutIds = ParseSourceWorkoutIdsFromNotes(session.Notes);
+
+        if (preselectWorkoutIds.Count > 0)
+        {
+            await LoadWorkoutsAsync(preselectWorkoutLocalIds: preselectWorkoutIds, preselectExerciseLocalIds: null);
+            return;
+        }
+
         var sets = await _local.GetSessionSetsEntitiesAsync(sessionLocalId, includeDeleted: false);
         var exerciseIdsInSession = sets
             .Select(x => x.ExerciseLocalId)
             .Distinct()
             .ToHashSet();
 
-        await LoadWorkoutsAsync(exerciseIdsInSession);
+        await LoadWorkoutsAsync(preselectWorkoutLocalIds: null, preselectExerciseLocalIds: exerciseIdsInSession);
     }
 
-    private async Task LoadWorkoutsAsync(HashSet<Guid>? preselectExerciseLocalIds = null)
+    private static HashSet<Guid> ParseSourceWorkoutIdsFromNotes(string? notes)
+    {
+        var result = new HashSet<Guid>();
+
+        if (string.IsNullOrWhiteSpace(notes)) return result;
+        if (!notes.StartsWith(LocalDatabaseService.SessionSourceWorkoutsNotesPrefix, StringComparison.Ordinal)) return result;
+
+        var payload = notes.Substring(LocalDatabaseService.SessionSourceWorkoutsNotesPrefix.Length);
+        if (string.IsNullOrWhiteSpace(payload)) return result;
+
+        foreach (var part in payload.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (Guid.TryParse(part, out var id))
+                result.Add(id);
+        }
+
+        return result;
+    }
+
+    private async Task LoadWorkoutsAsync(HashSet<Guid>? preselectWorkoutLocalIds, HashSet<Guid>? preselectExerciseLocalIds)
     {
         Workouts.Clear();
 
         var workouts = await _local.GetWorkoutsAsync(search: null);
+
         foreach (var w in workouts)
         {
             var isSelected = false;
 
-            if (preselectExerciseLocalIds is not null && preselectExerciseLocalIds.Count > 0)
+            if (preselectWorkoutLocalIds is not null && preselectWorkoutLocalIds.Count > 0)
+            {
+                isSelected = preselectWorkoutLocalIds.Contains(w.LocalId);
+            }
+            else if (preselectExerciseLocalIds is not null && preselectExerciseLocalIds.Count > 0)
             {
                 var links = await _local.GetWorkoutExercisesAllStatesAsync(w.LocalId);
-
                 var activeLinks = links.Where(l => !l.IsDeleted).ToList();
 
-                if (activeLinks.Count > 0)
-                {
-                    isSelected = activeLinks.All(l => preselectExerciseLocalIds.Contains(l.ExerciseLocalId));
-                }
+                isSelected =
+                    activeLinks.Count > 0 &&
+                    activeLinks.All(l => preselectExerciseLocalIds.Contains(l.ExerciseLocalId));
             }
 
             Workouts.Add(new WorkoutPickRowVm
@@ -161,13 +192,7 @@ public partial class SessionEditViewModel : ObservableObject
                     selected);
             }
 
-            try
-            {
-                await _sync.SyncAllAsync();
-            }
-            catch
-            {
-            }
+            try { await _sync.SyncAllAsync(); } catch { }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }

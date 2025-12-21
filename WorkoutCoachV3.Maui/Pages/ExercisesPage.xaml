@@ -6,34 +6,40 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" Grid.Row="0" ColumnSpacing="8">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" Grid.Row="0" ColumnSpacing="8">
             <Label Text="Exercises" FontSize="28" VerticalOptions="Center" />
 
             <Button Grid.Column="1"
-                    Text="Exercises"
-                    IsEnabled="False"
-                    Margin="8,0,0,0"/>
+            Text="Exercises"
+            IsEnabled="False"
+            Margin="8,0,0,0"/>
 
             <Button Grid.Column="2"
-                    Text="Workouts"
-                    Command="{Binding GoToWorkoutsCommand}"
-                    Margin="8,0,0,0"/>
+            Text="Workouts"
+            Command="{Binding GoToWorkoutsCommand}"
+            Margin="8,0,0,0"/>
 
             <Button Grid.Column="3"
-                    Text="Sessions"
-                    Command="{Binding GoToSessionsCommand}"
-                    Margin="8,0,0,0"/>
+            Text="Sessions"
+            Command="{Binding GoToSessionsCommand}"
+            Margin="8,0,0,0"/>
 
             <Button Grid.Column="4"
-                    Text="Add"
-                    Command="{Binding AddCommand}"
-                    Margin="8,0,0,0"/>
+            Text="Stats"
+            Command="{Binding GoToStatsCommand}"
+            Margin="8,0,0,0"/>
 
             <Button Grid.Column="5"
-                    Text="Logout"
-                    Command="{Binding LogoutCommand}"
-                    Margin="8,0,0,0"/>
+            Text="Add"
+            Command="{Binding AddCommand}"
+            Margin="8,0,0,0"/>
+
+            <Button Grid.Column="6"
+            Text="Logout"
+            Command="{Binding LogoutCommand}"
+            Margin="8,0,0,0"/>
         </Grid>
+
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Entry Placeholder="Search..."

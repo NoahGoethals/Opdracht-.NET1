@@ -8,7 +8,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
             <Label Text="Sessions"
                    FontSize="28"
                    VerticalOptions="Center" />
@@ -28,10 +28,14 @@
                     TextColor="Black" />
 
             <Button Grid.Column="4"
+                    Text="Stats"
+                    Command="{Binding GoToStatsCommand}" />
+
+            <Button Grid.Column="5"
                     Text="Add"
                     Command="{Binding AddCommand}" />
 
-            <Button Grid.Column="5"
+            <Button Grid.Column="6"
                     Text="Logout"
                     Command="{Binding LogoutCommand}" />
         </Grid>
@@ -48,46 +52,46 @@
         </Grid>
 
         <CollectionView Grid.Row="2"
-                ItemsSource="{Binding Items}">
+                        ItemsSource="{Binding Items}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <SwipeView>
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Edit"
-                                   BackgroundColor="#3B82F6"
-                                   Command="{Binding BindingContext.EditCommand, Source={x:Reference PageRoot}}"
-                                   CommandParameter="{Binding SessionLocalId}" />
+                                           BackgroundColor="#3B82F6"
+                                           Command="{Binding BindingContext.EditCommand, Source={x:Reference PageRoot}}"
+                                           CommandParameter="{Binding SessionLocalId}" />
 
                                 <SwipeItem Text="Delete"
-                                   BackgroundColor="#EF4444"
-                                   Command="{Binding BindingContext.DeleteCommand, Source={x:Reference PageRoot}}"
-                                   CommandParameter="{Binding SessionLocalId}" />
+                                           BackgroundColor="#EF4444"
+                                           Command="{Binding BindingContext.DeleteCommand, Source={x:Reference PageRoot}}"
+                                           CommandParameter="{Binding SessionLocalId}" />
                             </SwipeItems>
                         </SwipeView.RightItems>
 
                         <Frame Margin="0,0,0,10"
-                       Padding="14"
-                       CornerRadius="12"
-                       BorderColor="#DDD">
+                               Padding="14"
+                               CornerRadius="12"
+                               BorderColor="#DDD">
 
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer
-                            Command="{Binding BindingContext.OpenCommand, Source={x:Reference PageRoot}}"
-                            CommandParameter="{Binding SessionLocalId}" />
+                                    Command="{Binding BindingContext.OpenCommand, Source={x:Reference PageRoot}}"
+                                    CommandParameter="{Binding SessionLocalId}" />
                             </Frame.GestureRecognizers>
 
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Title}"
-                               FontSize="18"
-                               FontAttributes="Bold" />
+                                       FontSize="18"
+                                       FontAttributes="Bold" />
 
                                 <Label Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}"
-                               Opacity="0.6" />
+                                       Opacity="0.6" />
 
                                 <Label Text="Tap to open"
-                               FontSize="12"
-                               Opacity="0.6" />
+                                       FontSize="12"
+                                       Opacity="0.6" />
                             </VerticalStackLayout>
 
                         </Frame>
@@ -95,7 +99,6 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
 
     </Grid>
 </ContentPage>

@@ -49,6 +49,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Pages\StatsPage.xaml.cs">
+	    <DependentUpon>StatsPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\SessionDetailPage.xaml.cs">
 	    <DependentUpon>SessionDetailPage.xaml</DependentUpon>
 	  </Compile>
@@ -76,6 +79,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<MauiXaml Update="Pages\StatsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\SessionDetailPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

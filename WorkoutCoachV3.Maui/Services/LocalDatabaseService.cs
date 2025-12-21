@@ -20,6 +20,14 @@ public class LocalDatabaseService
         _dbFactory = dbFactory;
     }
 
+    public const string SessionSourceWorkoutsNotesPrefix = "__src_workouts:";
+
+    private static string BuildSessionSourceWorkoutsNotes(IEnumerable<Guid> workoutIds)
+    {
+        var ids = workoutIds?.ToList() ?? new List<Guid>();
+        return SessionSourceWorkoutsNotesPrefix + string.Join(";", ids);
+    }
+
     public sealed record WorkoutExerciseDisplay(string Name, int Repetitions, double WeightKg);
 
     public sealed record WorkoutExerciseManageRow(
@@ -29,6 +37,21 @@ public class LocalDatabaseService
         int Repetitions,
         double WeightKg
     );
+
+    public record SessionListDisplay(Guid SessionLocalId, string Title, DateTime Date);
+
+    public record SessionSetDisplay(int SetNumber, string ExerciseName, int Reps, double Weight);
+
+    public sealed record StatsSummary(int Sessions, int Sets, int TotalReps, double TotalVolumeKg);
+
+    public sealed record ExerciseStatsRow(
+        Guid ExerciseLocalId,
+        string ExerciseName,
+        int Sets,
+        int Reps,
+        double VolumeKg,
+        double MaxKg);
+
 
     public async Task EnsureCreatedAndSeedAsync()
     {
@@ -42,22 +65,50 @@ public class LocalDatabaseService
         var hasAnyExercises = await db.Exercises.AnyAsync();
         var hasAnyWorkouts = await db.Workouts.AnyAsync();
 
-        var online = Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.Internet;
+        var online = Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess ==
+                     Microsoft.Maui.Networking.NetworkAccess.Internet;
 
         if (!online && (!hasAnyExercises || !hasAnyWorkouts))
         {
             if (!hasAnyExercises)
             {
                 db.Exercises.AddRange(
-                    new LocalExercise { Name = "Bench Press", Category = "Chest", Notes = "Barbell", SyncState = SyncState.Dirty, LastModifiedUtc = DateTime.UtcNow },
-                    new LocalExercise { Name = "Back Squat", Category = "Legs", Notes = "Depth focus", SyncState = SyncState.Dirty, LastModifiedUtc = DateTime.UtcNow },
-                    new LocalExercise { Name = "Barbell Row", Category = "Back", Notes = "Strict form", SyncState = SyncState.Dirty, LastModifiedUtc = DateTime.UtcNow }
+                    new LocalExercise
+                    {
+                        Name = "Bench Press",
+                        Category = "Chest",
+                        Notes = "Barbell",
+                        SyncState = SyncState.Dirty,
+                        LastModifiedUtc = DateTime.UtcNow
+                    },
+                    new LocalExercise
+                    {
+                        Name = "Back Squat",
+                        Category = "Legs",
+                        Notes = "Depth focus",
+                        SyncState = SyncState.Dirty,
+                        LastModifiedUtc = DateTime.UtcNow
+                    },
+                    new LocalExercise
+                    {
+                        Name = "Barbell Row",
+                        Category = "Back",
+                        Notes = "Strict form",
+                        SyncState = SyncState.Dirty,
+                        LastModifiedUtc = DateTime.UtcNow
+                    }
                 );
             }
 
             if (!hasAnyWorkouts)
             {
-                db.Workouts.Add(new LocalWorkout { Title = "Full Body A", Notes = "Offline seed", SyncState = SyncState.Dirty, LastModifiedUtc = DateTime.UtcNow });
+                db.Workouts.Add(new LocalWorkout
+                {
+                    Title = "Full Body A",
+                    Notes = "Offline seed",
+                    SyncState = SyncState.Dirty,
+                    LastModifiedUtc = DateTime.UtcNow
+                });
             }
 
             await db.SaveChangesAsync();
@@ -107,6 +158,12 @@ WHERE rowid NOT IN (
         {
             Debug.WriteLine("[DB][REPAIR] " + ex);
         }
+    }
+
+    private static string BuildDbUpdateDetails(DbUpdateException ex)
+    {
+        var inner = ex.InnerException?.Message ?? "(no inner exception)";
+        return $"{ex.Message}\nINNER: {inner}";
     }
 
 
@@ -253,7 +310,7 @@ WHERE rowid NOT IN (
         await db.SaveChangesAsync();
     }
 
- 
+
     public async Task<List<LocalWorkout>> GetWorkoutsAsync(string? search = null)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -391,7 +448,6 @@ WHERE rowid NOT IN (
     }
 
 
-
     public async Task<List<LocalWorkoutExercise>> GetWorkoutExercisesAllStatesAsync(Guid workoutLocalId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -415,7 +471,7 @@ WHERE rowid NOT IN (
             .Where(e => !e.IsDeleted)
             .ToDictionaryAsync(e => e.LocalId, e => e.Name);
 
-        var result = links
+        return links
             .Where(l => exMap.ContainsKey(l.ExerciseLocalId))
             .Select(l => new WorkoutExerciseDisplay(
                 Name: exMap[l.ExerciseLocalId],
@@ -424,8 +480,6 @@ WHERE rowid NOT IN (
             ))
             .OrderBy(x => x.Name)
             .ToList();
-
-        return result;
     }
 
     public async Task<List<WorkoutExerciseManageRow>> GetWorkoutExerciseManageRowsAsync(Guid workoutLocalId)
@@ -466,7 +520,9 @@ WHERE rowid NOT IN (
         }).ToList();
     }
 
-    public async Task SaveWorkoutExercisesAsync(Guid workoutLocalId, List<(Guid ExerciseLocalId, bool IsInWorkout, int Repetitions, double WeightKg)> rows)
+    public async Task SaveWorkoutExercisesAsync(
+        Guid workoutLocalId,
+        List<(Guid ExerciseLocalId, bool IsInWorkout, int Repetitions, double WeightKg)> rows)
     {
         var mapped = rows.Select(r => new WorkoutExerciseManageRow(
             ExerciseLocalId: r.ExerciseLocalId,
@@ -556,7 +612,9 @@ WHERE rowid NOT IN (
         await db.SaveChangesAsync();
     }
 
-    public async Task ReplaceWorkoutExercisesFromRemoteAsync(Guid workoutLocalId, List<(Guid ExerciseLocalId, int Repetitions, double WeightKg)> remote)
+    public async Task ReplaceWorkoutExercisesFromRemoteAsync(
+        Guid workoutLocalId,
+        List<(Guid ExerciseLocalId, int Repetitions, double WeightKg)> remote)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
@@ -584,18 +642,6 @@ WHERE rowid NOT IN (
 
         await db.SaveChangesAsync();
     }
-
-    private static string BuildDbUpdateDetails(DbUpdateException ex)
-    {
-        var inner = ex.InnerException?.Message ?? "(no inner exception)";
-        return $"{ex.Message}\nINNER: {inner}";
-    }
-
-
-    public record SessionListDisplay(Guid SessionLocalId, string Title, DateTime Date);
-
-    public record SessionSetDisplay(int SetNumber, string ExerciseName, int Reps, double Weight);
-
 
 
     public async Task<List<SessionListDisplay>> GetSessionsAsync(string? search = null)
@@ -706,6 +752,7 @@ WHERE rowid NOT IN (
                 Title = title.Trim(),
                 Date = date,
                 Description = description,
+                Notes = BuildSessionSourceWorkoutsNotes(selectedWorkoutLocalIds),
                 IsDeleted = false,
                 SyncState = SyncState.Dirty,
                 LastModifiedUtc = DateTime.UtcNow
@@ -780,6 +827,7 @@ WHERE rowid NOT IN (
             session.Title = title.Trim();
             session.Date = date;
             session.Description = description;
+            session.Notes = BuildSessionSourceWorkoutsNotes(selectedWorkoutLocalIds);
             session.IsDeleted = false;
             session.SyncState = SyncState.Dirty;
             session.LastModifiedUtc = DateTime.UtcNow;
@@ -930,6 +978,7 @@ WHERE rowid NOT IN (
                     Title = r.Title,
                     Date = r.Date,
                     Description = r.Description,
+                    Notes = null, 
                     IsDeleted = false,
                     SyncState = SyncState.Synced,
                     LastModifiedUtc = now,
@@ -997,5 +1046,75 @@ WHERE rowid NOT IN (
         }
 
         await db.SaveChangesAsync();
+    }
+
+
+    public async Task<(StatsSummary Summary, List<ExerciseStatsRow> TopExercises)> GetStatsAsync(
+        Guid? exerciseLocalId,
+        DateTime? from,
+        DateTime? to,
+        int takeTop = 50)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var q =
+            from set in db.SessionSets
+            join session in db.Sessions on set.SessionLocalId equals session.LocalId
+            where !set.IsDeleted && !session.IsDeleted
+            select new
+            {
+                SessionLocalId = session.LocalId,
+                SessionDate = session.Date,
+                set.ExerciseLocalId,
+                set.Reps,
+                Weight = set.Weight
+            };
+
+        if (exerciseLocalId.HasValue)
+            q = q.Where(x => x.ExerciseLocalId == exerciseLocalId.Value);
+
+        if (from.HasValue)
+        {
+            var f = from.Value.Date;
+            q = q.Where(x => x.SessionDate.Date >= f);
+        }
+
+        if (to.HasValue)
+        {
+            var t = to.Value.Date;
+            q = q.Where(x => x.SessionDate.Date <= t);
+        }
+
+        var sessions = await q.Select(x => x.SessionLocalId).Distinct().CountAsync();
+        var sets = await q.CountAsync();
+        var totalReps = await q.SumAsync(x => (int?)x.Reps) ?? 0;
+        var totalVolume = await q.SumAsync(x => (double?)(x.Reps * x.Weight)) ?? 0.0;
+
+        var exerciseNames = await db.Exercises
+            .Where(e => !e.IsDeleted)
+            .ToDictionaryAsync(e => e.LocalId, e => e.Name);
+
+        var top = await q
+            .GroupBy(x => x.ExerciseLocalId)
+            .Select(g => new
+            {
+                ExerciseLocalId = g.Key,
+                Sets = g.Count(),
+                Reps = g.Sum(x => x.Reps),
+                Volume = g.Sum(x => x.Reps * x.Weight),
+                MaxKg = g.Max(x => x.Weight)
+            })
+            .OrderByDescending(x => x.Volume)
+            .ThenByDescending(x => x.MaxKg)
+            .Take(takeTop)
+            .ToListAsync();
+
+        var rows = top.Select(x =>
+        {
+            var name = exerciseNames.TryGetValue(x.ExerciseLocalId, out var n) ? n : "(unknown)";
+            return new ExerciseStatsRow(x.ExerciseLocalId, name, x.Sets, x.Reps, x.Volume, x.MaxKg);
+        }).ToList();
+
+        return (new StatsSummary(sessions, sets, totalReps, totalVolume), rows);
     }
 }

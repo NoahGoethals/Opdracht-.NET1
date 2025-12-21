@@ -45,7 +45,7 @@ public partial class ExercisesViewModel : ObservableObject
         await LoadLocalAsync();
 
         try { await _sync.SyncAllAsync(); }
-        catch { /* silent */ }
+        catch { }
 
         await LoadLocalAsync();
     }
@@ -99,20 +99,11 @@ public partial class ExercisesViewModel : ObservableObject
         if (IsBusy) return;
 
         IsRefreshing = true;
-        try
-        {
-            await RefreshAsync();
-        }
-        finally
-        {
-            IsRefreshing = false;
-        }
+        try { await RefreshAsync(); }
+        finally { IsRefreshing = false; }
     }
 
-    partial void OnSelectedCategoryChanged(string value)
-    {
-        _ = LoadLocalAsync();
-    }
+    partial void OnSelectedCategoryChanged(string value) => _ = LoadLocalAsync();
 
     partial void OnSearchTextChanged(string? value)
     {
@@ -127,23 +118,46 @@ public partial class ExercisesViewModel : ObservableObject
                 await Task.Delay(350, token);
                 if (token.IsCancellationRequested) return;
 
-                await MainThread.InvokeOnMainThreadAsync(async () =>
-                {
-                    await LoadLocalAsync();
-                });
+                await MainThread.InvokeOnMainThreadAsync(async () => await LoadLocalAsync());
             }
-            catch {  }
+            catch { }
         }, token);
     }
 
     [RelayCommand]
     private async Task AddAsync()
     {
-        var page = _services.GetRequiredService<ExerciseEditPage>();
-        var vm = (ExerciseEditViewModel)page.BindingContext!;
-        vm.InitForCreate();
+        var choice = await Application.Current!.MainPage!.DisplayActionSheet(
+            "Add",
+            "Cancel",
+            null,
+            "Exercise",
+            "Workout",
+            "Session");
 
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+        if (choice is null || choice == "Cancel") return;
+
+        if (choice == "Exercise")
+        {
+            var page = _services.GetRequiredService<ExerciseEditPage>();
+            var vm = (ExerciseEditViewModel)page.BindingContext!;
+            vm.InitForCreate();
+            await Application.Current!.MainPage!.Navigation.PushAsync(page);
+        }
+        else if (choice == "Workout")
+        {
+            var page = _services.GetRequiredService<WorkoutEditPage>();
+            var vm = (WorkoutEditViewModel)page.BindingContext!;
+            vm.InitForCreate();
+            await Application.Current!.MainPage!.Navigation.PushAsync(page);
+        }
+        else if (choice == "Session")
+        {
+            var page = _services.GetRequiredService<SessionEditPage>();
+            var vm = (SessionEditViewModel)page.BindingContext!;
+            await vm.InitForCreateAsync();
+            await Application.Current!.MainPage!.Navigation.PushAsync(page);
+        }
     }
 
     [RelayCommand]
@@ -174,9 +188,7 @@ public partial class ExercisesViewModel : ObservableObject
         try
         {
             await _local.SoftDeleteExerciseAsync(item.LocalId);
-
             try { await _sync.SyncAllAsync(); } catch { }
-
             await LoadLocalAsync();
         }
         catch (Exception ex)
@@ -185,26 +197,22 @@ public partial class ExercisesViewModel : ObservableObject
         }
     }
 
-
     [RelayCommand]
     private async Task GoToWorkoutsAsync()
-    {
-        var page = _services.GetRequiredService<WorkoutsPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<WorkoutsPage>());
 
     [RelayCommand]
     private async Task GoToSessionsAsync()
-    {
-        var page = _services.GetRequiredService<SessionsPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<SessionsPage>());
+
+    [RelayCommand]
+    private async Task GoToStatsAsync()
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<StatsPage>());
 
     [RelayCommand]
     private async Task LogoutAsync()
     {
         await _tokenStore.ClearAsync();
-        var loginPage = _services.GetRequiredService<LoginPage>();
-        Application.Current!.MainPage = new NavigationPage(loginPage);
+        Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }

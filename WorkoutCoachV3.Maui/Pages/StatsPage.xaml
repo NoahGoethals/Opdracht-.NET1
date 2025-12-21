@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WorkoutCoachV3.Maui.Pages.StatsPage"
+             x:Name="PageRoot"
+             Title="Stats">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+            <Label Grid.Column="0" Text="Stats" FontSize="28" VerticalOptions="Center" />
+
+            <Button Grid.Column="1" Text="Exercises" Command="{Binding GoToExercisesCommand}" />
+            <Button Grid.Column="2" Text="Workouts"  Command="{Binding GoToWorkoutsCommand}" />
+            <Button Grid.Column="3" Text="Sessions"  Command="{Binding GoToSessionsCommand}" />
+
+            <Button Grid.Column="4"
+                    Text="Stats"
+                    IsEnabled="False"
+                    BackgroundColor="#CFCFCF"
+                    TextColor="Black" />
+
+            <Button Grid.Column="5" Text="Add" Command="{Binding AddCommand}" />
+            <Button Grid.Column="6" Text="Logout" Command="{Binding LogoutCommand}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16">
+
+                <Grid ColumnDefinitions="2*,*,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="6">
+                        <Label Text="Exercise" />
+                        <Picker ItemsSource="{Binding ExerciseOptions}"
+                                SelectedItem="{Binding SelectedExercise}" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="6">
+                        <Label Text="From" />
+                        <DatePicker Date="{Binding FromDate}" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="2" Spacing="6">
+                        <Label Text="To" />
+                        <DatePicker Date="{Binding ToDate}" />
+                    </VerticalStackLayout>
+
+                    <Button Grid.Column="3"
+                            Text="Apply"
+                            VerticalOptions="End"
+                            HeightRequest="44"
+                            Padding="18,10"
+                            Command="{Binding ApplyCommand}" />
+                </Grid>
+
+                <Label Text="Overall stats" FontAttributes="Bold" FontSize="18" />
+
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                    <Frame Grid.Column="0" Padding="12" CornerRadius="12" BorderColor="#DDD">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Sessions" Opacity="0.7"/>
+                            <Label Text="{Binding SessionsCount}" FontAttributes="Bold" FontSize="18"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="1" Padding="12" CornerRadius="12" BorderColor="#DDD">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Sets" Opacity="0.7"/>
+                            <Label Text="{Binding SetsCount}" FontAttributes="Bold" FontSize="18"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="2" Padding="12" CornerRadius="12" BorderColor="#DDD">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total reps" Opacity="0.7"/>
+                            <Label Text="{Binding TotalReps}" FontAttributes="Bold" FontSize="18"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="3" Padding="12" CornerRadius="12" BorderColor="#DDD">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total volume (kg)" Opacity="0.7"/>
+                            <Label Text="{Binding TotalVolumeKg, StringFormat='{0:0.##}'}"
+                                   FontAttributes="Bold"
+                                   FontSize="18"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+
+                <Label Text="Top exercises (by volume)" FontAttributes="Bold" FontSize="18" />
+
+                <Grid ColumnDefinitions="2*,*,*,*,*" ColumnSpacing="10">
+                    <Label Text="Exercise" FontAttributes="Bold"/>
+                    <Label Grid.Column="1" Text="Sets" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                    <Label Grid.Column="2" Text="Reps" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                    <Label Grid.Column="3" Text="Volume (kg)" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                    <Label Grid.Column="4" Text="Max (kg)" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                </Grid>
+
+                <CollectionView ItemsSource="{Binding TopExercises}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="2*,*,*,*,*" ColumnSpacing="10" Padding="0,8">
+                                <Label Text="{Binding ExerciseName}" />
+                                <Label Grid.Column="1" Text="{Binding Sets}" HorizontalTextAlignment="End" />
+                                <Label Grid.Column="2" Text="{Binding Reps}" HorizontalTextAlignment="End" />
+                                <Label Grid.Column="3" Text="{Binding VolumeKg, StringFormat='{0:0.##}'}" HorizontalTextAlignment="End" />
+                                <Label Grid.Column="4" Text="{Binding MaxKg, StringFormat='{0:0.##}'}" HorizontalTextAlignment="End" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy}"
+                                   HorizontalOptions="Center" />
+
+                <Label Text="{Binding Error}" TextColor="Red" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

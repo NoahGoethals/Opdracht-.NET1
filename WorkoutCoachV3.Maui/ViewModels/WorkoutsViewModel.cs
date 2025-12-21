@@ -20,7 +20,11 @@ public partial class WorkoutsViewModel : ObservableObject
     [ObservableProperty] private string? error;
     [ObservableProperty] private string? searchText;
 
-    public WorkoutsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
+    public WorkoutsViewModel(
+        LocalDatabaseService local,
+        ISyncService sync,
+        IServiceProvider services,
+        ITokenStore tokenStore)
     {
         _local = local;
         _sync = sync;
@@ -47,7 +51,7 @@ public partial class WorkoutsViewModel : ObservableObject
 
         try
         {
-            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText;
+            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim();
             var data = await _local.GetWorkoutsAsync(search);
 
             Items.Clear();
@@ -105,9 +109,7 @@ public partial class WorkoutsViewModel : ObservableObject
         try
         {
             await _local.SoftDeleteWorkoutAsync(item.LocalId);
-
             try { await _sync.SyncAllAsync(); } catch { }
-
             await LoadLocalAsync();
         }
         catch (Exception ex)
@@ -130,23 +132,20 @@ public partial class WorkoutsViewModel : ObservableObject
 
     [RelayCommand]
     private async Task GoExercisesAsync()
-    {
-        var page = _services.GetRequiredService<ExercisesPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<ExercisesPage>());
 
     [RelayCommand]
     private async Task GoSessionsAsync()
-    {
-        var page = _services.GetRequiredService<SessionsPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<SessionsPage>());
+
+    [RelayCommand]
+    private async Task GoToStatsAsync()
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<StatsPage>());
 
     [RelayCommand]
     private async Task LogoutAsync()
     {
         await _tokenStore.ClearAsync();
-        var loginPage = _services.GetRequiredService<LoginPage>();
-        Application.Current!.MainPage = new NavigationPage(loginPage);
+        Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }

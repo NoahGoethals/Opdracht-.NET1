@@ -101,9 +101,7 @@ public partial class SessionsViewModel : ObservableObject
         try
         {
             await _local.SoftDeleteSessionAsync(sessionLocalId);
-
             try { await _sync.SyncAllAsync(); } catch { }
-
             await RefreshAsync();
         }
         catch (Exception ex)
@@ -124,17 +122,15 @@ public partial class SessionsViewModel : ObservableObject
 
     [RelayCommand]
     private async Task GoExercisesAsync()
-    {
-        var page = _services.GetRequiredService<ExercisesPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<ExercisesPage>());
 
     [RelayCommand]
     private async Task GoWorkoutsAsync()
-    {
-        var page = _services.GetRequiredService<WorkoutsPage>();
-        await Application.Current!.MainPage!.Navigation.PushAsync(page);
-    }
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<WorkoutsPage>());
+
+    [RelayCommand]
+    private async Task GoToStatsAsync()
+        => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<StatsPage>());
 
     [RelayCommand]
     private async Task LogoutAsync()
@@ -142,7 +138,6 @@ public partial class SessionsViewModel : ObservableObject
         var tokenStore = _services.GetRequiredService<ITokenStore>();
         await tokenStore.ClearAsync();
 
-        var loginPage = _services.GetRequiredService<LoginPage>();
-        Application.Current!.MainPage = new NavigationPage(loginPage);
+        Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }

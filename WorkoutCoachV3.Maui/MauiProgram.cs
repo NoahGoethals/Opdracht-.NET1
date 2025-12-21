@@ -91,6 +91,10 @@ public static class MauiProgram
         builder.Services.AddTransient<SessionEditPage>();
         builder.Services.AddTransient<SessionDetailPage>();
 
+        builder.Services.AddTransient<StatsViewModel>();
+        builder.Services.AddTransient<StatsPage>();
+
+
         return builder.Build();
     }
 
