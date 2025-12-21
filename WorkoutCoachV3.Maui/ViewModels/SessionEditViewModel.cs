@@ -96,7 +96,13 @@ public partial class SessionEditViewModel : ObservableObject
             if (preselectExerciseLocalIds is not null && preselectExerciseLocalIds.Count > 0)
             {
                 var links = await _local.GetWorkoutExercisesAllStatesAsync(w.LocalId);
-                isSelected = links.Any(l => !l.IsDeleted && preselectExerciseLocalIds.Contains(l.ExerciseLocalId));
+
+                var activeLinks = links.Where(l => !l.IsDeleted).ToList();
+
+                if (activeLinks.Count > 0)
+                {
+                    isSelected = activeLinks.All(l => preselectExerciseLocalIds.Contains(l.ExerciseLocalId));
+                }
             }
 
             Workouts.Add(new WorkoutPickRowVm
