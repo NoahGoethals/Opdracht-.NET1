@@ -7,25 +7,29 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" Grid.Row="0" ColumnSpacing="8">
-            <Button Grid.Column="0"
-                    Text="Exercises"
-                    Command="{Binding GoExercisesCommand}" />
-
-            <Label Grid.Column="1"
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" Grid.Row="0" ColumnSpacing="8">
+            <Label Grid.Column="0"
                    Text="Workouts"
                    FontSize="28"
                    VerticalOptions="Center" />
 
+            <Button Grid.Column="1"
+                    Text="Exercises"
+                    Command="{Binding GoExercisesCommand}" />
+
             <Button Grid.Column="2"
+                    Text="Workouts"
+                    IsEnabled="False" />
+
+            <Button Grid.Column="3"
+                    Text="Sessions"
+                    Command="{Binding GoSessionsCommand}" />
+
+            <Button Grid.Column="4"
                     Text="Add"
                     Command="{Binding AddCommand}" />
 
-            <Button Grid.Column="3"
-                    Text="Refresh"
-                    Command="{Binding RefreshCommand}" />
-
-            <Button Grid.Column="4"
+            <Button Grid.Column="5"
                     Text="Logout"
                     Command="{Binding LogoutCommand}" />
         </Grid>

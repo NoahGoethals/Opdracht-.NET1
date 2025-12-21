@@ -58,13 +58,7 @@ public partial class SessionsViewModel : ObservableObject
 
         try
         {
-            try
-            {
-                await _sync.SyncAllAsync();
-            }
-            catch
-            {
-            }
+            try { await _sync.SyncAllAsync(); } catch { }
 
             var data = await _local.GetSessionsAsync(Search);
             Items.Clear();
@@ -126,5 +120,29 @@ public partial class SessionsViewModel : ObservableObject
         await vm.InitAsync(sessionLocalId);
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private async Task GoExercisesAsync()
+    {
+        var page = _services.GetRequiredService<ExercisesPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private async Task GoWorkoutsAsync()
+    {
+        var page = _services.GetRequiredService<WorkoutsPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private async Task LogoutAsync()
+    {
+        var tokenStore = _services.GetRequiredService<ITokenStore>();
+        await tokenStore.ClearAsync();
+
+        var loginPage = _services.GetRequiredService<LoginPage>();
+        Application.Current!.MainPage = new NavigationPage(loginPage);
     }
 }

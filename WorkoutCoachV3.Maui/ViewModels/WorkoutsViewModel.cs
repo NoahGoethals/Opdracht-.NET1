@@ -136,6 +136,13 @@ public partial class WorkoutsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task GoSessionsAsync()
+    {
+        var page = _services.GetRequiredService<SessionsPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         await _tokenStore.ClearAsync();
