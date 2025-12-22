@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Pages;
@@ -13,27 +14,41 @@ public partial class WorkoutsViewModel : ObservableObject
     private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
     private readonly ITokenStore _tokenStore;
+    private readonly IUserSessionStore _sessionStore;
 
     public ObservableCollection<LocalWorkout> Items { get; } = new();
 
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isRefreshing;
     [ObservableProperty] private string? error;
     [ObservableProperty] private string? searchText;
+
+    [ObservableProperty] private bool canAccessAdmin;
 
     public WorkoutsViewModel(
         LocalDatabaseService local,
         ISyncService sync,
         IServiceProvider services,
-        ITokenStore tokenStore)
+        ITokenStore tokenStore,
+        IUserSessionStore sessionStore)
     {
         _local = local;
         _sync = sync;
         _services = services;
         _tokenStore = tokenStore;
+        _sessionStore = sessionStore;
+
+        _ = LoadAdminFlagAsync();
     }
 
-    public async Task RefreshAsync()
+    private async Task LoadAdminFlagAsync()
     {
+        CanAccessAdmin = await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator");
+    }
+
+    public async Task RefreshAsyncCore()
+    {
+        await LoadAdminFlagAsync();
         await LoadLocalAsync();
 
         try { await _sync.SyncAllAsync(); }
@@ -65,6 +80,22 @@ public partial class WorkoutsViewModel : ObservableObject
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task RefreshAsync()
+    {
+        if (IsBusy) return;
+
+        IsRefreshing = true;
+        try
+        {
+            await RefreshAsyncCore();
+        }
+        finally
+        {
+            IsRefreshing = false;
         }
     }
 
@@ -143,9 +174,20 @@ public partial class WorkoutsViewModel : ObservableObject
         => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<StatsPage>());
 
     [RelayCommand]
+    private async Task GoToAdminAsync()
+    {
+        await LoadAdminFlagAsync();
+        if (!CanAccessAdmin) return;
+
+        var page = _services.GetRequiredService<AdminPanelPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         await _tokenStore.ClearAsync();
+        await _sessionStore.ClearAsync();
         Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }

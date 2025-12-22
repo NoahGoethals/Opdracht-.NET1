@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
@@ -13,6 +15,7 @@ public partial class ExercisesViewModel : ObservableObject
     private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
     private readonly ITokenStore _tokenStore;
+    private readonly IUserSessionStore _sessionStore;
 
     private CancellationTokenSource? _searchDebounceCts;
 
@@ -26,21 +29,32 @@ public partial class ExercisesViewModel : ObservableObject
     [ObservableProperty] private string? searchText;
     [ObservableProperty] private string selectedCategory = "All";
 
+    [ObservableProperty] private bool canAccessAdmin;
+
     public ExercisesViewModel(
         LocalDatabaseService local,
         ISyncService sync,
         IServiceProvider services,
-        ITokenStore tokenStore)
+        ITokenStore tokenStore,
+        IUserSessionStore sessionStore)
     {
         _local = local;
         _sync = sync;
         _services = services;
         _tokenStore = tokenStore;
+        _sessionStore = sessionStore;
 
         Categories.Add("All");
+
+        _ = LoadAdminFlagAsync();
     }
 
-    public async Task RefreshAsync()
+    private async Task LoadAdminFlagAsync()
+    {
+        CanAccessAdmin = await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator");
+    }
+
+    public async Task RefreshAsyncCore()
     {
         await LoadLocalAsync();
 
@@ -51,9 +65,26 @@ public partial class ExercisesViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        if (IsBusy) return;
+
+        IsRefreshing = true;
+        try
+        {
+            await RefreshAsyncCore();
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
+    }
+
+    [RelayCommand]
     public async Task LoadLocalAsync()
     {
         if (IsBusy) return;
+
         IsBusy = true;
         Error = null;
 
@@ -91,16 +122,6 @@ public partial class ExercisesViewModel : ObservableObject
         {
             IsBusy = false;
         }
-    }
-
-    [RelayCommand]
-    private async Task RefreshCommandAsync()
-    {
-        if (IsBusy) return;
-
-        IsRefreshing = true;
-        try { await RefreshAsync(); }
-        finally { IsRefreshing = false; }
     }
 
     partial void OnSelectedCategoryChanged(string value) => _ = LoadLocalAsync();
@@ -210,9 +231,25 @@ public partial class ExercisesViewModel : ObservableObject
         => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<StatsPage>());
 
     [RelayCommand]
+    private async Task GoToAdminAsync()
+    {
+        await LoadAdminFlagAsync();
+
+        if (!CanAccessAdmin)
+        {
+            await Application.Current!.MainPage!.DisplayAlert("Admin", "Not authorized.", "OK");
+            return;
+        }
+
+        var page = _services.GetRequiredService<AdminPanelPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         await _tokenStore.ClearAsync();
+        await _sessionStore.ClearAsync();
         Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }

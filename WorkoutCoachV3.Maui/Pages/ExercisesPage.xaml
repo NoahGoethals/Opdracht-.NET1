@@ -6,9 +6,10 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-              Grid.Row="0"
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
               ColumnSpacing="8">
+
             <Label Text="Exercises" FontSize="28" VerticalOptions="Center" />
 
             <Button Grid.Column="1" Text="Exercises" IsEnabled="False" Margin="8,0,0,0"/>
@@ -25,6 +26,7 @@
             <Button Grid.Column="6" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0"/>
             <Button Grid.Column="7" Text="Logout" Command="{Binding LogoutCommand}" Margin="8,0,0,0"/>
         </Grid>
+
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Entry Placeholder="Search..."
                    Text="{Binding SearchText}"
@@ -46,10 +48,12 @@
         <RefreshView Grid.Row="3"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshCommand}">
-            <CollectionView ItemsSource="{Binding Items}">
+
+            <CollectionView ItemsSource="{Binding Items}"
+                            SelectionMode="None">
+
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-
                         <SwipeView>
 
                             <SwipeView.RightItems>
@@ -80,6 +84,7 @@
                         </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
+
             </CollectionView>
         </RefreshView>
 

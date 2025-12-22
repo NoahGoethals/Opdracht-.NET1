@@ -16,7 +16,7 @@ public partial class ExercisesPage : ContentPage
 
         if (BindingContext is ExercisesViewModel vm)
         {
-            await vm.RefreshAsync();
+            await vm.RefreshAsyncCore();
         }
     }
 }

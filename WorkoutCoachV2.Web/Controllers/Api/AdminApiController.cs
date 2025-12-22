@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ namespace WorkoutCoachV2.Web.Controllers.Api;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Policy = "AdminOnly")] 
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminOnly")]
 public class AdminApiController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Linq;
 using WorkoutCoachV3.Maui.Pages;
@@ -13,6 +14,7 @@ public partial class StatsViewModel : ObservableObject
     private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
     private readonly ITokenStore _tokenStore;
+    private readonly IUserSessionStore _sessionStore;
 
     public ObservableCollection<ExercisePickItem> ExerciseOptions { get; } = new();
     public ObservableCollection<LocalDatabaseService.ExerciseStatsRow> TopExercises { get; } = new();
@@ -28,14 +30,31 @@ public partial class StatsViewModel : ObservableObject
     [ObservableProperty] private double totalVolumeKg;
 
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isRefreshing;
     [ObservableProperty] private string? error;
 
-    public StatsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services, ITokenStore tokenStore)
+    // Admin button
+    [ObservableProperty] private bool canAccessAdmin;
+
+    public StatsViewModel(
+        LocalDatabaseService local,
+        ISyncService sync,
+        IServiceProvider services,
+        ITokenStore tokenStore,
+        IUserSessionStore sessionStore)
     {
         _local = local;
         _sync = sync;
         _services = services;
         _tokenStore = tokenStore;
+        _sessionStore = sessionStore;
+
+        _ = LoadAdminFlagAsync();
+    }
+
+    private async Task LoadAdminFlagAsync()
+    {
+        CanAccessAdmin = await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator");
     }
 
     public sealed class ExercisePickItem
@@ -47,6 +66,7 @@ public partial class StatsViewModel : ObservableObject
 
     public async Task InitAsync()
     {
+        await LoadAdminFlagAsync();
         await LoadExerciseOptionsAsync();
         SelectedExercise ??= ExerciseOptions.FirstOrDefault();
     }
@@ -72,8 +92,9 @@ public partial class StatsViewModel : ObservableObject
         }
     }
 
+    // ✅ Verb: Load (reload zonder sync) -> LoadCommand
     [RelayCommand]
-    public async Task ApplyAsync()
+    public async Task LoadAsync()
     {
         if (IsBusy) return;
         IsBusy = true;
@@ -81,8 +102,6 @@ public partial class StatsViewModel : ObservableObject
 
         try
         {
-            try { await _sync.SyncAllAsync(); } catch { }
-
             var exerciseId = SelectedExercise?.ExerciseLocalId;
 
             var (summary, top) = await _local.GetStatsAsync(
@@ -110,6 +129,50 @@ public partial class StatsViewModel : ObservableObject
         }
     }
 
+    // ✅ Verb: Apply (met sync zoals je had)
+    [RelayCommand]
+    public async Task ApplyAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        Error = null;
+
+        try
+        {
+            try { await _sync.SyncAllAsync(); } catch { }
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // ✅ Verb voor RefreshView: RefreshCommand (sync + reload)
+    [RelayCommand]
+    public async Task RefreshAsync()
+    {
+        if (IsBusy) return;
+
+        IsRefreshing = true;
+        try
+        {
+            await LoadAdminFlagAsync();
+
+            try { await _sync.SyncAllAsync(); } catch { }
+            await LoadAsync();
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
+    }
+
     [RelayCommand]
     private async Task GoToExercisesAsync()
         => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<ExercisesPage>());
@@ -121,6 +184,16 @@ public partial class StatsViewModel : ObservableObject
     [RelayCommand]
     private async Task GoToSessionsAsync()
         => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<SessionsPage>());
+
+    [RelayCommand]
+    private async Task GoToAdminAsync()
+    {
+        await LoadAdminFlagAsync();
+        if (!CanAccessAdmin) return;
+
+        var page = _services.GetRequiredService<AdminPanelPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
 
     [RelayCommand]
     private async Task AddAsync()
@@ -162,6 +235,7 @@ public partial class StatsViewModel : ObservableObject
     private async Task LogoutAsync()
     {
         await _tokenStore.ClearAsync();
+        await _sessionStore.ClearAsync();
         Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }

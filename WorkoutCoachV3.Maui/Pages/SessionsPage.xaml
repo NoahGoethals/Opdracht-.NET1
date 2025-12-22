@@ -8,37 +8,24 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-            <Label Text="Sessions"
-                   FontSize="28"
-                   VerticalOptions="Center" />
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+            <Label Text="Sessions" FontSize="28" VerticalOptions="Center" />
 
-            <Button Grid.Column="1"
-                    Text="Exercises"
-                    Command="{Binding GoExercisesCommand}" />
-
-            <Button Grid.Column="2"
-                    Text="Workouts"
-                    Command="{Binding GoWorkoutsCommand}" />
-
-            <Button Grid.Column="3"
-                    Text="Sessions"
-                    IsEnabled="False"
-                    BackgroundColor="#BDBDBD"
-                    TextColor="Black" />
-
-            <Button Grid.Column="4"
-                    Text="Stats"
-                    Command="{Binding GoToStatsCommand}" />
+            <Button Grid.Column="1" Text="Exercises" Command="{Binding GoExercisesCommand}" Margin="8,0,0,0"/>
+            <Button Grid.Column="2" Text="Workouts" Command="{Binding GoWorkoutsCommand}" Margin="8,0,0,0"/>
+            <Button Grid.Column="3" Text="Sessions" IsEnabled="False" Margin="8,0,0,0"/>
+            <Button Grid.Column="4" Text="Stats" Command="{Binding GoToStatsCommand}" Margin="8,0,0,0"/>
 
             <Button Grid.Column="5"
-                    Text="Add"
-                    Command="{Binding AddCommand}" />
+            Text="Admin"
+            Command="{Binding GoToAdminCommand}"
+            IsVisible="{Binding CanAccessAdmin}"
+            Margin="8,0,0,0"/>
 
-            <Button Grid.Column="6"
-                    Text="Logout"
-                    Command="{Binding LogoutCommand}" />
+            <Button Grid.Column="6" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0"/>
+            <Button Grid.Column="7" Text="Logout" Command="{Binding LogoutCommand}" Margin="8,0,0,0"/>
         </Grid>
+
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Entry Placeholder="Search..."

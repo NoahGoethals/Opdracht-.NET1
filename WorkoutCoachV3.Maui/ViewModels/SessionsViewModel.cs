@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -11,18 +12,38 @@ public partial class SessionsViewModel : ObservableObject
     private readonly LocalDatabaseService _local;
     private readonly ISyncService _sync;
     private readonly IServiceProvider _services;
+    private readonly ITokenStore _tokenStore;
+    private readonly IUserSessionStore _sessionStore;
 
     public ObservableCollection<LocalDatabaseService.SessionListDisplay> Items { get; } = new();
 
     [ObservableProperty] private string? search;
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isRefreshing;
     [ObservableProperty] private string? error;
 
-    public SessionsViewModel(LocalDatabaseService local, ISyncService sync, IServiceProvider services)
+    // Admin button
+    [ObservableProperty] private bool canAccessAdmin;
+
+    public SessionsViewModel(
+        LocalDatabaseService local,
+        ISyncService sync,
+        IServiceProvider services,
+        ITokenStore tokenStore,
+        IUserSessionStore sessionStore)
     {
         _local = local;
         _sync = sync;
         _services = services;
+        _tokenStore = tokenStore;
+        _sessionStore = sessionStore;
+
+        _ = LoadAdminFlagAsync();
+    }
+
+    private async Task LoadAdminFlagAsync()
+    {
+        CanAccessAdmin = await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator");
     }
 
     [RelayCommand]
@@ -49,21 +70,31 @@ public partial class SessionsViewModel : ObservableObject
         }
     }
 
+    public async Task RefreshAsyncCore()
+    {
+        await LoadAdminFlagAsync();
+
+        try { await _sync.SyncAllAsync(); } catch { }
+
+        var data = await _local.GetSessionsAsync(Search);
+        Items.Clear();
+        foreach (var s in data)
+            Items.Add(s);
+    }
+
+    // ✅ Verb voor RefreshView: RefreshCommand
     [RelayCommand]
     public async Task RefreshAsync()
     {
         if (IsBusy) return;
+
+        IsRefreshing = true;
         IsBusy = true;
         Error = null;
 
         try
         {
-            try { await _sync.SyncAllAsync(); } catch { }
-
-            var data = await _local.GetSessionsAsync(Search);
-            Items.Clear();
-            foreach (var s in data)
-                Items.Add(s);
+            await RefreshAsyncCore();
         }
         catch (Exception ex)
         {
@@ -72,6 +103,7 @@ public partial class SessionsViewModel : ObservableObject
         finally
         {
             IsBusy = false;
+            IsRefreshing = false;
         }
     }
 
@@ -133,11 +165,20 @@ public partial class SessionsViewModel : ObservableObject
         => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<StatsPage>());
 
     [RelayCommand]
+    private async Task GoToAdminAsync()
+    {
+        await LoadAdminFlagAsync();
+        if (!CanAccessAdmin) return;
+
+        var page = _services.GetRequiredService<AdminPanelPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
-        var tokenStore = _services.GetRequiredService<ITokenStore>();
-        await tokenStore.ClearAsync();
-
+        await _tokenStore.ClearAsync();
+        await _sessionStore.ClearAsync();
         Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
 }
