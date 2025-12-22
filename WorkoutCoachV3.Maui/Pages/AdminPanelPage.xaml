@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WorkoutCoachV3.Maui.Pages.AdminPanelPage"
+             x:Name="PageRoot"
+             Title="Admin">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+            <Label Grid.Column="0" Text="Admin" FontSize="28" VerticalOptions="Center" />
+
+            <Button Grid.Column="1" Text="Exercises" Command="{Binding GoToExercisesCommand}" />
+            <Button Grid.Column="2" Text="Workouts"  Command="{Binding GoToWorkoutsCommand}" />
+            <Button Grid.Column="3" Text="Sessions"  Command="{Binding GoToSessionsCommand}" />
+            <Button Grid.Column="4" Text="Stats"     Command="{Binding GoToStatsCommand}" />
+
+            <Button Grid.Column="5"
+                    Text="Admin"
+                    IsEnabled="False"
+                    IsVisible="{Binding CanAccessAdmin}"
+                    BackgroundColor="#CFCFCF"
+                    TextColor="Black" />
+
+            <Button Grid.Column="6" Text="Logout" Command="{Binding LogoutCommand}" />
+        </Grid>
+
+        <HorizontalStackLayout Grid.Row="1" Spacing="12">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Users}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Padding="10" Margin="0,6" BorderColor="#D0D0D0">
+                        <VerticalStackLayout Spacing="8">
+
+                            <Label FontAttributes="Bold" Text="{Binding Email}" />
+                            <Label Text="{Binding DisplayName}" />
+
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                                <Label Grid.Column="0" Text="Role:" VerticalOptions="Center" />
+
+                                <Picker Grid.Column="1"
+                                        ItemsSource="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RoleOptions}"
+                                        SelectedItem="{Binding SelectedRole}" />
+
+                                <Button Grid.Column="2"
+                                        Text="Save"
+                                        Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SaveRoleCommand}"
+                                        CommandParameter="{Binding .}" />
+
+                                <Button Grid.Column="3"
+                                        Text="{Binding IsBlocked, StringFormat='Blocked: {0}'}"
+                                        Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ToggleBlockCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

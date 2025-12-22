@@ -2,9 +2,9 @@ using WorkoutCoachV3.Maui.ViewModels;
 
 namespace WorkoutCoachV3.Maui.Pages;
 
-public partial class ExercisesPage : ContentPage
+public partial class AdminPanelPage : ContentPage
 {
-    public ExercisesPage(ExercisesViewModel vm)
+    public AdminPanelPage(AdminPanelViewModel vm)
     {
         InitializeComponent();
         BindingContext = vm;
@@ -14,9 +14,7 @@ public partial class ExercisesPage : ContentPage
     {
         base.OnAppearing();
 
-        if (BindingContext is ExercisesViewModel vm)
-        {
-            await vm.RefreshAsync();
-        }
+        if (BindingContext is AdminPanelViewModel vm)
+            await vm.LoadAsync();
     }
 }

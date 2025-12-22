@@ -10,6 +10,7 @@ public partial class LoginViewModel : ObservableObject
 {
     private readonly IAuthApi _authApi;
     private readonly ITokenStore _tokenStore;
+    private readonly IUserSessionStore _sessionStore;
     private readonly IServiceProvider _services;
 
     [ObservableProperty] private string email = "";
@@ -17,10 +18,11 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
 
-    public LoginViewModel(IAuthApi authApi, ITokenStore tokenStore, IServiceProvider services)
+    public LoginViewModel(IAuthApi authApi, ITokenStore tokenStore, IUserSessionStore sessionStore, IServiceProvider services)
     {
         _authApi = authApi;
         _tokenStore = tokenStore;
+        _sessionStore = sessionStore;
         _services = services;
     }
 
@@ -35,10 +37,11 @@ public partial class LoginViewModel : ObservableObject
         try
         {
             var res = await _authApi.LoginAsync(Email.Trim(), Password);
-            await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
 
-            var exercisesPage = _services.GetRequiredService<ExercisesPage>();
-            Application.Current!.MainPage = new NavigationPage(exercisesPage);
+            await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
+            await _sessionStore.SetAsync(res.UserId, res.Email, res.DisplayName, res.Roles);
+
+            Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<ExercisesPage>());
         }
         catch (Exception ex)
         {

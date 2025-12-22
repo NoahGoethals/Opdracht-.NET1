@@ -21,6 +21,7 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 
         builder.Services.AddSingleton<ITokenStore, TokenStore>();
+        builder.Services.AddSingleton<IUserSessionStore, UserSessionStore>();
         builder.Services.AddTransient<AuthHeaderHandler>();
 
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, "workoutcoach.local.db3");
@@ -60,6 +61,7 @@ public static class MauiProgram
         builder.Services.AddTransient<IWorkoutsApi, WorkoutsApi>();
         builder.Services.AddTransient<IWorkoutExercisesApi, WorkoutExercisesApi>();
         builder.Services.AddTransient<ISessionsApi, SessionsApi>();
+        builder.Services.AddTransient<IAdminApi, AdminApi>();
 
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<RegisterViewModel>();
@@ -78,6 +80,8 @@ public static class MauiProgram
         builder.Services.AddTransient<SessionDetailViewModel>();
 
         builder.Services.AddTransient<StatsViewModel>();
+        builder.Services.AddTransient<AdminPanelViewModel>();
+
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<RegisterPage>();
 
@@ -95,6 +99,7 @@ public static class MauiProgram
         builder.Services.AddTransient<SessionDetailPage>();
 
         builder.Services.AddTransient<StatsPage>();
+        builder.Services.AddTransient<AdminPanelPage>();
 
         return builder.Build();
     }

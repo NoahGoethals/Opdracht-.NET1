@@ -10,6 +10,7 @@ public partial class RegisterViewModel : ObservableObject
 {
     private readonly IAuthApi _authApi;
     private readonly ITokenStore _tokenStore;
+    private readonly IUserSessionStore _sessionStore;
     private readonly IServiceProvider _services;
 
     [ObservableProperty] private string displayName = "";
@@ -19,10 +20,11 @@ public partial class RegisterViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
 
-    public RegisterViewModel(IAuthApi authApi, ITokenStore tokenStore, IServiceProvider services)
+    public RegisterViewModel(IAuthApi authApi, ITokenStore tokenStore, IUserSessionStore sessionStore, IServiceProvider services)
     {
         _authApi = authApi;
         _tokenStore = tokenStore;
+        _sessionStore = sessionStore;
         _services = services;
     }
 
@@ -36,39 +38,21 @@ public partial class RegisterViewModel : ObservableObject
         var mail = Email.Trim();
         var name = DisplayName.Trim();
 
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            ErrorMessage = "Display name is required.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(mail))
-        {
-            ErrorMessage = "Email is required.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Password))
-        {
-            ErrorMessage = "Password is required.";
-            return;
-        }
-
-        if (Password != ConfirmPassword)
-        {
-            ErrorMessage = "Passwords do not match.";
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(name)) { ErrorMessage = "Display name is required."; return; }
+        if (string.IsNullOrWhiteSpace(mail)) { ErrorMessage = "Email is required."; return; }
+        if (string.IsNullOrWhiteSpace(Password)) { ErrorMessage = "Password is required."; return; }
+        if (Password != ConfirmPassword) { ErrorMessage = "Passwords do not match."; return; }
 
         IsBusy = true;
 
         try
         {
             var res = await _authApi.RegisterAsync(mail, Password, name);
-            await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
 
-            var exercisesPage = _services.GetRequiredService<ExercisesPage>();
-            Application.Current!.MainPage = new NavigationPage(exercisesPage);
+            await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
+            await _sessionStore.SetAsync(res.UserId, res.Email, res.DisplayName, res.Roles);
+
+            Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<ExercisesPage>());
         }
         catch (Exception ex)
         {
