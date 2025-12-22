@@ -3,6 +3,7 @@
 public interface IAuthApi
 {
     Task<AuthResponse> LoginAsync(string email, string password);
+    Task<AuthResponse> RegisterAsync(string email, string password, string displayName);
 }
 
 public record AuthResponse(

@@ -20,4 +20,18 @@ public class AuthApi : IAuthApi
         var data = await res.Content.ReadFromJsonAsync<AuthResponse>();
         return data ?? throw new Exception("Login response was empty.");
     }
+
+    public async Task<AuthResponse> RegisterAsync(string email, string password, string displayName)
+    {
+        var res = await _http.PostAsJsonAsync("api/auth/register", new { email, password, displayName });
+
+        if (!res.IsSuccessStatusCode)
+        {
+            var msg = await res.Content.ReadAsStringAsync();
+            throw new Exception($"Register failed: {(int)res.StatusCode} {msg}");
+        }
+
+        var data = await res.Content.ReadFromJsonAsync<AuthResponse>();
+        return data ?? throw new Exception("Register response was empty.");
+    }
 }

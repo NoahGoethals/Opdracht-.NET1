@@ -8,20 +8,19 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class LoginViewModel : ObservableObject
 {
-    private readonly IAuthApi _auth;
-    private readonly ITokenStore _tokens;
+    private readonly IAuthApi _authApi;
+    private readonly ITokenStore _tokenStore;
     private readonly IServiceProvider _services;
 
-    [ObservableProperty] private string email = "admin@workoutcoach.local";
-    [ObservableProperty] private string password = "Admin123!";
+    [ObservableProperty] private string email = "";
+    [ObservableProperty] private string password = "";
     [ObservableProperty] private bool isBusy;
-    [ObservableProperty] private string? error;
-    [ObservableProperty] private string? message;
+    [ObservableProperty] private string? errorMessage;
 
-    public LoginViewModel(IAuthApi auth, ITokenStore tokens, IServiceProvider services)
+    public LoginViewModel(IAuthApi authApi, ITokenStore tokenStore, IServiceProvider services)
     {
-        _auth = auth;
-        _tokens = tokens;
+        _authApi = authApi;
+        _tokenStore = tokenStore;
         _services = services;
     }
 
@@ -30,25 +29,33 @@ public partial class LoginViewModel : ObservableObject
     {
         if (IsBusy) return;
 
+        ErrorMessage = null;
         IsBusy = true;
-        Error = null;
-        Message = null;
 
         try
         {
-            var res = await _auth.LoginAsync(Email, Password);
-            await _tokens.SetAsync(res.Token, res.ExpiresUtc);
+            var res = await _authApi.LoginAsync(Email.Trim(), Password);
+            await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
 
             var exercisesPage = _services.GetRequiredService<ExercisesPage>();
             Application.Current!.MainPage = new NavigationPage(exercisesPage);
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            ErrorMessage = ex.Message;
         }
         finally
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task GoToRegisterAsync()
+    {
+        if (IsBusy) return;
+
+        var page = _services.GetRequiredService<RegisterPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 }

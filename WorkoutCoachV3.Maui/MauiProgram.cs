@@ -62,6 +62,7 @@ public static class MauiProgram
         builder.Services.AddTransient<ISessionsApi, SessionsApi>();
 
         builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<RegisterViewModel>();
 
         builder.Services.AddTransient<ExercisesViewModel>();
         builder.Services.AddTransient<ExerciseEditViewModel>();
@@ -76,7 +77,9 @@ public static class MauiProgram
         builder.Services.AddTransient<SessionEditViewModel>();
         builder.Services.AddTransient<SessionDetailViewModel>();
 
+        builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<RegisterPage>();
 
         builder.Services.AddTransient<ExercisesPage>();
         builder.Services.AddTransient<ExerciseEditPage>();
@@ -91,9 +94,7 @@ public static class MauiProgram
         builder.Services.AddTransient<SessionEditPage>();
         builder.Services.AddTransient<SessionDetailPage>();
 
-        builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<StatsPage>();
-
 
         return builder.Build();
     }

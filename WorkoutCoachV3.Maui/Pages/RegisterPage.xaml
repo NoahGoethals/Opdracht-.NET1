@@ -2,8 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:WorkoutCoachV3.Maui.Converters"
-             x:Class="WorkoutCoachV3.Maui.Pages.LoginPage"
-             Title="Login">
+             x:Class="WorkoutCoachV3.Maui.Pages.RegisterPage"
+             Title="Register">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -14,9 +14,12 @@
     <ScrollView>
         <VerticalStackLayout Spacing="14" Padding="24">
 
-            <Label Text="WorkoutCoach"
+            <Label Text="Create account"
                    FontSize="28"
                    FontAttributes="Bold" />
+
+            <Entry Placeholder="Display name"
+                   Text="{Binding DisplayName}" />
 
             <Entry Placeholder="Email"
                    Keyboard="Email"
@@ -26,12 +29,16 @@
                    IsPassword="True"
                    Text="{Binding Password}" />
 
-            <Button Text="Login"
-                    Command="{Binding LoginCommand}"
+            <Entry Placeholder="Confirm password"
+                   IsPassword="True"
+                   Text="{Binding ConfirmPassword}" />
+
+            <Button Text="Register"
+                    Command="{Binding RegisterCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
 
-            <Button Text="Create account"
-                    Command="{Binding GoToRegisterCommand}"
+            <Button Text="Back to login"
+                    Command="{Binding BackCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"

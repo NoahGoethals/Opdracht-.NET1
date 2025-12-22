@@ -1,16 +1,74 @@
-﻿using WorkoutCoachV3.Maui.Pages;
+﻿using Microsoft.Extensions.DependencyInjection;
+using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
 namespace WorkoutCoachV3.Maui;
 
 public partial class App : Application
 {
-    public App(LocalDatabaseService localDb, LoginPage loginPage)
+    private readonly IServiceProvider _services;
+
+    public App(LocalDatabaseService localDb, ITokenStore tokenStore, IServiceProvider services)
     {
         InitializeComponent();
+        _services = services;
 
-        _ = Task.Run(async () => await localDb.EnsureCreatedAndSeedAsync());
+        MainPage = new ContentPage
+        {
+            Content = new Grid
+            {
+                Padding = 24,
+                Children =
+                {
+                    new VerticalStackLayout
+                    {
+                        Spacing = 12,
+                        VerticalOptions = LayoutOptions.Center,
+                        HorizontalOptions = LayoutOptions.Center,
+                        Children =
+                        {
+                            new Label
+                            {
+                                Text = "WorkoutCoach",
+                                FontSize = 28,
+                                FontAttributes = FontAttributes.Bold,
+                                HorizontalTextAlignment = TextAlignment.Center
+                            },
+                            new ActivityIndicator { IsRunning = true }
+                        }
+                    }
+                }
+            }
+        };
 
-        MainPage = new NavigationPage(loginPage);
+        _ = InitializeAsync(localDb, tokenStore);
+    }
+
+    private async Task InitializeAsync(LocalDatabaseService localDb, ITokenStore tokenStore)
+    {
+        try
+        {
+            await localDb.EnsureCreatedAndSeedAsync();
+
+            var hasToken = await tokenStore.HasValidTokenAsync();
+
+            Page root = hasToken
+                ? _services.GetRequiredService<ExercisesPage>()
+                : _services.GetRequiredService<LoginPage>();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Application.Current!.MainPage = new NavigationPage(root);
+            });
+        }
+        catch
+        {
+            var login = _services.GetRequiredService<LoginPage>();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Application.Current!.MainPage = new NavigationPage(login);
+            });
+        }
     }
 }
