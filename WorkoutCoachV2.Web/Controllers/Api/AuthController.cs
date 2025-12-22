@@ -38,7 +38,7 @@ namespace WorkoutCoachV2.Web.Controllers.Api
             var user = await _userManager.FindByEmailAsync(req.Email);
             if (user == null) return Unauthorized("Ongeldige login.");
 
-            if (user.IsBlocked) return Forbid("Gebruiker is geblokkeerd.");
+            if (user.IsBlocked) return StatusCode(403, "Gebruiker is geblokkeerd.");
 
             var ok = await _signInManager.CheckPasswordSignInAsync(user, req.Password, lockoutOnFailure: false);
             if (!ok.Succeeded) return Unauthorized("Ongeldige login.");
