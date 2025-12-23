@@ -1,6 +1,6 @@
 ﻿using Microsoft.Maui.Networking;
 using System.Diagnostics;
-using WorkoutCoachV2.Model.ApiContracts;
+using Api = WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -31,13 +31,11 @@ public class SyncService : ISyncService
         if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
             return;
 
-        // Push first (offline changes)
         await SyncExercisesPushAsync(ct);
         await SyncWorkoutsPushAsync(ct);
         await SyncWorkoutExercisesPushAsync(ct);
         await SyncSessionsPushAsync(ct);
 
-        // Pull afterwards (server truth)
         await SyncExercisesPullAsync(ct);
         await SyncWorkoutsPullAsync(ct);
         await SyncWorkoutExercisesPullAsync(ct);
@@ -66,7 +64,7 @@ public class SyncService : ISyncService
                 if (!e.RemoteId.HasValue)
                 {
                     var created = await _exercisesApi.CreateAsync(
-                        new CreateExerciseDto(e.Name, e.Category, e.Notes),
+                        new Api.CreateExerciseDto(e.Name, e.Category, e.Notes),
                         ct);
 
                     await _local.MarkExerciseSyncedAsync(e.LocalId, created.Id);
@@ -75,7 +73,7 @@ public class SyncService : ISyncService
                 {
                     await _exercisesApi.UpdateAsync(
                         e.RemoteId.Value,
-                        new UpdateExerciseDto(e.Name, e.Category, e.Notes),
+                        new Api.UpdateExerciseDto(e.Name, e.Category, e.Notes),
                         ct);
 
                     await _local.MarkExerciseSyncedAsync(e.LocalId);
@@ -110,7 +108,7 @@ public class SyncService : ISyncService
                 if (!w.RemoteId.HasValue)
                 {
                     var created = await _workoutsApi.CreateAsync(
-                        new CreateWorkoutDto(w.Title, ScheduledOn: null),
+                        new Api.CreateWorkoutDto(w.Title, ScheduledOn: null),
                         ct);
 
                     await _local.MarkWorkoutSyncedAsync(w.LocalId, created.Id);
@@ -119,7 +117,7 @@ public class SyncService : ISyncService
                 {
                     await _workoutsApi.UpdateAsync(
                         w.RemoteId.Value,
-                        new UpdateWorkoutDto(w.Title, ScheduledOn: null),
+                        new Api.UpdateWorkoutDto(w.Title, ScheduledOn: null),
                         ct);
 
                     await _local.MarkWorkoutSyncedAsync(w.LocalId);
@@ -156,14 +154,14 @@ public class SyncService : ISyncService
                     .Where(e => e.RemoteId.HasValue && !e.IsDeleted)
                     .ToDictionary(e => e.LocalId, e => e.RemoteId!.Value);
 
-                var payload = new List<UpsertWorkoutExerciseDto>();
+                var payload = new List<Api.UpsertWorkoutExerciseDto>();
 
                 foreach (var link in active)
                 {
                     if (!exMap.TryGetValue(link.ExerciseLocalId, out var remoteExerciseId))
                         continue;
 
-                    payload.Add(new UpsertWorkoutExerciseDto(
+                    payload.Add(new Api.UpsertWorkoutExerciseDto(
                         ExerciseId: remoteExerciseId,
                         Reps: Math.Max(0, link.Repetitions),
                         WeightKg: Math.Max(0.0, link.WeightKg)
@@ -185,7 +183,6 @@ public class SyncService : ISyncService
         var dirty = await _local.GetDirtySessionsAsync();
         if (dirty.Count == 0) return;
 
-        // Build local exercise -> remote exercise id map once
         var localExercises = await _local.GetExercisesAsync();
         var exLocalToRemote = localExercises
             .Where(e => e.RemoteId.HasValue && !e.IsDeleted)
@@ -208,12 +205,11 @@ public class SyncService : ISyncService
 
                 var setEntities = await _local.GetSessionSetsEntitiesAsync(s.LocalId, includeDeleted: false);
 
-                // If session contains at least one exercise that isn't synced yet, skip pushing.
                 if (setEntities.Any(x => !exLocalToRemote.ContainsKey(x.ExerciseLocalId)))
                     continue;
 
                 var sets = setEntities
-                    .Select(x => new SessionSetDto(
+                    .Select(x => new Api.SessionSetDto(
                         ExerciseId: exLocalToRemote[x.ExerciseLocalId],
                         SetNumber: Math.Max(1, x.SetNumber),
                         Reps: Math.Max(0, x.Reps),
@@ -223,7 +219,7 @@ public class SyncService : ISyncService
                     .ThenBy(x => x.SetNumber)
                     .ToList();
 
-                var payload = new UpsertSessionDto(
+                var payload = new Api.UpsertSessionDto(
                     Title: s.Title,
                     Date: s.Date,
                     Description: s.Description,

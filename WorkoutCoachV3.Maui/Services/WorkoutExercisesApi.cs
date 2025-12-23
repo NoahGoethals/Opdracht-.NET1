@@ -1,28 +1,36 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
+using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
 public class WorkoutExercisesApi : IWorkoutExercisesApi
 {
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly IHttpClientFactory _factory;
 
-    public WorkoutExercisesApi(IHttpClientFactory factory)
+    public WorkoutExercisesApi(IHttpClientFactory factory) => _factory = factory;
+
+    private HttpClient ApiClient => _factory.CreateClient("Api");
+
+    public async Task<List<WorkoutExerciseDto>> GetAllAsync(int workoutId, CancellationToken ct = default)
     {
-        _factory = factory;
+        var resp = await ApiClient.GetAsync($"api/workouts/{workoutId}/exercises", ct);
+        resp.EnsureSuccessStatusCode();
+
+        var json = await resp.Content.ReadAsStringAsync(ct);
+        return JsonSerializer.Deserialize<List<WorkoutExerciseDto>>(json, JsonOpts) ?? new();
     }
 
-    public async Task<List<WorkoutExerciseLinkDto>> GetAllAsync(int workoutId, CancellationToken ct = default)
+    public async Task ReplaceAllAsync(int workoutId, List<UpsertWorkoutExerciseDto> items, CancellationToken ct = default)
     {
-        var http = _factory.CreateClient("Api");
-        return await http.GetFromJsonAsync<List<WorkoutExerciseLinkDto>>(
-                   $"api/workouts/{workoutId}/exercises", ct
-               ) ?? new();
-    }
+        items ??= new();
 
-    public async Task ReplaceAllAsync(int workoutId, List<UpsertWorkoutExerciseLinkDto> items, CancellationToken ct = default)
-    {
-        var http = _factory.CreateClient("Api");
-        var res = await http.PutAsJsonAsync($"api/workouts/{workoutId}/exercises", items, ct);
-        res.EnsureSuccessStatusCode();
+        var resp = await ApiClient.PutAsJsonAsync($"api/workouts/{workoutId}/exercises", items, JsonOpts, ct);
+        resp.EnsureSuccessStatusCode();
     }
 }

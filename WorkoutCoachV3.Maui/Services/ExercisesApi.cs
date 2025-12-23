@@ -1,56 +1,76 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
 public class ExercisesApi : IExercisesApi
 {
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly IHttpClientFactory _factory;
 
     public ExercisesApi(IHttpClientFactory factory) => _factory = factory;
 
     private HttpClient ApiClient => _factory.CreateClient("Api");
 
-    public async Task<List<ExerciseDto>> GetAllAsync(string? search, string? category, string? sort, CancellationToken ct = default)
+    public async Task<List<ExerciseDto>> GetAllAsync(
+        string? search,
+        string? category,
+        string? sort,
+        CancellationToken ct = default)
     {
-        var qs = new List<string>();
-        if (!string.IsNullOrWhiteSpace(search)) qs.Add($"search={Uri.EscapeDataString(search)}");
-        if (!string.IsNullOrWhiteSpace(category)) qs.Add($"category={Uri.EscapeDataString(category)}");
-        if (!string.IsNullOrWhiteSpace(sort)) qs.Add($"sort={Uri.EscapeDataString(sort)}");
+        var q = new List<string>();
 
-        var url = "api/exercises" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+        if (!string.IsNullOrWhiteSpace(search))
+            q.Add("search=" + Uri.EscapeDataString(search.Trim()));
 
-        var res = await ApiClient.GetAsync(url, ct);
-        if (!res.IsSuccessStatusCode)
-            throw new Exception($"Exercises GET failed: {(int)res.StatusCode}");
+        if (!string.IsNullOrWhiteSpace(category))
+            q.Add("category=" + Uri.EscapeDataString(category.Trim()));
 
-        var json = await res.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<List<ExerciseDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-               ?? new List<ExerciseDto>();
+        if (!string.IsNullOrWhiteSpace(sort))
+            q.Add("sort=" + Uri.EscapeDataString(sort.Trim()));
+
+        var url = "api/exercises" + (q.Count > 0 ? "?" + string.Join("&", q) : "");
+
+        var resp = await ApiClient.GetAsync(url, ct);
+        resp.EnsureSuccessStatusCode();
+
+        var json = await resp.Content.ReadAsStringAsync(ct);
+        return JsonSerializer.Deserialize<List<ExerciseDto>>(json, JsonOpts) ?? new();
+    }
+
+    public async Task<ExerciseDto> GetOneAsync(int id, CancellationToken ct = default)
+    {
+        var resp = await ApiClient.GetAsync($"api/exercises/{id}", ct);
+        resp.EnsureSuccessStatusCode();
+
+        var json = await resp.Content.ReadAsStringAsync(ct);
+        return JsonSerializer.Deserialize<ExerciseDto>(json, JsonOpts)
+               ?? throw new InvalidOperationException("API returned empty exercise.");
     }
 
     public async Task<ExerciseDto> CreateAsync(CreateExerciseDto dto, CancellationToken ct = default)
     {
-        var res = await ApiClient.PostAsJsonAsync("api/exercises", dto, ct);
-        if (!res.IsSuccessStatusCode)
-            throw new Exception($"Exercises POST failed: {(int)res.StatusCode}");
+        var resp = await ApiClient.PostAsJsonAsync("api/exercises", dto, JsonOpts, ct);
+        resp.EnsureSuccessStatusCode();
 
-        var json = await res.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<ExerciseDto>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-               ?? throw new Exception("Invalid create response.");
+        var created = await resp.Content.ReadFromJsonAsync<ExerciseDto>(JsonOpts, ct);
+        return created ?? throw new InvalidOperationException("API returned empty exercise.");
     }
 
     public async Task UpdateAsync(int id, UpdateExerciseDto dto, CancellationToken ct = default)
     {
-        var res = await ApiClient.PutAsJsonAsync($"api/exercises/{id}", dto, ct);
-        if (!res.IsSuccessStatusCode)
-            throw new Exception($"Exercises PUT failed: {(int)res.StatusCode}");
+        var resp = await ApiClient.PutAsJsonAsync($"api/exercises/{id}", dto, JsonOpts, ct);
+        resp.EnsureSuccessStatusCode();
     }
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var res = await ApiClient.DeleteAsync($"api/exercises/{id}", ct);
-        if (!res.IsSuccessStatusCode)
-            throw new Exception($"Exercises DELETE failed: {(int)res.StatusCode}");
+        var resp = await ApiClient.DeleteAsync($"api/exercises/{id}", ct);
+        resp.EnsureSuccessStatusCode();
     }
 }

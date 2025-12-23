@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -12,10 +13,7 @@ public class SessionsApi : ISessionsApi
 
     private readonly IHttpClientFactory _factory;
 
-    public SessionsApi(IHttpClientFactory factory)
-    {
-        _factory = factory;
-    }
+    public SessionsApi(IHttpClientFactory factory) => _factory = factory;
 
     private HttpClient ApiClient => _factory.CreateClient("Api");
 
@@ -50,10 +48,20 @@ public class SessionsApi : ISessionsApi
         resp.EnsureSuccessStatusCode();
 
         var json = await resp.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<List<SessionDto>>(json, JsonOpts) ?? new List<SessionDto>();
+        return JsonSerializer.Deserialize<List<SessionDto>>(json, JsonOpts) ?? new();
     }
 
-    public async Task<SessionDto> CreateAsync(CreateSessionDto dto, CancellationToken ct = default)
+    public async Task<SessionDto> GetOneAsync(int id, CancellationToken ct = default)
+    {
+        var resp = await ApiClient.GetAsync($"api/sessions/{id}", ct);
+        resp.EnsureSuccessStatusCode();
+
+        var json = await resp.Content.ReadAsStringAsync(ct);
+        return JsonSerializer.Deserialize<SessionDto>(json, JsonOpts)
+               ?? throw new InvalidOperationException("API returned empty session.");
+    }
+
+    public async Task<SessionDto> CreateAsync(UpsertSessionDto dto, CancellationToken ct = default)
     {
         var resp = await ApiClient.PostAsJsonAsync("api/sessions", dto, JsonOpts, ct);
         resp.EnsureSuccessStatusCode();
@@ -62,7 +70,7 @@ public class SessionsApi : ISessionsApi
         return created ?? throw new InvalidOperationException("API returned empty session.");
     }
 
-    public async Task UpdateAsync(int id, UpdateSessionDto dto, CancellationToken ct = default)
+    public async Task UpdateAsync(int id, UpsertSessionDto dto, CancellationToken ct = default)
     {
         var resp = await ApiClient.PutAsJsonAsync($"api/sessions/{id}", dto, JsonOpts, ct);
         resp.EnsureSuccessStatusCode();
