@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maui.Networking;
 using System.Diagnostics;
+using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -155,19 +156,18 @@ public class SyncService : ISyncService
                     .Where(e => e.RemoteId.HasValue && !e.IsDeleted)
                     .ToDictionary(e => e.LocalId, e => e.RemoteId!.Value);
 
-                var payload = new List<UpsertWorkoutExerciseLinkDto>();
+                var payload = new List<UpsertWorkoutExerciseDto>();
 
                 foreach (var link in active)
                 {
                     if (!exMap.TryGetValue(link.ExerciseLocalId, out var remoteExerciseId))
                         continue;
 
-                    payload.Add(new UpsertWorkoutExerciseLinkDto
-                    {
-                        ExerciseId = remoteExerciseId,
-                        Reps = Math.Max(0, link.Repetitions),
-                        WeightKg = Math.Max(0.0, link.WeightKg)
-                    });
+                    payload.Add(new UpsertWorkoutExerciseDto(
+                        ExerciseId: remoteExerciseId,
+                        Reps: Math.Max(0, link.Repetitions),
+                        WeightKg: Math.Max(0.0, link.WeightKg)
+                    ));
                 }
 
                 await _workoutExercisesApi.ReplaceAllAsync(workout.RemoteId.Value, payload, ct);
@@ -206,11 +206,9 @@ public class SyncService : ISyncService
                     continue;
                 }
 
-                // Collect sets for this session and map exercise local ids -> remote ids
                 var setEntities = await _local.GetSessionSetsEntitiesAsync(s.LocalId, includeDeleted: false);
 
                 // If session contains at least one exercise that isn't synced yet, skip pushing.
-                // It will be pushed after Exercises sync gives those exercises a RemoteId.
                 if (setEntities.Any(x => !exLocalToRemote.ContainsKey(x.ExerciseLocalId)))
                     continue;
 
@@ -225,31 +223,21 @@ public class SyncService : ISyncService
                     .ThenBy(x => x.SetNumber)
                     .ToList();
 
+                var payload = new UpsertSessionDto(
+                    Title: s.Title,
+                    Date: s.Date,
+                    Description: s.Description,
+                    Sets: sets
+                );
+
                 if (!s.RemoteId.HasValue)
                 {
-                    var created = await _sessionsApi.CreateAsync(
-                        new CreateSessionDto(
-                            Title: s.Title,
-                            Date: s.Date,
-                            Description: s.Description,
-                            Sets: sets
-                        ),
-                        ct);
-
+                    var created = await _sessionsApi.CreateAsync(payload, ct);
                     await _local.MarkSessionSyncedAsync(s.LocalId, created.Id);
                 }
                 else
                 {
-                    await _sessionsApi.UpdateAsync(
-                        s.RemoteId.Value,
-                        new UpdateSessionDto(
-                            Title: s.Title,
-                            Date: s.Date,
-                            Description: s.Description,
-                            Sets: sets
-                        ),
-                        ct);
-
+                    await _sessionsApi.UpdateAsync(s.RemoteId.Value, payload, ct);
                     await _local.MarkSessionSyncedAsync(s.LocalId);
                 }
             }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WorkoutCoachV2.Model.ApiContracts;
 using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.Web.Controllers.Api;
@@ -22,9 +23,6 @@ public class AdminApiController : ControllerBase
         _userManager = userManager;
         _roleManager = roleManager;
     }
-
-    public record AdminUserDto(string Id, string Email, string DisplayName, bool IsBlocked, string[] Roles);
-    public record SetRoleRequest(string Role);
 
     [HttpGet("users")]
     public async Task<ActionResult<List<AdminUserDto>>> GetUsers()

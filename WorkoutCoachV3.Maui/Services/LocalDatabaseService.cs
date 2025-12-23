@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using WorkoutCoachV3.Maui.Data;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
+using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 

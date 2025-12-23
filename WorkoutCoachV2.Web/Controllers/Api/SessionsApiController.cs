@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using WorkoutCoachV2.Model.ApiContracts;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Models;
 
@@ -15,25 +16,9 @@ public class SessionsApiController : ControllerBase
 {
     private readonly AppDbContext _db;
 
-    public SessionsApiController(AppDbContext db)
-    {
-        _db = db;
-    }
+    public SessionsApiController(AppDbContext db) => _db = db;
 
     private string? UserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    public record SessionSetDto(int ExerciseId, int SetNumber, int Reps, double Weight);
-
-    public record SessionDto(
-        int Id,
-        string Title,
-        DateTime Date,
-        string? Description,
-        int SetsCount,
-        List<SessionSetDto> Sets
-    );
-
-    public record UpsertSessionDto(string Title, DateTime Date, string? Description, List<SessionSetDto> Sets);
 
     [HttpGet]
     public async Task<ActionResult<List<SessionDto>>> GetAll(
@@ -73,19 +58,24 @@ public class SessionsApiController : ControllerBase
         var result = list.Select(s =>
         {
             var sets = includeSets
-                ? s.Sets
+                ? (s.Sets ?? new List<SessionSet>())
                     .OrderBy(x => x.ExerciseId)
                     .ThenBy(x => x.SetNumber)
-                    .Select(x => new SessionSetDto(x.ExerciseId, x.SetNumber, x.Reps, x.Weight))
+                    .Select(x => new SessionSetDto(
+                        ExerciseId: x.ExerciseId,
+                        SetNumber: x.SetNumber,
+                        Reps: x.Reps,
+                        Weight: x.Weight
+                    ))
                     .ToList()
                 : new List<SessionSetDto>();
 
             return new SessionDto(
-                s.Id,
-                s.Title,
-                s.Date,
-                s.Description,
-                SetsCount: s.Sets?.Count ?? 0,
+                Id: s.Id,
+                Title: s.Title,
+                Date: s.Date,
+                Description: s.Description,
+                SetsCount: (s.Sets?.Count ?? 0),
                 Sets: sets
             );
         }).ToList();
@@ -106,15 +96,20 @@ public class SessionsApiController : ControllerBase
         if (session is null) return NotFound();
 
         var dto = new SessionDto(
-            session.Id,
-            session.Title,
-            session.Date,
-            session.Description,
+            Id: session.Id,
+            Title: session.Title,
+            Date: session.Date,
+            Description: session.Description,
             SetsCount: session.Sets.Count,
             Sets: session.Sets
                 .OrderBy(x => x.ExerciseId)
                 .ThenBy(x => x.SetNumber)
-                .Select(x => new SessionSetDto(x.ExerciseId, x.SetNumber, x.Reps, x.Weight))
+                .Select(x => new SessionSetDto(
+                    ExerciseId: x.ExerciseId,
+                    SetNumber: x.SetNumber,
+                    Reps: x.Reps,
+                    Weight: x.Weight
+                ))
                 .ToList()
         );
 
@@ -125,11 +120,11 @@ public class SessionsApiController : ControllerBase
     public async Task<ActionResult<SessionDto>> Create([FromBody] UpsertSessionDto dto)
     {
         if (UserId is null) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(dto.Title)) return BadRequest("Title is required.");
 
-        if (string.IsNullOrWhiteSpace(dto.Title))
-            return BadRequest("Title is required.");
+        var sets = dto.Sets ?? new List<SessionSetDto>();
 
-        var exerciseIds = dto.Sets.Select(s => s.ExerciseId).Distinct().ToList();
+        var exerciseIds = sets.Select(s => s.ExerciseId).Distinct().ToList();
         if (exerciseIds.Count > 0)
         {
             var validCount = await _db.Exercises
@@ -151,7 +146,7 @@ public class SessionsApiController : ControllerBase
         _db.Sessions.Add(session);
         await _db.SaveChangesAsync();
 
-        foreach (var s in dto.Sets)
+        foreach (var s in sets)
         {
             session.Sets.Add(new SessionSet
             {
@@ -166,10 +161,10 @@ public class SessionsApiController : ControllerBase
         await _db.SaveChangesAsync();
 
         var created = new SessionDto(
-            session.Id,
-            session.Title,
-            session.Date,
-            session.Description,
+            Id: session.Id,
+            Title: session.Title,
+            Date: session.Date,
+            Description: session.Description,
             SetsCount: session.Sets.Count,
             Sets: session.Sets
                 .OrderBy(x => x.ExerciseId)
@@ -191,11 +186,11 @@ public class SessionsApiController : ControllerBase
             .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == UserId && !s.IsDeleted);
 
         if (session is null) return NotFound();
+        if (string.IsNullOrWhiteSpace(dto.Title)) return BadRequest("Title is required.");
 
-        if (string.IsNullOrWhiteSpace(dto.Title))
-            return BadRequest("Title is required.");
+        var sets = dto.Sets ?? new List<SessionSetDto>();
 
-        var exerciseIds = dto.Sets.Select(s => s.ExerciseId).Distinct().ToList();
+        var exerciseIds = sets.Select(s => s.ExerciseId).Distinct().ToList();
         if (exerciseIds.Count > 0)
         {
             var validCount = await _db.Exercises
@@ -213,7 +208,7 @@ public class SessionsApiController : ControllerBase
         if (session.Sets.Count > 0)
             _db.SessionSets.RemoveRange(session.Sets);
 
-        foreach (var s in dto.Sets)
+        foreach (var s in sets)
         {
             _db.SessionSets.Add(new SessionSet
             {
@@ -237,10 +232,8 @@ public class SessionsApiController : ControllerBase
         var session = await _db.Sessions
             .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == UserId);
 
-        if (session is not null && session.IsDeleted)
-            return NotFound();
-
         if (session is null) return NotFound();
+        if (session.IsDeleted) return NotFound();
 
         session.IsDeleted = true;
         await _db.SaveChangesAsync();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WorkoutCoachV2.Model.ApiContracts;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Models;
 
@@ -18,10 +19,6 @@ public class ExercisesApiController : ControllerBase
     public ExercisesApiController(AppDbContext db) => _db = db;
 
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-    public record ExerciseDto(int Id, string Name, string? Category, string? Notes);
-    public record CreateExerciseDto(string Name, string? Category, string? Notes);
-    public record UpdateExerciseDto(string Name, string? Category, string? Notes);
 
     [HttpGet]
     public async Task<ActionResult<List<ExerciseDto>>> GetAll(

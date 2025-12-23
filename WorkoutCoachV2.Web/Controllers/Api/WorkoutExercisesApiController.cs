@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WorkoutCoachV2.Model.ApiContracts;
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Models;
 
@@ -15,16 +16,9 @@ public class WorkoutExercisesApiController : ControllerBase
 {
     private readonly AppDbContext _db;
 
-    public WorkoutExercisesApiController(AppDbContext db)
-    {
-        _db = db;
-    }
+    public WorkoutExercisesApiController(AppDbContext db) => _db = db;
 
     private string? UserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    public sealed record WorkoutExerciseDto(int ExerciseId, string ExerciseName, int Reps, double? WeightKg);
-
-    public sealed record UpsertWorkoutExerciseDto(int ExerciseId, int Reps, double? WeightKg);
 
     [HttpGet]
     public async Task<ActionResult<List<WorkoutExerciseDto>>> GetAll(int workoutId, CancellationToken ct)
@@ -66,6 +60,7 @@ public class WorkoutExercisesApiController : ControllerBase
         if (workout is null) return NotFound();
 
         items ??= new();
+
         var normalized = items
             .GroupBy(x => x.ExerciseId)
             .Select(g => g.Last())
