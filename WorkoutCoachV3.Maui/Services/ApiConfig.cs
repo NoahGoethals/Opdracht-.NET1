@@ -10,7 +10,8 @@ public static class ApiConfig
         if (DeviceInfo.Platform == DevicePlatform.Android)
             return "https://10.0.2.2:7289/";
 
-        // Windows dev -> exact hetzelfde als je browser test
-        return "https://localhost:7289/";
+        // Windows dev:
+        // Gebruik 127.0.0.1 i.p.v. localhost om IPv6/loopback edge-cases te vermijden.
+        return "https://127.0.0.1:7289/";
     }
 }
