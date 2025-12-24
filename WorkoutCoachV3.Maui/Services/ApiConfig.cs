@@ -6,12 +6,16 @@ public static class ApiConfig
 {
     public static string GetBaseUrl()
     {
-        // Android emulator -> host PC
         if (DeviceInfo.Platform == DevicePlatform.Android)
-            return "https://10.0.2.2:7289/";
+        {
+            // ✅ Voor echte telefoon + USB (adb reverse) EN emulator:
+            // - adb reverse maakt telefoon localhost:5162 -> PC localhost:5162
+            // - emulator kan ook naar zichzelf, maar 127.0.0.1 werkt enkel als reverse actief is
+            // Dus: we kiezen 127.0.0.1 en gebruiken adb reverse als standaard testpad.
+            return "http://127.0.0.1:5162/";
+        }
 
-        // Windows dev:
-        // Gebruik 127.0.0.1 i.p.v. localhost om IPv6/loopback edge-cases te vermijden.
+        // ✅ Windows dev
         return "https://127.0.0.1:7289/";
     }
 }

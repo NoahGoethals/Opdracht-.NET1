@@ -103,7 +103,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -211,9 +210,14 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+
+    app.UseHttpsRedirection();
+}
+else
+{
+    //  http://localhost:5162/
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

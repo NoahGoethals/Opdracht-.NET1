@@ -1,8 +1,11 @@
 {
   "profiles": {
-    "Windows Machine": {
+    "https": {
       "commandName": "Project",
-      "nativeDebugging": false
+      "applicationUrl": "https://localhost:7289;http://localhost:5162",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }
