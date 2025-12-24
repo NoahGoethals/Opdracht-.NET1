@@ -8,7 +8,12 @@ public partial class App : Application
 {
     private readonly IServiceProvider _services;
 
-    public App(LocalDatabaseService localDb, ITokenStore tokenStore, IServiceProvider services)
+    public App(
+        LocalDatabaseService localDb,
+        ITokenStore tokenStore,
+        IUserSessionStore sessionStore,
+        IAuthApi authApi,
+        IServiceProvider services)
     {
         InitializeComponent();
         _services = services;
@@ -41,16 +46,35 @@ public partial class App : Application
             }
         };
 
-        _ = InitializeAsync(localDb, tokenStore);
+        _ = InitializeAsync(localDb, tokenStore, sessionStore, authApi);
     }
 
-    private async Task InitializeAsync(LocalDatabaseService localDb, ITokenStore tokenStore)
+    private async Task InitializeAsync(
+        LocalDatabaseService localDb,
+        ITokenStore tokenStore,
+        IUserSessionStore sessionStore,
+        IAuthApi authApi)
     {
         try
         {
             await localDb.EnsureCreatedAndSeedAsync();
 
             var hasToken = await tokenStore.HasValidTokenAsync();
+
+            if (hasToken && Connectivity.Current.NetworkAccess == NetworkAccess.Internet)
+            {
+                try
+                {
+                    var me = await authApi.MeAsync();
+                    await sessionStore.SetAsync(me.UserId, me.Email, me.DisplayName, me.Roles);
+                }
+                catch
+                {
+                    await tokenStore.ClearAsync();
+                    await sessionStore.ClearAsync();
+                    hasToken = false;
+                }
+            }
 
             Page root = hasToken
                 ? _services.GetRequiredService<ExercisesPage>()

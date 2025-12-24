@@ -73,6 +73,25 @@ public class AuthController : ControllerBase
         return Ok(new AuthResponse(token, expiresUtc, user.Id, user.Email ?? "", user.DisplayName ?? "", roles));
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<CurrentUserDto>> Me()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        if (user.IsBlocked) return StatusCode(403, "Gebruiker is geblokkeerd.");
+
+        var roles = (await _userManager.GetRolesAsync(user)).ToArray();
+
+        return Ok(new CurrentUserDto(
+            user.Id,
+            user.Email ?? "",
+            user.DisplayName ?? "",
+            roles
+        ));
+    }
+
     private string CreateJwt(ApplicationUser user, string[] roles, out DateTime expiresUtc)
     {
         var key = _config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key ontbreekt");

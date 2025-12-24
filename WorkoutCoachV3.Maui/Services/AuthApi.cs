@@ -6,8 +6,14 @@ namespace WorkoutCoachV3.Maui.Services;
 
 public class AuthApi : IAuthApi
 {
-    private readonly HttpClient _http;
-    public AuthApi(HttpClient http) => _http = http;
+    private readonly HttpClient _http;               
+    private readonly IHttpClientFactory _factory;    
+
+    public AuthApi(HttpClient http, IHttpClientFactory factory)
+    {
+        _http = http;
+        _factory = factory;
+    }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
@@ -46,5 +52,29 @@ public class AuthApi : IAuthApi
 
         var data = await res.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: ct);
         return data ?? throw new Exception("Register response was empty.");
+    }
+
+    public async Task<CurrentUserDto> MeAsync(CancellationToken ct = default)
+    {
+        var api = _factory.CreateClient("Api");
+
+        var res = await api.GetAsync("api/auth/me", ct);
+
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("Sessie verlopen. Log opnieuw in.");
+
+        if (res.StatusCode == HttpStatusCode.Forbidden)
+            throw new Exception("Gebruiker is geblokkeerd.");
+
+        if (!res.IsSuccessStatusCode)
+        {
+            var msg = (await res.Content.ReadAsStringAsync(ct))?.Trim();
+            throw new Exception(string.IsNullOrWhiteSpace(msg)
+                ? $"Me failed: {(int)res.StatusCode}"
+                : msg);
+        }
+
+        var me = await res.Content.ReadFromJsonAsync<CurrentUserDto>(cancellationToken: ct);
+        return me ?? throw new Exception("Me response was empty.");
     }
 }

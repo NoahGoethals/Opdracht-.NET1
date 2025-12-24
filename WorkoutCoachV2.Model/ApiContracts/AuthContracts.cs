@@ -14,3 +14,10 @@ public sealed record AuthResponse(
     string DisplayName,
     string[] Roles
 );
+
+public sealed record CurrentUserDto(
+    string UserId,
+    string Email,
+    string DisplayName,
+    string[] Roles
+);
