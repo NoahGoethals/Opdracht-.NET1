@@ -8,24 +8,29 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-            <Label Text="Sessions" FontSize="28" VerticalOptions="Center" />
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <Label Text="Sessions"
+                   FontSize="{OnIdiom Phone=20, Default=28}"
+                   VerticalOptions="Center" />
 
-            <Button Grid.Column="1" Text="Exercises" Command="{Binding GoExercisesCommand}" Margin="8,0,0,0"/>
-            <Button Grid.Column="2" Text="Workouts" Command="{Binding GoWorkoutsCommand}" Margin="8,0,0,0"/>
-            <Button Grid.Column="3" Text="Sessions" IsEnabled="False" Margin="8,0,0,0"/>
-            <Button Grid.Column="4" Text="Stats" Command="{Binding GoToStatsCommand}" Margin="8,0,0,0"/>
+            <ScrollView Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Exercises" Command="{Binding GoExercisesCommand}" />
+                    <Button Text="Workouts" Command="{Binding GoWorkoutsCommand}" />
+                    <Button Text="Sessions" IsEnabled="False" />
+                    <Button Text="Stats" Command="{Binding GoToStatsCommand}" />
 
-            <Button Grid.Column="5"
-            Text="Admin"
-            Command="{Binding GoToAdminCommand}"
-            IsVisible="{Binding CanAccessAdmin}"
-            Margin="8,0,0,0"/>
+                    <Button Text="Admin"
+                            Command="{Binding GoToAdminCommand}"
+                            IsVisible="{Binding CanAccessAdmin}" />
 
-            <Button Grid.Column="6" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0"/>
-            <Button Grid.Column="7" Text="Logout" Command="{Binding LogoutCommand}" Margin="8,0,0,0"/>
+                    <Button Text="Add" Command="{Binding AddCommand}" />
+                    <Button Text="Logout" Command="{Binding LogoutCommand}" />
+                </HorizontalStackLayout>
+            </ScrollView>
         </Grid>
-
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Entry Placeholder="Search..."
@@ -60,7 +65,9 @@
                         <Frame Margin="0,0,0,10"
                                Padding="14"
                                CornerRadius="12"
-                               BorderColor="#DDD">
+                               HasShadow="False"
+                               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                               BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
 
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer

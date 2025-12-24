@@ -3,6 +3,7 @@
     x:Class="WorkoutCoachV3.Maui.Pages.WorkoutExercisesManagePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Name="PageRoot"
     Title="{Binding Title}">
 
     <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
@@ -16,55 +17,71 @@
         <CollectionView
             Grid.Row="1"
             ItemsSource="{Binding Rows}"
+            ItemSizingStrategy="MeasureAllItems"
             VerticalOptions="FillAndExpand"
             VerticalScrollBarVisibility="Always">
 
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Margin="0,6" Padding="12" CornerRadius="16" HasShadow="False" BorderColor="#DDDDDD">
-                        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
-                              RowDefinitions="Auto,Auto"
-                              ColumnSpacing="12">
+                    <Frame
+                        Margin="0,6"
+                        Padding="12"
+                        CornerRadius="16"
+                        HasShadow="False"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                        BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
 
-                            <CheckBox
-                                Grid.RowSpan="2"
-                                IsChecked="{Binding IsInWorkout}" />
+                        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
 
-                            <Label
-                                Grid.Column="1"
-                                Text="{Binding Name}"
-                                FontAttributes="Bold"
-                                FontSize="16" />
+                            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <CheckBox
+                                    VerticalOptions="Start"
+                                    IsChecked="{Binding IsInWorkout}" />
 
-                            <Entry
-                                Grid.Column="2"
-                                Text="{Binding RepetitionsText, Mode=TwoWay}"
-                                Keyboard="Numeric"
-                                HorizontalTextAlignment="Center"
-                                WidthRequest="70"
-                                Placeholder="Reps" />
-
-                            <Grid Grid.Column="3" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
-                                <Entry
-                                    Grid.Column="0"
-                                    Text="{Binding WeightKgText, Mode=TwoWay}"
-                                    Keyboard="Numeric"
-                                    HorizontalTextAlignment="Center"
-                                    WidthRequest="80"
-                                    Placeholder="Kg" />
                                 <Label
                                     Grid.Column="1"
-                                    Text="kg"
-                                    VerticalTextAlignment="Center"
-                                    TextColor="#888888" />
+                                    Text="{Binding Name}"
+                                    FontAttributes="Bold"
+                                    FontSize="16"
+                                    LineBreakMode="TailTruncation"
+                                    VerticalOptions="Center" />
+                            </Grid>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
+
+                                <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                    <Label Text="Reps" FontSize="12" Opacity="0.7" />
+                                    <Entry
+                                        Text="{Binding RepetitionsText, Mode=TwoWay}"
+                                        Keyboard="Numeric"
+                                        Placeholder="0"
+                                        HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                    <Label Text="Weight (kg)" FontSize="12" Opacity="0.7" />
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                        <Entry
+                                            Grid.Column="0"
+                                            Text="{Binding WeightKgText, Mode=TwoWay}"
+                                            Keyboard="Numeric"
+                                            Placeholder="0"
+                                            HorizontalTextAlignment="Center" />
+                                        <Label
+                                            Grid.Column="1"
+                                            Text="kg"
+                                            VerticalTextAlignment="Center"
+                                            Opacity="0.6" />
+                                    </Grid>
+                                </VerticalStackLayout>
+
                             </Grid>
 
                             <Label
-                                Grid.Row="1"
-                                Grid.Column="1"
-                                Text="Reps / Weight (kg)"
+                                Grid.Row="2"
+                                Text="Select the checkbox to include this exercise in the workout."
                                 FontSize="12"
-                                TextColor="#888888" />
+                                Opacity="0.6" />
 
                         </Grid>
                     </Frame>

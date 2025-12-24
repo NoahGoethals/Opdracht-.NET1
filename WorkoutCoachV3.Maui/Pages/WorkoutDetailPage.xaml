@@ -2,20 +2,35 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.WorkoutDetailPage"
+             x:Name="PageRoot"
              Title="Workout">
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid ColumnDefinitions="*,Auto" Grid.Row="0">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="{Binding WorkoutTitle}" FontSize="28"/>
-                <Label Text="{Binding Notes}" Opacity="0.7"/>
-                <Label Text="{Binding Error}" TextColor="Red" />
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+
+            <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                <Label Text="{Binding WorkoutTitle}"
+                       FontSize="{OnIdiom Phone=22, Default=28}"
+                       FontAttributes="Bold"
+                       LineBreakMode="TailTruncation" />
+
+                <Label Text="{Binding Notes}"
+                       Opacity="0.7"
+                       LineBreakMode="WordWrap" />
+
+                <Label Text="{Binding Error}"
+                       TextColor="Red"
+                       IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
             </VerticalStackLayout>
 
             <Button Grid.Column="1"
                     Text="Manage"
-                    Command="{Binding ManageCommand}" />
+                    Command="{Binding ManageCommand}"
+                    Padding="12,10"
+                    MinimumHeightRequest="44"
+                    VerticalOptions="Start"
+                    HorizontalOptions="End" />
         </Grid>
 
         <Label Grid.Row="1"
@@ -23,21 +38,45 @@
                FontAttributes="Bold"
                FontSize="16" />
 
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Items}">
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Items}"
+                        ItemSizingStrategy="MeasureAllItems">
+
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Frame Margin="0,0,0,10"
                            Padding="14"
                            CornerRadius="12"
-                           BorderColor="#DDD">
-                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="14">
-                            <Label Text="{Binding Name}" FontSize="16"/>
-                            <Label Grid.Column="1" Text="{Binding Repetitions}" />
-                            <Label Grid.Column="2" Text="{Binding WeightKg}" />
+                           HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                           BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
+
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*"
+                              RowSpacing="8">
+
+                            <Label Grid.Row="0"
+                                   Text="{Binding Name}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   LineBreakMode="TailTruncation" />
+
+                            <Grid Grid.Row="1"
+                                  ColumnDefinitions="Auto,Auto,Auto"
+                                  ColumnSpacing="10">
+
+                                <Label Text="Reps:" Opacity="0.7" />
+                                <Label Grid.Column="1" Text="{Binding Repetitions}" />
+
+                                <Label Grid.Column="2"
+                                       Text="{Binding WeightKg, StringFormat=' | {0} kg'}"
+                                       Opacity="0.9" />
+
+                            </Grid>
                         </Grid>
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
+
         </CollectionView>
 
     </Grid>

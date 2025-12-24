@@ -7,22 +7,27 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-            <Label Grid.Column="0" Text="Admin" FontSize="28" VerticalOptions="Center" />
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <Label Text="Admin"
+                   FontSize="{OnIdiom Phone=20, Default=28}"
+                   VerticalOptions="Center" />
 
-            <Button Grid.Column="1" Text="Exercises" Command="{Binding GoToExercisesCommand}" />
-            <Button Grid.Column="2" Text="Workouts"  Command="{Binding GoToWorkoutsCommand}" />
-            <Button Grid.Column="3" Text="Sessions"  Command="{Binding GoToSessionsCommand}" />
-            <Button Grid.Column="4" Text="Stats"     Command="{Binding GoToStatsCommand}" />
+            <ScrollView Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Exercises" Command="{Binding GoToExercisesCommand}" />
+                    <Button Text="Workouts"  Command="{Binding GoToWorkoutsCommand}" />
+                    <Button Text="Sessions"  Command="{Binding GoToSessionsCommand}" />
+                    <Button Text="Stats"     Command="{Binding GoToStatsCommand}" />
 
-            <Button Grid.Column="5"
-                    Text="Admin"
-                    IsEnabled="False"
-                    IsVisible="{Binding CanAccessAdmin}"
-                    BackgroundColor="#CFCFCF"
-                    TextColor="Black" />
+                    <Button Text="Admin"
+                            IsEnabled="False"
+                            IsVisible="{Binding CanAccessAdmin}" />
 
-            <Button Grid.Column="6" Text="Logout" Command="{Binding LogoutCommand}" />
+                    <Button Text="Logout" Command="{Binding LogoutCommand}" />
+                </HorizontalStackLayout>
+            </ScrollView>
         </Grid>
 
         <HorizontalStackLayout Grid.Row="1" Spacing="12">
@@ -34,26 +39,36 @@
                         ItemsSource="{Binding Users}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Padding="10" Margin="0,6" BorderColor="#D0D0D0">
-                        <VerticalStackLayout Spacing="8">
+                    <Frame Padding="12"
+                           Margin="0,6"
+                           HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                           BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}"
+                           CornerRadius="12">
 
-                            <Label FontAttributes="Bold" Text="{Binding Email}" />
-                            <Label Text="{Binding DisplayName}" />
+                        <VerticalStackLayout Spacing="10">
 
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label FontAttributes="Bold" Text="{Binding Email}" />
+                                <Label Text="{Binding DisplayName}" Opacity="0.8" />
+                                <Label Text="{Binding IsBlocked, StringFormat='Blocked: {0}'}" Opacity="0.7" />
+                            </VerticalStackLayout>
+
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                 <Label Grid.Column="0" Text="Role:" VerticalOptions="Center" />
-
                                 <Picker Grid.Column="1"
                                         ItemsSource="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RoleOptions}"
                                         SelectedItem="{Binding SelectedRole}" />
+                            </Grid>
 
-                                <Button Grid.Column="2"
-                                        Text="Save"
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button Grid.Column="0"
+                                        Text="Save role"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SaveRoleCommand}"
                                         CommandParameter="{Binding .}" />
 
-                                <Button Grid.Column="3"
-                                        Text="{Binding IsBlocked, StringFormat='Blocked: {0}'}"
+                                <Button Grid.Column="1"
+                                        Text="Toggle block"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ToggleBlockCommand}"
                                         CommandParameter="{Binding .}" />
                             </Grid>

@@ -1,22 +1,69 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
-    x:Class="WorkoutCoachV3.Maui.Pages.SessionDetailPage"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Session">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WorkoutCoachV3.Maui.Pages.SessionDetailPage"
+             x:Name="PageRoot"
+             Title="Session">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16">
-        <Label Text="{Binding Title}" FontSize="26" FontAttributes="Bold"/>
-        <Label Grid.Row="1" Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}" Opacity="0.7"/>
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Sets}" Margin="0,12,0,0">
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+            <Label Text="{Binding Title}"
+                   FontSize="{OnIdiom Phone=22, Default=28}"
+                   FontAttributes="Bold"
+                   LineBreakMode="TailTruncation" />
+
+            <Label Text="{Binding Date, StringFormat='{0:dd/MM/yyyy}'}"
+                   Opacity="0.7" />
+
+            <Label Text="{Binding Description}"
+                   Opacity="0.8"
+                   LineBreakMode="WordWrap" />
+
+            <Label Text="{Binding Error}"
+                   TextColor="Red"
+                   IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
+        </VerticalStackLayout>
+
+        <Label Grid.Row="1"
+               Text="Sets"
+               FontAttributes="Bold"
+               FontSize="16" />
+
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Sets}"
+                        ItemSizingStrategy="MeasureAllItems">
+
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Margin="0,0,0,10" Padding="14" CornerRadius="16">
-                        <Grid ColumnDefinitions="*,Auto,Auto">
-                            <Label Text="{Binding ExerciseName}" FontAttributes="Bold" />
-                            <Label Grid.Column="1" Text="{Binding Reps}" Margin="12,0,0,0"/>
-                            <Label Grid.Column="2" Text="{Binding Weight, StringFormat='{0:0.#} kg'}" Margin="12,0,0,0"/>
+                    <Frame Margin="0,0,0,10"
+                           Padding="14"
+                           CornerRadius="12"
+                           HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                           BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
+
+                        <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+
+                            <Label Text="{Binding ExerciseName}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   LineBreakMode="TailTruncation"/>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
+                                <Label Text="Set:" Opacity="0.7" />
+                                <Label Grid.Column="1" Text="{Binding SetNumber}" />
+
+                                <Label Grid.Column="2"
+                                       Text="{Binding Reps, StringFormat=' | {0} reps'}"
+                                       Opacity="0.9" />
+                            </Grid>
+
+                            <Label Grid.Row="1"
+                                   HorizontalOptions="End"
+                                   Text="{Binding Weight, StringFormat='{0} kg'}"
+                                   Opacity="0.9" />
+
                         </Grid>
                     </Frame>
                 </DataTemplate>
