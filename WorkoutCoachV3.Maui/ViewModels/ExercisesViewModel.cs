@@ -1,8 +1,8 @@
 ﻿using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.ApplicationModel;
 using WorkoutCoachV3.Maui.Data.LocalEntities;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
@@ -17,19 +17,11 @@ public partial class ExercisesViewModel : ObservableObject
     private readonly ITokenStore _tokenStore;
     private readonly IUserSessionStore _sessionStore;
 
-    private CancellationTokenSource? _searchDebounceCts;
+    private CancellationTokenSource? _searchCts;
 
-    public ObservableCollection<LocalExercise> Items { get; } = new();
-    public ObservableCollection<string> Categories { get; } = new();
+    private readonly SemaphoreSlim _loadGate = new(1, 1);
 
-    [ObservableProperty] private bool isBusy;
-    [ObservableProperty] private bool isRefreshing;
-    [ObservableProperty] private string? error;
-
-    [ObservableProperty] private string? searchText;
-    [ObservableProperty] private string selectedCategory = "All";
-
-    [ObservableProperty] private bool canAccessAdmin;
+    private bool _suppressCategoryReload;
 
     public ExercisesViewModel(
         LocalDatabaseService local,
@@ -45,34 +37,58 @@ public partial class ExercisesViewModel : ObservableObject
         _sessionStore = sessionStore;
 
         Categories.Add("All");
+        SelectedCategory = "All";
 
         _ = LoadAdminFlagAsync();
+        _ = RefreshAsyncCore();
+    }
+
+    public ObservableCollection<LocalExercise> Items { get; } = new();
+    public ObservableCollection<string> Categories { get; } = new();
+
+    [ObservableProperty] private bool _isRefreshing;
+    [ObservableProperty] private string? _error;
+    [ObservableProperty] private string? _searchText;
+    [ObservableProperty] private string _selectedCategory = "All";
+    [ObservableProperty] private bool _canAccessAdmin;
+
+    private static bool ContainsIgnoreCase(IEnumerable<string> list, string value)
+        => list.Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase));
+
+    private string? CategoryFilterOrNull()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedCategory) ||
+            string.Equals(SelectedCategory, "All", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return SelectedCategory;
     }
 
     private async Task LoadAdminFlagAsync()
     {
-        CanAccessAdmin = await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator");
-    }
-
-    public async Task RefreshAsyncCore()
-    {
-        await LoadLocalAsync();
-
-        try { await _sync.SyncAllAsync(); }
-        catch { }
-
-        await LoadLocalAsync();
+        var roles = await _sessionStore.GetRolesAsync();
+        CanAccessAdmin = roles.Any(r => r is "Admin" or "Moderator");
     }
 
     [RelayCommand]
     private async Task RefreshAsync()
-    {
-        if (IsBusy) return;
+        => await RefreshAsyncCore();
 
-        IsRefreshing = true;
+    private async Task RefreshAsyncCore()
+    {
+        if (IsRefreshing) return;
+
         try
         {
-            await RefreshAsyncCore();
+            IsRefreshing = true;
+            Error = null;
+
+            await _sync.SyncAllAsync();
+            await LoadLocalAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
         }
         finally
         {
@@ -81,38 +97,49 @@ public partial class ExercisesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task LoadLocalAsync()
+    private async Task LoadLocalAsync()
     {
-        if (IsBusy) return;
-
-        IsBusy = true;
-        Error = null;
-
+        await _loadGate.WaitAsync();
         try
         {
-            var cat = SelectedCategory == "All" ? null : SelectedCategory;
-            var search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim();
+            Error = null;
 
-            var data = await _local.GetExercisesAsync(search: search, category: cat);
+            var data = await _local.GetExercisesAsync(
+                search: SearchText,
+                category: CategoryFilterOrNull());
 
-            Items.Clear();
-            foreach (var x in data)
-                Items.Add(x);
+            var allForCategories = await _local.GetExercisesAsync(search: null, category: null);
 
-            var distinctCats = data
+            var distinctCats = allForCategories
                 .Select(x => x.Category)
                 .Where(c => !string.IsNullOrWhiteSpace(c))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(c => c)
                 .ToList();
 
-            Categories.Clear();
-            Categories.Add("All");
-            foreach (var c in distinctCats)
-                Categories.Add(c);
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Items.Clear();
+                foreach (var x in data)
+                    Items.Add(x);
 
-            if (!Categories.Contains(SelectedCategory))
+                var desired = new List<string> { "All" };
+                desired.AddRange(distinctCats);
+
+                if (!SequenceEqualIgnoreCase(Categories, desired))
+                {
+                    Categories.Clear();
+                    foreach (var c in desired)
+                        Categories.Add(c);
+                }
+            });
+
+            if (!ContainsIgnoreCase(Categories, SelectedCategory))
+            {
+                _suppressCategoryReload = true;
                 SelectedCategory = "All";
+                _suppressCategoryReload = false;
+            }
         }
         catch (Exception ex)
         {
@@ -120,102 +147,88 @@ public partial class ExercisesViewModel : ObservableObject
         }
         finally
         {
-            IsBusy = false;
+            _loadGate.Release();
         }
     }
 
-    partial void OnSelectedCategoryChanged(string value) => _ = LoadLocalAsync();
+    private static bool SequenceEqualIgnoreCase(IList<string> a, IList<string> b)
+    {
+        if (a.Count != b.Count) return false;
+        for (var i = 0; i < a.Count; i++)
+        {
+            if (!string.Equals(a[i], b[i], StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        return true;
+    }
 
     partial void OnSearchTextChanged(string? value)
     {
-        _searchDebounceCts?.Cancel();
-        _searchDebounceCts = new CancellationTokenSource();
-        var token = _searchDebounceCts.Token;
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
 
         _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(350, token);
+                await Task.Delay(250, token);
                 if (token.IsCancellationRequested) return;
 
                 await MainThread.InvokeOnMainThreadAsync(async () => await LoadLocalAsync());
             }
-            catch { }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() => Error = ex.Message);
+            }
         }, token);
+    }
+
+    partial void OnSelectedCategoryChanged(string value)
+    {
+        if (_suppressCategoryReload) return;
+
+        _ = MainThread.InvokeOnMainThreadAsync(async () => await LoadLocalAsync());
     }
 
     [RelayCommand]
     private async Task AddAsync()
     {
-        var choice = await Application.Current!.MainPage!.DisplayActionSheet(
-            "Add",
-            "Cancel",
-            null,
-            "Exercise",
-            "Workout",
-            "Session");
-
-        if (choice is null || choice == "Cancel") return;
-
-        if (choice == "Exercise")
-        {
-            var page = _services.GetRequiredService<ExerciseEditPage>();
-            var vm = (ExerciseEditViewModel)page.BindingContext!;
-            vm.InitForCreate();
-            await Application.Current!.MainPage!.Navigation.PushAsync(page);
-        }
-        else if (choice == "Workout")
-        {
-            var page = _services.GetRequiredService<WorkoutEditPage>();
-            var vm = (WorkoutEditViewModel)page.BindingContext!;
-            vm.InitForCreate();
-            await Application.Current!.MainPage!.Navigation.PushAsync(page);
-        }
-        else if (choice == "Session")
-        {
-            var page = _services.GetRequiredService<SessionEditPage>();
-            var vm = (SessionEditViewModel)page.BindingContext!;
-            await vm.InitForCreateAsync();
-            await Application.Current!.MainPage!.Navigation.PushAsync(page);
-        }
-    }
-
-    [RelayCommand]
-    private async Task EditAsync(LocalExercise? item)
-    {
-        if (item is null) return;
-
         var page = _services.GetRequiredService<ExerciseEditPage>();
-        var vm = (ExerciseEditViewModel)page.BindingContext!;
-        await vm.InitForEditAsync(item.LocalId);
+        var vm = _services.GetRequiredService<ExerciseEditViewModel>();
+
+        vm.InitForCreate();
+        page.BindingContext = vm;
 
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(LocalExercise? item)
+    private async Task EditAsync(LocalExercise item)
     {
-        if (item is null) return;
+        var page = _services.GetRequiredService<ExerciseEditPage>();
+        var vm = _services.GetRequiredService<ExerciseEditViewModel>();
 
+        await vm.InitForEditAsync(item.LocalId);
+        page.BindingContext = vm;
+
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private async Task DeleteAsync(LocalExercise item)
+    {
         var ok = await Application.Current!.MainPage!.DisplayAlert(
             "Delete exercise",
             $"Delete '{item.Name}'?",
-            "Delete",
-            "Cancel");
+            "Yes",
+            "No");
 
         if (!ok) return;
 
-        try
-        {
-            await _local.SoftDeleteExerciseAsync(item.LocalId);
-            try { await _sync.SyncAllAsync(); } catch { }
-            await LoadLocalAsync();
-        }
-        catch (Exception ex)
-        {
-            Error = ex.Message;
-        }
+        await _local.SoftDeleteExerciseAsync(item.LocalId);
+        await LoadLocalAsync();
     }
 
     [RelayCommand]
@@ -252,4 +265,7 @@ public partial class ExercisesViewModel : ObservableObject
         await _sessionStore.ClearAsync();
         Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
     }
+
+    public IAsyncRelayCommand GoWorkoutsCommand => GoToWorkoutsCommand;
+    public IAsyncRelayCommand GoSessionsCommand => GoToSessionsCommand;
 }

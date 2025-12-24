@@ -4,19 +4,25 @@ namespace WorkoutCoachV3.Maui.Pages;
 
 public partial class ExercisesPage : ContentPage
 {
+    private readonly ExercisesViewModel _vm;
+
     public ExercisesPage(ExercisesViewModel vm)
     {
         InitializeComponent();
-        BindingContext = vm;
+        _vm = vm;
+        BindingContext = _vm;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        if (BindingContext is ExercisesViewModel vm)
+        try
         {
-            await vm.RefreshAsyncCore();
+            await _vm.RefreshCommand.ExecuteAsync(null);
+        }
+        catch
+        {
         }
     }
 }

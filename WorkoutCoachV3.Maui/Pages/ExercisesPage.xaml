@@ -6,7 +6,9 @@
     x:Name="PageRoot"
     Title="Exercises">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,*"
+          Padding="16"
+          RowSpacing="12">
 
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
             <Label
@@ -33,7 +35,9 @@
             </ScrollView>
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,Auto"
+              ColumnSpacing="10">
             <Entry Placeholder="Search..."
                    Text="{Binding SearchText}"
                    ReturnType="Search"
@@ -44,20 +48,17 @@
                     Command="{Binding LoadLocalCommand}" />
         </Grid>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" RowDefinitions="Auto,*">
-            <VerticalStackLayout Grid.Column="0" Spacing="6">
+        <Grid Grid.Row="2"
+              RowDefinitions="Auto,*"
+              RowSpacing="12">
+
+            <VerticalStackLayout Grid.Row="0" Spacing="6">
                 <Label Text="Category:" FontAttributes="Bold" />
                 <Picker ItemsSource="{Binding Categories}"
                         SelectedItem="{Binding SelectedCategory}" />
             </VerticalStackLayout>
 
-            <Button Grid.Column="1"
-                    Text="Reload"
-                    Command="{Binding LoadLocalCommand}"
-                    VerticalOptions="End" />
-
             <CollectionView Grid.Row="1"
-                            Grid.ColumnSpan="2"
                             ItemsSource="{Binding Items}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -102,6 +103,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+
         </Grid>
 
     </Grid>

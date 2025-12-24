@@ -171,16 +171,23 @@ WHERE rowid NOT IN (
     public async Task<List<LocalExercise>> GetExercisesAsync(string? search = null, string? category = null)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
-        var q = db.Exercises.Where(x => !x.IsDeleted);
+
+        IQueryable<LocalExercise> q = db.Exercises.Where(e => !e.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(search))
-            q = q.Where(x => x.Name.Contains(search));
+        {
+            var s = search.Trim().ToLowerInvariant();
+            q = q.Where(x => x.Name != null && x.Name.ToLower()!.Contains(s));
+        }
 
         if (!string.IsNullOrWhiteSpace(category))
+        {
             q = q.Where(x => x.Category == category);
+        }
 
         return await q.OrderBy(x => x.Name).ToListAsync();
     }
+
 
     public async Task<LocalExercise?> GetExerciseByLocalIdAsync(Guid localId)
     {
