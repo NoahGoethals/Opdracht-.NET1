@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
+using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -103,37 +105,47 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
-})
-.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-{
-    var key = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key ontbreekt");
-    var issuer = builder.Configuration["Jwt:Issuer"] ?? "WorkoutCoachV2";
-    var audience = builder.Configuration["Jwt:Audience"] ?? "WorkoutCoachV2.Maui";
-
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services
+    .AddAuthentication(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateIssuerSigningKey = true,
-        ValidateLifetime = true,
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        var key = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key ontbreekt");
+        var issuer = builder.Configuration["Jwt:Issuer"] ?? "WorkoutCoachV2";
+        var audience = builder.Configuration["Jwt:Audience"] ?? "WorkoutCoachV2.Maui";
 
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
 
-        ClockSkew = TimeSpan.FromMinutes(2)
-    };
-});
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+    });
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "Moderator"));
 });
+
+
+if (builder.Environment.IsDevelopment())
+{
+    if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+    {
+        builder.WebHost.UseUrls("http://localhost:5162", "https://localhost:7289");
+    }
+}
 
 var app = builder.Build();
 
@@ -215,7 +227,7 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    //  http://localhost:5162/
+    // http://localhost:5162 
 }
 
 app.UseStaticFiles();
@@ -232,4 +244,26 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.Run();
+try
+{
+    var addresses = app.Services.GetRequiredService<IServerAddressesFeature>()?.Addresses;
+    if (addresses is not null)
+    {
+        Console.WriteLine("🌐 Listening on:");
+        foreach (var a in addresses) Console.WriteLine("   " + a);
+    }
+}
+catch
+{
+}
+
+try
+{
+    app.Run();
+}
+catch (IOException ioEx) when (ioEx.Message.Contains("address already in use", StringComparison.OrdinalIgnoreCase))
+{
+    Console.WriteLine("❌ Poortconflict: een andere instantie draait al op dezelfde URL/poort.");
+    Console.WriteLine("➡️ Stop de andere Web instance (terminal/VS) of verander je poorten.");
+    throw;
+}
