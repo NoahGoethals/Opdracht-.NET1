@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using WorkoutCoachV2.Model.ApiContracts;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -47,7 +48,8 @@ public partial class RegisterViewModel : ObservableObject
 
         try
         {
-            var res = await _authApi.RegisterAsync(mail, Password, name);
+            var req = new RegisterRequest(mail, Password, name);
+            var res = await _authApi.RegisterAsync(req);
 
             await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
             await _sessionStore.SetAsync(res.UserId, res.Email, res.DisplayName, res.Roles);

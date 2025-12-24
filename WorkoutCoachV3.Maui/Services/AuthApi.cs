@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -8,13 +9,13 @@ public class AuthApi : IAuthApi
     private readonly HttpClient _http;
     public AuthApi(HttpClient http) => _http = http;
 
-    public async Task<AuthResponse> LoginAsync(string email, string password)
+    public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
-        var res = await _http.PostAsJsonAsync("api/auth/login", new { email, password });
+        var res = await _http.PostAsJsonAsync("api/auth/login", request, ct);
 
         if (!res.IsSuccessStatusCode)
         {
-            var msg = (await res.Content.ReadAsStringAsync())?.Trim();
+            var msg = (await res.Content.ReadAsStringAsync(ct))?.Trim();
 
             if (res.StatusCode == HttpStatusCode.Forbidden)
                 throw new Exception(string.IsNullOrWhiteSpace(msg) ? "Gebruiker is geblokkeerd." : msg);
@@ -27,23 +28,23 @@ public class AuthApi : IAuthApi
                 : msg);
         }
 
-        var data = await res.Content.ReadFromJsonAsync<AuthResponse>();
+        var data = await res.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: ct);
         return data ?? throw new Exception("Login response was empty.");
     }
 
-    public async Task<AuthResponse> RegisterAsync(string email, string password, string displayName)
+    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
-        var res = await _http.PostAsJsonAsync("api/auth/register", new { email, password, displayName });
+        var res = await _http.PostAsJsonAsync("api/auth/register", request, ct);
 
         if (!res.IsSuccessStatusCode)
         {
-            var msg = (await res.Content.ReadAsStringAsync())?.Trim();
+            var msg = (await res.Content.ReadAsStringAsync(ct))?.Trim();
             throw new Exception(string.IsNullOrWhiteSpace(msg)
                 ? $"Register failed: {(int)res.StatusCode}"
                 : msg);
         }
 
-        var data = await res.Content.ReadFromJsonAsync<AuthResponse>();
+        var data = await res.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: ct);
         return data ?? throw new Exception("Register response was empty.");
     }
 }
