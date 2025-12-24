@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -61,6 +62,7 @@ public partial class App : Application
 
             var hasToken = await tokenStore.HasValidTokenAsync();
 
+
             if (hasToken && Connectivity.Current.NetworkAccess == NetworkAccess.Internet)
             {
                 try
@@ -68,11 +70,16 @@ public partial class App : Application
                     var me = await authApi.MeAsync();
                     await sessionStore.SetAsync(me.UserId, me.Email, me.DisplayName, me.Roles);
                 }
-                catch
+                catch (UnauthorizedAccessException)
                 {
                     await tokenStore.ClearAsync();
                     await sessionStore.ClearAsync();
                     hasToken = false;
+                }
+                catch (Exception ex)
+                {
+
+                    Debug.WriteLine("[APP INIT] MeAsync failed (kept token): " + ex.Message);
                 }
             }
 
@@ -85,8 +92,10 @@ public partial class App : Application
                 Application.Current!.MainPage = new NavigationPage(root);
             });
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine("[APP INIT] Fatal init error: " + ex);
+
             var login = _services.GetRequiredService<LoginPage>();
 
             MainThread.BeginInvokeOnMainThread(() =>
