@@ -1,0 +1,65 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy ASP.Net Core app to Azure Web App - workoutcoachv2-web-noah1
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Build (Web only)
+        run: dotnet build ./WorkoutCoachV2.Web/WorkoutCoachV2.Web.csproj -c Release
+
+      - name: Publish (Web only)
+        run: dotnet publish ./WorkoutCoachV2.Web/WorkoutCoachV2.Web.csproj -c Release -o ./publish --no-build
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: ./publish
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: ./publish
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F5FA05C4021944598AB14D86EB4F2943 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_737883C6714A421EA1E8643A3E561FEE }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_04D006C7E8554F5CBF2047CB3F2B17D0 }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'workoutcoachv2-web-noah1'
+          slot-name: 'Production'
+          package: ./publish
