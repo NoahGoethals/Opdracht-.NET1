@@ -1,4 +1,7 @@
 ﻿using System.Globalization;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Maui.Storage;
 
 namespace WorkoutCoachV3.Maui.Services;
 
@@ -6,75 +9,89 @@ public class TokenStore : ITokenStore
 {
     private const string TokenKey = "auth_token";
     private const string ExpiresKey = "auth_expires_utc";
-
     private static readonly TimeSpan ExpirySkew = TimeSpan.FromSeconds(30);
 
     public async Task SetAsync(string token, DateTime expiresUtc)
     {
-        var expiresString = expiresUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+        var utc = expiresUtc.Kind switch
+        {
+            DateTimeKind.Utc => expiresUtc,
+            DateTimeKind.Local => expiresUtc.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(expiresUtc, DateTimeKind.Utc)
+        };
 
-        if (!await TrySecureSetAsync(TokenKey, token))
-            Preferences.Set(TokenKey, token);
+        var expiresString = utc.ToString("O", CultureInfo.InvariantCulture);
 
-        if (!await TrySecureSetAsync(ExpiresKey, expiresString))
-            Preferences.Set(ExpiresKey, expiresString);
+        _ = await TrySecureSetAsync(TokenKey, token);
+        _ = await TrySecureSetAsync(ExpiresKey, expiresString);
+
+        Preferences.Set(TokenKey, token);
+        Preferences.Set(ExpiresKey, expiresString);
     }
 
     public async Task<string?> GetTokenAsync()
     {
-        var expires = await GetExpiresUtcAsync();
-        if (expires is null)
+        var secure = await TrySecureGetAsync(TokenKey);
+        var token = !string.IsNullOrWhiteSpace(secure)
+            ? secure
+            : Preferences.Get(TokenKey, null);
+
+        if (string.IsNullOrWhiteSpace(token))
             return null;
 
-        var now = DateTime.UtcNow;
-        if (now >= (expires.Value - ExpirySkew))
+        var expires = await GetExpiresUtcAsync();
+        if (expires.HasValue && DateTime.UtcNow >= (expires.Value - ExpirySkew)) 
         {
             await ClearAsync();
             return null;
         }
 
-        var token = await TrySecureGetAsync(TokenKey);
-        if (string.IsNullOrWhiteSpace(token))
-            token = Preferences.Get(TokenKey, null as string);
-
-        return string.IsNullOrWhiteSpace(token) ? null : token;
+        return token;
     }
 
     public async Task<DateTime?> GetExpiresUtcAsync()
     {
-        var s = await TrySecureGetAsync(ExpiresKey);
-        if (string.IsNullOrWhiteSpace(s))
-            s = Preferences.Get(ExpiresKey, null as string);
+        var secure = await TrySecureGetAsync(ExpiresKey);
+        var str = !string.IsNullOrWhiteSpace(secure)
+            ? secure
+            : Preferences.Get(ExpiresKey, null);
 
-        if (string.IsNullOrWhiteSpace(s))
-            return null;
+        if (!string.IsNullOrWhiteSpace(str))
+        {
+            if (DateTime.TryParse(str, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt))
+            {
+                if (dt.Kind == DateTimeKind.Unspecified)
+                    dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 
-        if (!DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt))
-            return null;
+                return dt.ToUniversalTime();
+            }
+        }
 
-        return dt.ToUniversalTime();
+        var token = await TrySecureGetAsync(TokenKey);
+        token = !string.IsNullOrWhiteSpace(token) ? token : Preferences.Get(TokenKey, null);
+
+        var fromJwt = TryGetExpiryFromJwt(token);
+        if (fromJwt.HasValue)
+        {
+            var expiresString = fromJwt.Value.ToString("O", CultureInfo.InvariantCulture);
+            _ = await TrySecureSetAsync(ExpiresKey, expiresString);
+            Preferences.Set(ExpiresKey, expiresString);
+        }
+
+        return fromJwt;
     }
 
     public async Task<bool> HasValidTokenAsync()
     {
-        var token = await TrySecureGetAsync(TokenKey);
-        if (string.IsNullOrWhiteSpace(token))
-            token = Preferences.Get(TokenKey, null as string);
-
+        var token = await GetTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
             return false;
 
         var expires = await GetExpiresUtcAsync();
-        if (expires is null)
+        if (!expires.HasValue)
             return false;
 
-        var now = DateTime.UtcNow;
-        var valid = now < (expires.Value - ExpirySkew);
-
-        if (!valid)
-            await ClearAsync();
-
-        return valid;
+        return DateTime.UtcNow < (expires.Value - ExpirySkew);
     }
 
     public async Task ClearAsync()
@@ -84,6 +101,41 @@ public class TokenStore : ITokenStore
 
         Preferences.Remove(TokenKey);
         Preferences.Remove(ExpiresKey);
+    }
+
+    private static DateTime? TryGetExpiryFromJwt(string? jwt)
+    {
+        if (string.IsNullOrWhiteSpace(jwt))
+            return null;
+
+        var parts = jwt.Split('.');
+        if (parts.Length < 2)
+            return null;
+
+        try
+        {
+            var jsonBytes = Base64UrlDecode(parts[1]);
+            using var doc = JsonDocument.Parse(jsonBytes);
+
+            if (doc.RootElement.TryGetProperty("exp", out var expEl) && expEl.TryGetInt64(out var exp))
+                return DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static byte[] Base64UrlDecode(string input)
+    {
+        var s = input.Replace('-', '+').Replace('_', '/');
+        var pad = 4 - (s.Length % 4);
+        if (pad is > 0 and < 4)
+            s = s + new string('=', pad);
+
+        return Convert.FromBase64String(s);
     }
 
     private static async Task<bool> TrySecureSetAsync(string key, string value)
@@ -111,15 +163,9 @@ public class TokenStore : ITokenStore
         }
     }
 
-    private static async Task TrySecureRemoveAsync(string key)
+    private static Task TrySecureRemoveAsync(string key)
     {
-        try
-        {
-            SecureStorage.Remove(key);
-            await Task.CompletedTask;
-        }
-        catch
-        {
-        }
+        try { SecureStorage.Remove(key); } catch { }
+        return Task.CompletedTask;
     }
 }

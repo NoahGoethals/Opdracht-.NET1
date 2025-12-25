@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using WorkoutCoachV3.Maui.Pages;
 using WorkoutCoachV3.Maui.Services;
 
@@ -9,12 +8,7 @@ public partial class App : Application
 {
     private readonly IServiceProvider _services;
 
-    public App(
-        LocalDatabaseService localDb,
-        ITokenStore tokenStore,
-        IUserSessionStore sessionStore,
-        IAuthApi authApi,
-        IServiceProvider services)
+    public App(IServiceProvider services)
     {
         InitializeComponent();
         _services = services;
@@ -23,84 +17,73 @@ public partial class App : Application
         {
             Content = new Grid
             {
-                Padding = 24,
                 Children =
                 {
-                    new VerticalStackLayout
+                    new ActivityIndicator
                     {
-                        Spacing = 12,
+                        IsRunning = true,
                         VerticalOptions = LayoutOptions.Center,
-                        HorizontalOptions = LayoutOptions.Center,
-                        Children =
-                        {
-                            new Label
-                            {
-                                Text = "WorkoutCoach",
-                                FontSize = 28,
-                                FontAttributes = FontAttributes.Bold,
-                                HorizontalTextAlignment = TextAlignment.Center
-                            },
-                            new ActivityIndicator { IsRunning = true }
-                        }
+                        HorizontalOptions = LayoutOptions.Center
                     }
                 }
             }
         };
 
-        _ = InitializeAsync(localDb, tokenStore, sessionStore, authApi);
+        _ = InitializeAsync();
     }
 
-    private async Task InitializeAsync(
-        LocalDatabaseService localDb,
-        ITokenStore tokenStore,
-        IUserSessionStore sessionStore,
-        IAuthApi authApi)
+    private async Task InitializeAsync()
     {
+        var tokenStore = _services.GetRequiredService<ITokenStore>();
+        var sessionStore = _services.GetRequiredService<IUserSessionStore>();
+        var localDb = _services.GetRequiredService<LocalDatabaseService>();
+        var authApi = _services.GetRequiredService<IAuthApi>();
+
+        try { await localDb.EnsureCreatedAndSeedAsync(); } catch { }
+
         try
         {
-            await localDb.EnsureCreatedAndSeedAsync();
-
-            var hasToken = await tokenStore.HasValidTokenAsync();
-
-
-            if (hasToken && Connectivity.Current.NetworkAccess == NetworkAccess.Internet)
+            var hasValid = await tokenStore.HasValidTokenAsync();
+            if (!hasValid)
             {
-                try
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    var me = await authApi.MeAsync();
-                    await sessionStore.SetAsync(me.UserId, me.Email, me.DisplayName, me.Roles);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    await tokenStore.ClearAsync();
-                    await sessionStore.ClearAsync();
-                    hasToken = false;
-                }
-                catch (Exception ex)
-                {
-
-                    Debug.WriteLine("[APP INIT] MeAsync failed (kept token): " + ex.Message);
-                }
+                    MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
+                });
+                return;
             }
 
-            Page root = hasToken
-                ? _services.GetRequiredService<ExercisesPage>()
-                : _services.GetRequiredService<LoginPage>();
+            try
+            {
+                var me = await authApi.MeAsync();
+
+                var userId = me.UserId ?? "";
+                var email = me.Email ?? "";
+                var displayName = !string.IsNullOrWhiteSpace(me.DisplayName)
+                    ? me.DisplayName
+                    : (!string.IsNullOrWhiteSpace(email) ? email : "User");
+
+                var roles = me.Roles ?? Array.Empty<string>();
+
+                await sessionStore.SetAsync(userId, email, displayName, roles);
+            }
+            catch
+            {
+            }
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Application.Current!.MainPage = new NavigationPage(root);
+                MainPage = new NavigationPage(_services.GetRequiredService<ExercisesPage>());
             });
         }
-        catch (Exception ex)
+        catch
         {
-            Debug.WriteLine("[APP INIT] Fatal init error: " + ex);
-
-            var login = _services.GetRequiredService<LoginPage>();
+            await tokenStore.ClearAsync();
+            await sessionStore.ClearAsync();
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Application.Current!.MainPage = new NavigationPage(login);
+                MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());
             });
         }
     }
