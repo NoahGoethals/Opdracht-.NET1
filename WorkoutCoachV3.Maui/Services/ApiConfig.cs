@@ -3,12 +3,12 @@ using Microsoft.Maui.Storage;
 
 namespace WorkoutCoachV3.Maui.Services;
 
-
 public static class ApiConfig
 {
     private const string BaseUrlKey = "ApiBaseUrl";
 
-  
+    private const string AzureDefaultBaseUrl = "https://workoutcoachv2-web-noah1.azurewebsites.net/";
+
     public static string GetBaseUrl()
     {
         var saved = Preferences.Get(BaseUrlKey, string.Empty);
@@ -24,22 +24,16 @@ public static class ApiConfig
 
     public static string GetDefaultBaseUrl()
     {
-        if (DeviceInfo.Platform == DevicePlatform.Android)
-        {
-            if (DeviceInfo.DeviceType == DeviceType.Virtual)
-                return "http://10.0.2.2:5162/";
-
-            return "http://127.0.0.1:5162/";
-        }
-
-        return "https://127.0.0.1:7289/";
+        return AzureDefaultBaseUrl;
     }
 
     public static void SetBaseUrl(string baseUrl)
     {
         var normalized = Normalize(baseUrl);
         if (!IsValidAbsoluteUrl(normalized))
-            throw new ArgumentException("Ongeldige Base URL. Voorbeeld: https://jouwapp.azurewebsites.net/", nameof(baseUrl));
+            throw new ArgumentException(
+                "Ongeldige Base URL. Voorbeeld: https://jouwapp.azurewebsites.net/",
+                nameof(baseUrl));
 
         Preferences.Set(BaseUrlKey, normalized);
     }
@@ -53,6 +47,7 @@ public static class ApiConfig
     {
         var saved = Preferences.Get(BaseUrlKey, string.Empty);
         if (string.IsNullOrWhiteSpace(saved)) return null;
+
         var normalized = Normalize(saved);
         return IsValidAbsoluteUrl(normalized) ? normalized : null;
     }
