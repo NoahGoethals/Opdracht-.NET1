@@ -39,6 +39,9 @@ public partial class App : Application
         var localDb = _services.GetRequiredService<LocalDatabaseService>();
         var authApi = _services.GetRequiredService<IAuthApi>();
 
+        var connectivitySync = _services.GetRequiredService<ConnectivitySyncService>();
+        connectivitySync.Start();
+
         try { await localDb.EnsureCreatedAndSeedAsync(); } catch { }
 
         try
@@ -70,6 +73,8 @@ public partial class App : Application
             catch
             {
             }
+
+            try { await connectivitySync.TriggerSyncAsync(); } catch { }
 
             MainThread.BeginInvokeOnMainThread(() =>
             {

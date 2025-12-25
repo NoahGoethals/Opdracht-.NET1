@@ -20,10 +20,12 @@ public static class MauiProgram
 
         builder.Logging.AddDebug();
 
+
         builder.Services.AddSingleton<ITokenStore, TokenStore>();
         builder.Services.AddSingleton<IUserSessionStore, UserSessionStore>();
         builder.Services.AddTransient<AuthHeaderHandler>();
 
+     
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, "workoutcoach.local.db3");
 
         builder.Services.AddDbContextFactory<LocalAppDbContext>(options =>
@@ -31,12 +33,17 @@ public static class MauiProgram
         );
 
         builder.Services.AddSingleton<LocalDatabaseService>();
+
         builder.Services.AddSingleton<ISyncService, SyncService>();
+
+        builder.Services.AddSingleton<ConnectivitySyncService>();
+
 
         builder.Services.AddHttpClient("ApiNoAuth", (sp, http) =>
         {
             var baseUrl = ApiConfig.GetBaseUrl();
             System.Diagnostics.Debug.WriteLine($"[API] ApiNoAuth BaseUrl = {baseUrl}");
+
             http.BaseAddress = new Uri(baseUrl);
             http.Timeout = TimeSpan.FromSeconds(30);
         })
@@ -49,6 +56,7 @@ public static class MauiProgram
         {
             var baseUrl = ApiConfig.GetBaseUrl();
             System.Diagnostics.Debug.WriteLine($"[API] Api BaseUrl = {baseUrl}");
+
             http.BaseAddress = new Uri(baseUrl);
             http.Timeout = TimeSpan.FromSeconds(30);
         })
@@ -61,6 +69,8 @@ public static class MauiProgram
         builder.Services.AddHttpClient(nameof(ApiHealthService), (sp, http) =>
         {
             var baseUrl = ApiConfig.GetBaseUrl();
+            System.Diagnostics.Debug.WriteLine($"[API] ApiHealthService BaseUrl = {baseUrl}");
+
             http.BaseAddress = new Uri(baseUrl);
             http.Timeout = TimeSpan.FromSeconds(10);
         })
