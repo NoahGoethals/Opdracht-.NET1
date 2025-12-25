@@ -1,10 +1,9 @@
-﻿using System;
-using System.Globalization;
-using System.Net;
+﻿using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -18,7 +17,9 @@ using WorkoutCoachV2.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("WorkoutCoachConnection")
+
+var connectionString =
+    builder.Configuration.GetConnectionString("WorkoutCoachConnection")
     ?? throw new InvalidOperationException("Connection string 'WorkoutCoachConnection' not found.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -33,6 +34,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }));
 
 builder.Services.AddHttpContextAccessor();
+
 
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
@@ -59,6 +61,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
         new CookieRequestCultureProvider()
     };
 });
+
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -105,33 +108,54 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-builder.Services
-    .AddAuthentication(options =>
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Smart";
+    options.DefaultAuthenticateScheme = "Smart";
+    options.DefaultChallengeScheme = "Smart";
+})
+.AddPolicyScheme("Smart", "Smart scheme", options =>
+{
+    options.ForwardDefaultSelector = context =>
     {
-        options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
-    })
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+        if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+            return JwtBearerDefaults.AuthenticationScheme;
+
+        return IdentityConstants.ApplicationScheme;
+    };
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+  
+    var key =
+        builder.Configuration["Jwt:Key"]
+        ?? builder.Configuration["Jwt__Key"]
+        ?? throw new InvalidOperationException("Jwt key ontbreekt. Zet Azure App Setting 'Jwt__Key' (32+ tekens).");
+
+    var issuer =
+        builder.Configuration["Jwt:Issuer"]
+        ?? builder.Configuration["Jwt__Issuer"]
+        ?? "WorkoutCoachV2";
+
+    var audience =
+        builder.Configuration["Jwt:Audience"]
+        ?? builder.Configuration["Jwt__Audience"]
+        ?? "WorkoutCoachV2.Maui";
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        var key = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key ontbreekt");
-        var issuer = builder.Configuration["Jwt:Issuer"] ?? "WorkoutCoachV2";
-        var audience = builder.Configuration["Jwt:Audience"] ?? "WorkoutCoachV2.Maui";
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
 
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-
-            ValidIssuer = issuer,
-            ValidAudience = audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-
-            ClockSkew = TimeSpan.FromMinutes(2)
-        };
-    });
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ClockSkew = TimeSpan.FromMinutes(2)
+    };
+});
 
 builder.Services.AddAuthorization(options =>
 {
@@ -149,13 +173,18 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 var locOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>();
 app.UseRequestLocalization(locOptions.Value);
+
 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-
     var db = services.GetRequiredService<AppDbContext>();
 
     try
@@ -171,65 +200,76 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine("❌ MigrateAsync FAILED:");
-        Console.WriteLine(ex.ToString());
-        throw;
+        Console.WriteLine(ex);
+
+  
+        if (app.Environment.IsDevelopment())
+            throw;
     }
 
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    var config = services.GetRequiredService<IConfiguration>();
-
-    var roles = new[] { "Admin", "Moderator", "User" };
-    foreach (var role in roles)
+    try
     {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var config = services.GetRequiredService<IConfiguration>();
 
-    var adminEmail = config["AdminSeed:Email"];
-    var adminPassword = config["AdminSeed:Password"];
-    var adminDisplayName = config["AdminSeed:DisplayName"] ?? "Admin";
-
-    if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
-    {
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-        if (adminUser == null)
+        var roles = new[] { "Admin", "Moderator", "User" };
+        foreach (var role in roles)
         {
-            adminUser = new ApplicationUser
+            if (!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new IdentityRole(role));
+        }
+
+   
+        var adminEmail = config["AdminSeed:Email"] ?? config["AdminSeed__Email"];
+        var adminPassword = config["AdminSeed:Password"] ?? config["AdminSeed__Password"];
+        var adminDisplayName = (config["AdminSeed:DisplayName"] ?? config["AdminSeed__DisplayName"]) ?? "Admin";
+
+        if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
+        {
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+            if (adminUser == null)
             {
-                UserName = adminEmail,
-                Email = adminEmail,
-                DisplayName = adminDisplayName,
-                IsBlocked = false
-            };
+                adminUser = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    DisplayName = adminDisplayName,
+                    IsBlocked = false
+                };
 
-            var createResult = await userManager.CreateAsync(adminUser, adminPassword);
-            if (createResult.Succeeded)
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
-        else
-        {
-            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
+                var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+                if (createResult.Succeeded)
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+            else
+            {
+                if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
 
-        await DemoDataSeeder.SeedDemoDataForUserAsync(db, adminUser.Id);
+            await DemoDataSeeder.SeedDemoDataForUserAsync(db, adminUser.Id);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("❌ Seeding FAILED:");
+        Console.WriteLine(ex);
+
+        if (app.Environment.IsDevelopment())
+            throw;
     }
 }
+
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
-
-    app.UseHttpsRedirection();
-}
-else
-{
-    // http://localhost:5162 
 }
 
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -257,13 +297,4 @@ catch
 {
 }
 
-try
-{
-    app.Run();
-}
-catch (IOException ioEx) when (ioEx.Message.Contains("address already in use", StringComparison.OrdinalIgnoreCase))
-{
-    Console.WriteLine("❌ Poortconflict: een andere instantie draait al op dezelfde URL/poort.");
-    Console.WriteLine("➡️ Stop de andere Web instance (terminal/VS) of verander je poorten.");
-    throw;
-}
+app.Run();
