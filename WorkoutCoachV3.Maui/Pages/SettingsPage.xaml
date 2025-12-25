@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WorkoutCoachV3.Maui.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:WorkoutCoachV3.Maui.Converters"
+    Title="Settings">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+
+            <Label Text="API Base URL"
+                   FontAttributes="Bold"
+                   FontSize="22" />
+
+            <Label Text="{Binding PlatformInfo}"
+                   Opacity="0.7" />
+
+            <Label Text="Hier stel je de API in die je MAUI app gebruikt."
+                   LineBreakMode="WordWrap"
+                   Opacity="0.9" />
+
+            <Label Text="Base URL" FontAttributes="Bold" />
+            <Entry Text="{Binding BaseUrl}"
+                   Placeholder="https://jouwapp.azurewebsites.net/"
+                   Keyboard="Url" />
+
+            <Label Text="Standaard Base URL" FontAttributes="Bold" />
+            <Label Text="{Binding DefaultBaseUrl}"
+                   FontFamily="Courier New"
+                   Opacity="0.85" />
+
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="Save"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+
+                <Button Text="Reset"
+                        Command="{Binding ResetToDefaultCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+
+                <Button Text="Test"
+                        Command="{Binding TestConnectionCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+            </HorizontalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+
+            <Label Text="{Binding Status}"
+                   LineBreakMode="WordWrap" />
+
+            <Frame Padding="12" CornerRadius="12" HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#1E1E1E}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Tips"
+                           FontAttributes="Bold" />
+                    <Label Text="• Android emulator → gebruik meestal http://10.0.2.2:5162/ (host PC)" />
+                    <Label Text="• Android fysieke telefoon → gebruik Azure URL of adb reverse (http://127.0.0.1:5162/)" />
+                    <Label Text="• Windows → gebruik Azure URL of je lokale https://127.0.0.1:7289/" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

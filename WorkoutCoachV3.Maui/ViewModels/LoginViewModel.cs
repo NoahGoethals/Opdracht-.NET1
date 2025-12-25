@@ -63,4 +63,13 @@ public partial class LoginViewModel : ObservableObject
         var page = _services.GetRequiredService<RegisterPage>();
         await Application.Current!.MainPage!.Navigation.PushAsync(page);
     }
+
+    [RelayCommand]
+    private async Task GoToSettingsAsync()
+    {
+        if (IsBusy) return;
+
+        var page = _services.GetRequiredService<SettingsPage>();
+        await Application.Current!.MainPage!.Navigation.PushAsync(page);
+    }
 }

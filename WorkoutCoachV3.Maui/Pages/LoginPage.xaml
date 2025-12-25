@@ -34,6 +34,10 @@
                     Command="{Binding GoToRegisterCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
 
+            <Button Text="API Settings"
+                    Command="{Binding GoToSettingsCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}" />
 

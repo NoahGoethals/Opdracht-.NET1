@@ -33,11 +33,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<LocalDatabaseService>();
         builder.Services.AddSingleton<ISyncService, SyncService>();
 
-        var baseUrl = ApiConfig.GetBaseUrl();
-        System.Diagnostics.Debug.WriteLine($"[API] BaseUrl = {baseUrl}");
-
-        builder.Services.AddHttpClient<IAuthApi, AuthApi>(http =>
+        builder.Services.AddHttpClient("ApiNoAuth", (sp, http) =>
         {
+            var baseUrl = ApiConfig.GetBaseUrl();
+            System.Diagnostics.Debug.WriteLine($"[API] ApiNoAuth BaseUrl = {baseUrl}");
             http.BaseAddress = new Uri(baseUrl);
             http.Timeout = TimeSpan.FromSeconds(30);
         })
@@ -46,8 +45,10 @@ public static class MauiProgram
 #endif
         ;
 
-        builder.Services.AddHttpClient("Api", http =>
+        builder.Services.AddHttpClient("Api", (sp, http) =>
         {
+            var baseUrl = ApiConfig.GetBaseUrl();
+            System.Diagnostics.Debug.WriteLine($"[API] Api BaseUrl = {baseUrl}");
             http.BaseAddress = new Uri(baseUrl);
             http.Timeout = TimeSpan.FromSeconds(30);
         })
@@ -56,6 +57,20 @@ public static class MauiProgram
         .ConfigurePrimaryHttpMessageHandler(() => DevHttpHandler())
 #endif
         ;
+
+        builder.Services.AddHttpClient(nameof(ApiHealthService), (sp, http) =>
+        {
+            var baseUrl = ApiConfig.GetBaseUrl();
+            http.BaseAddress = new Uri(baseUrl);
+            http.Timeout = TimeSpan.FromSeconds(10);
+        })
+#if DEBUG
+        .ConfigurePrimaryHttpMessageHandler(() => DevHttpHandler())
+#endif
+        ;
+
+        builder.Services.AddTransient<IAuthApi, AuthApi>();
+        builder.Services.AddSingleton<IApiHealthService, ApiHealthService>();
 
         builder.Services.AddTransient<IExercisesApi, ExercisesApi>();
         builder.Services.AddTransient<IWorkoutsApi, WorkoutsApi>();
@@ -81,6 +96,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<AdminPanelViewModel>();
+        builder.Services.AddTransient<SettingsViewModel>();
 
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<RegisterPage>();
@@ -100,6 +116,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<StatsPage>();
         builder.Services.AddTransient<AdminPanelPage>();
+        builder.Services.AddTransient<SettingsPage>();
 
         return builder.Build();
     }

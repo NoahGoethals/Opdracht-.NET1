@@ -4,20 +4,22 @@ using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
+
 public class AuthApi : IAuthApi
 {
-    private readonly HttpClient _http;               
-    private readonly IHttpClientFactory _factory;    
+    private readonly IHttpClientFactory _factory;
 
-    public AuthApi(HttpClient http, IHttpClientFactory factory)
+    public AuthApi(IHttpClientFactory factory)
     {
-        _http = http;
         _factory = factory;
     }
 
+    private HttpClient NoAuthClient => _factory.CreateClient("ApiNoAuth");
+    private HttpClient AuthClient => _factory.CreateClient("Api");
+
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
-        var res = await _http.PostAsJsonAsync("api/auth/login", request, ct);
+        var res = await NoAuthClient.PostAsJsonAsync("api/auth/login", request, ct);
 
         if (!res.IsSuccessStatusCode)
         {
@@ -40,7 +42,7 @@ public class AuthApi : IAuthApi
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
-        var res = await _http.PostAsJsonAsync("api/auth/register", request, ct);
+        var res = await NoAuthClient.PostAsJsonAsync("api/auth/register", request, ct);
 
         if (!res.IsSuccessStatusCode)
         {
@@ -56,9 +58,7 @@ public class AuthApi : IAuthApi
 
     public async Task<CurrentUserDto> MeAsync(CancellationToken ct = default)
     {
-        var api = _factory.CreateClient("Api");
-
-        var res = await api.GetAsync("api/auth/me", ct);
+        var res = await AuthClient.GetAsync("api/auth/me", ct);
 
         if (res.StatusCode == HttpStatusCode.Unauthorized)
             throw new UnauthorizedAccessException("Sessie verlopen. Log opnieuw in.");
