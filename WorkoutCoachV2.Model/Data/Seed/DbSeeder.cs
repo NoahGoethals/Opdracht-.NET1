@@ -1,5 +1,4 @@
-﻿// DB-seed: migrate DB, maak rollen/users, seed demo-data (oefeningen/workout), ruim lege sessies op.
-
+﻿
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace WorkoutCoachV2.Model.Data.Seed
 {
     public static class DbSeeder
     {
-        // Hou rol-namen consistent overal in je project
         private const string RoleAdmin = "Admin";
         private const string RoleModerator = "Moderator";
         private const string RoleUser = "User";
@@ -26,15 +24,12 @@ namespace WorkoutCoachV2.Model.Data.Seed
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-            // 1) Zorg dat DB + migraties up-to-date zijn
             await ctx.Database.MigrateAsync();
 
-            // 2) Rollen aanmaken indien nodig
             await EnsureRoleAsync(roleManager, RoleAdmin);
             await EnsureRoleAsync(roleManager, RoleModerator);
             await EnsureRoleAsync(roleManager, RoleUser);
 
-            // 3) Standaard users + rollen koppelen (idempotent)
             var admin = await EnsureUserAsync(userManager, "admin@local", "Administrator", "Admin!123");
             await EnsureUserInRoleAsync(userManager, admin, RoleAdmin);
 
@@ -44,8 +39,8 @@ namespace WorkoutCoachV2.Model.Data.Seed
             var user = await EnsureUserAsync(userManager, "user@local", "User", "User!123");
             await EnsureUserInRoleAsync(userManager, user, RoleUser);
 
-            // 4) Demo-data (oefeningen/workout) + cleanup (idempotent)
-            await SeedDemoDataAsync(ctx);
+        
+            await SeedDemoDataForOwnerAsync(ctx, admin.Id);
             await CleanupUntitledSessionsAsync(ctx);
         }
 
@@ -105,43 +100,66 @@ namespace WorkoutCoachV2.Model.Data.Seed
             }
         }
 
-        private static async Task SeedDemoDataAsync(AppDbContext ctx)
+        private static async Task SeedDemoDataForOwnerAsync(AppDbContext ctx, string ownerId)
         {
             var exercises = ctx.Set<Exercise>();
             var workouts = ctx.Set<Workout>();
             var workoutExercises = ctx.Set<WorkoutExercise>();
 
-            // Basisoefeningen (eenmalig)
-            if (!await exercises.AnyAsync())
+            var demoExercises = new[]
             {
-                exercises.AddRange(
-                    new Exercise { Name = "Bench Press" },
-                    new Exercise { Name = "Back Squat" },
-                    new Exercise { Name = "Deadlift" }
-                );
-                await ctx.SaveChangesAsync();
+                new { Name = "Bench Press", Category = "Strength", Notes = (string?)"Compound chest movement" },
+                new { Name = "Back Squat",  Category = "Strength", Notes = (string?)"Compound leg movement" },
+                new { Name = "Deadlift",    Category = "Strength", Notes = (string?)"Posterior chain compound lift" }
+            };
+
+            foreach (var ex in demoExercises)
+            {
+                var exists = await exercises.AnyAsync(e =>
+                    e.OwnerId == ownerId &&
+                    e.Name == ex.Name);
+
+                if (!exists)
+                {
+                    exercises.Add(new Exercise
+                    {
+                        Name = ex.Name,
+                        Category = ex.Category,
+                        Notes = ex.Notes,
+                        OwnerId = ownerId
+                    });
+                }
             }
 
-            // Minstens één workout voorzien
-            Workout workout;
-            if (!await workouts.AnyAsync())
+            await ctx.SaveChangesAsync();
+
+            const string workoutTitle = "Full Body A";
+
+            var workout = await workouts.FirstOrDefaultAsync(w =>
+                w.OwnerId == ownerId &&
+                w.Title == workoutTitle);
+
+            if (workout == null)
             {
-                workout = new Workout { Title = "Full Body A" };
+                workout = new Workout
+                {
+                    Title = workoutTitle,
+                    OwnerId = ownerId
+                };
+
                 workouts.Add(workout);
                 await ctx.SaveChangesAsync();
             }
-            else
-            {
-                workout = await workouts.FirstAsync();
-            }
 
-            // Koppel de eerste oefening aan de workout (idempotent)
-            var anyLinkForWorkout = await workoutExercises.AnyAsync(we =>
-                EF.Property<int>(we, "WorkoutId") == workout.Id);
+            var anyLinkForWorkout = await workoutExercises.AnyAsync(we => we.WorkoutId == workout.Id);
 
             if (!anyLinkForWorkout)
             {
-                var firstExercise = await exercises.FirstAsync();
+                var firstExercise = await exercises
+                    .Where(e => e.OwnerId == ownerId)
+                    .OrderBy(e => e.Name)
+                    .FirstAsync();
+
                 workoutExercises.Add(new WorkoutExercise
                 {
                     WorkoutId = workout.Id,
@@ -149,6 +167,7 @@ namespace WorkoutCoachV2.Model.Data.Seed
                     Reps = 5,
                     WeightKg = 0
                 });
+
                 await ctx.SaveChangesAsync();
             }
         }
@@ -158,7 +177,6 @@ namespace WorkoutCoachV2.Model.Data.Seed
             var sessions = ctx.Set<Session>();
             var sessionSets = ctx.Set<SessionSet>();
 
-            // Lege/naamloze sessies opschonen (incl. verweesde sets)
             var untitledIds = await sessions
                 .Where(s => string.IsNullOrWhiteSpace(s.Title))
                 .Select(s => s.Id)
