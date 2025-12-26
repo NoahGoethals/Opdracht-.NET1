@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-
 using WorkoutCoachV2.Model.Data;
 using WorkoutCoachV2.Model.Models;
 
@@ -27,79 +26,90 @@ namespace WorkoutCoachV2.Model.Data.Seed
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-            // Zorg dat DB + migraties up-to-date zijn
+            // 1) Zorg dat DB + migraties up-to-date zijn
             await ctx.Database.MigrateAsync();
 
-            // Rollen aanmaken indien nodig
-            async Task EnsureRoleAsync(string roleName)
+            // 2) Rollen aanmaken indien nodig
+            await EnsureRoleAsync(roleManager, RoleAdmin);
+            await EnsureRoleAsync(roleManager, RoleModerator);
+            await EnsureRoleAsync(roleManager, RoleUser);
+
+            // 3) Standaard users + rollen koppelen (idempotent)
+            var admin = await EnsureUserAsync(userManager, "admin@local", "Administrator", "Admin!123");
+            await EnsureUserInRoleAsync(userManager, admin, RoleAdmin);
+
+            var moderator = await EnsureUserAsync(userManager, "moderator@local", "Moderator", "Moderator!123");
+            await EnsureUserInRoleAsync(userManager, moderator, RoleModerator);
+
+            var user = await EnsureUserAsync(userManager, "user@local", "User", "User!123");
+            await EnsureUserInRoleAsync(userManager, user, RoleUser);
+
+            // 4) Demo-data (oefeningen/workout) + cleanup (idempotent)
+            await SeedDemoDataAsync(ctx);
+            await CleanupUntitledSessionsAsync(ctx);
+        }
+
+        private static async Task EnsureRoleAsync(RoleManager<IdentityRole> roleManager, string roleName)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
             {
-                if (!await roleManager.RoleExistsAsync(roleName))
+                var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+                if (!result.Succeeded)
                 {
-                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                    var msg = string.Join("; ", result.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"DbSeeder: could not create role '{roleName}': {msg}");
                 }
             }
+        }
 
-            await EnsureRoleAsync(RoleAdmin);
-            await EnsureRoleAsync(RoleModerator);
-            await EnsureRoleAsync(RoleUser);
+        private static async Task<ApplicationUser> EnsureUserAsync(
+            UserManager<ApplicationUser> userManager,
+            string email,
+            string displayName,
+            string password)
+        {
+            var user = await userManager.FindByNameAsync(email);
+            if (user != null) return user;
 
-            // Helpers
-            async Task<ApplicationUser> EnsureUserAsync(string email, string displayName, string password)
+            user = new ApplicationUser
             {
-                var user = await userManager.FindByNameAsync(email);
-                if (user == null)
-                {
-                    user = new ApplicationUser
-                    {
-                        UserName = email,
-                        Email = email,
-                        DisplayName = displayName
-                    };
+                UserName = email,
+                Email = email,
+                DisplayName = displayName,
+                IsBlocked = false
+            };
 
-                    var createResult = await userManager.CreateAsync(user, password);
-                    if (!createResult.Succeeded)
-                    {
-                        var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
-                        throw new InvalidOperationException($"DbSeeder: could not create user '{email}': {msg}");
-                    }
-                }
-
-                return user;
+            var createResult = await userManager.CreateAsync(user, password);
+            if (!createResult.Succeeded)
+            {
+                var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"DbSeeder: could not create user '{email}': {msg}");
             }
 
-            async Task EnsureUserInRoleAsync(ApplicationUser user, string role)
+            return user;
+        }
+
+        private static async Task EnsureUserInRoleAsync(
+            UserManager<ApplicationUser> userManager,
+            ApplicationUser user,
+            string roleName)
+        {
+            if (await userManager.IsInRoleAsync(user, roleName)) return;
+
+            var addResult = await userManager.AddToRoleAsync(user, roleName);
+            if (!addResult.Succeeded)
             {
-                if (!await userManager.IsInRoleAsync(user, role))
-                {
-                    var addResult = await userManager.AddToRoleAsync(user, role);
-                    if (!addResult.Succeeded)
-                    {
-                        var msg = string.Join("; ", addResult.Errors.Select(e => e.Description));
-                        throw new InvalidOperationException($"DbSeeder: could not add user '{user.UserName}' to role '{role}': {msg}");
-                    }
-                }
+                var msg = string.Join("; ", addResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException(
+                    $"DbSeeder: could not add user '{user.UserName}' to role '{roleName}': {msg}");
             }
+        }
 
-            // Standaard users + rollen koppelen
-            var adminEmail = "admin@local";
-            var moderatorEmail = "moderator@local";
-            var userEmail = "user@local";
-
-            var admin = await EnsureUserAsync(adminEmail, "Administrator", "Admin!123");
-            await EnsureUserInRoleAsync(admin, RoleAdmin);
-
-            var moderator = await EnsureUserAsync(moderatorEmail, "Moderator", "Moderator!123");
-            await EnsureUserInRoleAsync(moderator, RoleModerator);
-
-            var user = await EnsureUserAsync(userEmail, "User", "User!123");
-            await EnsureUserInRoleAsync(user, RoleUser);
-
-            // Sets naar DbSets (kortere namen)
+        private static async Task SeedDemoDataAsync(AppDbContext ctx)
+        {
             var exercises = ctx.Set<Exercise>();
             var workouts = ctx.Set<Workout>();
             var workoutExercises = ctx.Set<WorkoutExercise>();
-            var sessions = ctx.Set<Session>();
-            var sessionSets = ctx.Set<SessionSet>();
 
             // Basisoefeningen (eenmalig)
             if (!await exercises.AnyAsync())
@@ -141,30 +151,35 @@ namespace WorkoutCoachV2.Model.Data.Seed
                 });
                 await ctx.SaveChangesAsync();
             }
+        }
+
+        private static async Task CleanupUntitledSessionsAsync(AppDbContext ctx)
+        {
+            var sessions = ctx.Set<Session>();
+            var sessionSets = ctx.Set<SessionSet>();
 
             // Lege/naamloze sessies opschonen (incl. verweesde sets)
-            var untitled = await sessions
+            var untitledIds = await sessions
                 .Where(s => string.IsNullOrWhiteSpace(s.Title))
                 .Select(s => s.Id)
                 .ToListAsync();
 
-            if (untitled.Count > 0)
-            {
-                var orphanSets = await sessionSets
-                    .Where(ss => untitled.Contains(ss.SessionId))
-                    .ToListAsync();
+            if (untitledIds.Count == 0) return;
 
-                if (orphanSets.Count > 0)
-                    sessionSets.RemoveRange(orphanSets);
+            var orphanSets = await sessionSets
+                .Where(ss => untitledIds.Contains(ss.SessionId))
+                .ToListAsync();
 
-                var toRemove = await sessions
-                    .Where(s => untitled.Contains(s.Id))
-                    .ToListAsync();
+            if (orphanSets.Count > 0)
+                sessionSets.RemoveRange(orphanSets);
 
-                sessions.RemoveRange(toRemove);
+            var toRemove = await sessions
+                .Where(s => untitledIds.Contains(s.Id))
+                .ToListAsync();
 
-                await ctx.SaveChangesAsync();
-            }
+            sessions.RemoveRange(toRemove);
+
+            await ctx.SaveChangesAsync();
         }
     }
 }

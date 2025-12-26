@@ -17,7 +17,6 @@ using WorkoutCoachV2.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 var connectionString =
     builder.Configuration.GetConnectionString("WorkoutCoachConnection")
     ?? throw new InvalidOperationException("Connection string 'WorkoutCoachConnection' not found.");
@@ -127,11 +126,13 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-  
+   
     var key =
         builder.Configuration["Jwt:Key"]
         ?? builder.Configuration["Jwt__Key"]
-        ?? throw new InvalidOperationException("Jwt key ontbreekt. Zet Azure App Setting 'Jwt__Key' (32+ tekens).");
+        ?? (builder.Environment.IsDevelopment()
+            ? "DEV_ONLY_CHANGE_ME_32_CHARS_MINIMUM_KEY!!"
+            : throw new InvalidOperationException("Jwt key ontbreekt. Zet Azure App Setting 'Jwt__Key' (32+ tekens)."));
 
     var issuer =
         builder.Configuration["Jwt:Issuer"]
@@ -157,11 +158,11 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "Moderator"));
 });
-
 
 if (builder.Environment.IsDevelopment())
 {
@@ -173,93 +174,26 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
+
 var locOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>();
 app.UseRequestLocalization(locOptions.Value);
 
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var services = scope.ServiceProvider;
-    var db = services.GetRequiredService<AppDbContext>();
-
-    try
-    {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        Console.WriteLine("➡️ Start MigrateAsync...");
-
-        await db.Database.MigrateAsync();
-
-        sw.Stop();
-        Console.WriteLine($"✅ MigrateAsync klaar in {sw.Elapsed.TotalSeconds:n1}s");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("❌ MigrateAsync FAILED:");
-        Console.WriteLine(ex);
-
-  
-        if (app.Environment.IsDevelopment())
-            throw;
-    }
-
-    try
-    {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var config = services.GetRequiredService<IConfiguration>();
-
-        var roles = new[] { "Admin", "Moderator", "User" };
-        foreach (var role in roles)
-        {
-            if (!await roleManager.RoleExistsAsync(role))
-                await roleManager.CreateAsync(new IdentityRole(role));
-        }
-
-   
-        var adminEmail = config["AdminSeed:Email"] ?? config["AdminSeed__Email"];
-        var adminPassword = config["AdminSeed:Password"] ?? config["AdminSeed__Password"];
-        var adminDisplayName = (config["AdminSeed:DisplayName"] ?? config["AdminSeed__DisplayName"]) ?? "Admin";
-
-        if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
-        {
-            var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-            if (adminUser == null)
-            {
-                adminUser = new ApplicationUser
-                {
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    DisplayName = adminDisplayName,
-                    IsBlocked = false
-                };
-
-                var createResult = await userManager.CreateAsync(adminUser, adminPassword);
-                if (createResult.Succeeded)
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
-            else
-            {
-                if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
-
-            await DemoDataSeeder.SeedDemoDataForUserAsync(db, adminUser.Id);
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("❌ Seeding FAILED:");
-        Console.WriteLine(ex);
-
-        if (app.Environment.IsDevelopment())
-            throw;
-    }
+    await DbSeeder.SeedAsync(app.Services);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    logger.LogError(ex, "Database seeding/migration failed at startup.");
+    throw;
 }
 
 
@@ -283,6 +217,7 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
 
 try
 {
