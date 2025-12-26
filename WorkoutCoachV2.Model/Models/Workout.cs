@@ -6,6 +6,8 @@ namespace WorkoutCoachV2.Model.Models
 {
     public class Workout : BaseEntity
     {
+        [Required]
+        [MaxLength(100)]
         public string Title { get; set; } = "";
 
         [Display(Name = "Scheduled")]

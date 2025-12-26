@@ -6,11 +6,14 @@ namespace WorkoutCoachV2.Model.Models
     public class Exercise : BaseEntity
     {
         [Required]
+        [MaxLength(100)]
         public string Name { get; set; } = "";
 
         [Required]
+        [MaxLength(50)]
         public string Category { get; set; } = "";
 
+        [MaxLength(500)]
         public string? Notes { get; set; }
 
         // Per-user data

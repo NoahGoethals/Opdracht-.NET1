@@ -7,11 +7,13 @@ namespace WorkoutCoachV2.Model.Models
     public class Session : BaseEntity
     {
         [Required]
+        [MaxLength(100)]
         public string Title { get; set; } = "";
 
         [Display(Name = "Date")]
         public DateTime Date { get; set; } = DateTime.Today;
 
+        [MaxLength(1000)]
         public string? Description { get; set; }
 
         // Per-user data

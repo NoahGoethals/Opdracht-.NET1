@@ -41,7 +41,7 @@ namespace WorkoutCoachV2.Model.Data
 
             b.Entity<WorkoutExercise>()
                 .HasOne(we => we.Exercise)
-                .WithMany()
+                .WithMany(e => e.InWorkouts)
                 .HasForeignKey(we => we.ExerciseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -53,7 +53,7 @@ namespace WorkoutCoachV2.Model.Data
 
             b.Entity<SessionSet>()
                 .HasOne(ss => ss.Exercise)
-                .WithMany()
+                .WithMany(e => e.SessionSets)
                 .HasForeignKey(ss => ss.ExerciseId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
