@@ -13,8 +13,10 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
 
+	<!-- LANGUAGE NAMES -->
+	<data name="Dutch" xml:space="preserve"><value>Nederlands</value></data>
+	<data name="English" xml:space="preserve"><value>Engels</value></data>
 	<data name="French" xml:space="preserve"><value>Frans</value></data>
-
 
 	<!-- NAV / HEADER -->
 	<data name="Home" xml:space="preserve"><value>Home</value></data>
@@ -28,8 +30,6 @@
 	<data name="Register" xml:space="preserve"><value>Registreren</value></data>
 	<data name="Logout" xml:space="preserve"><value>Uitloggen</value></data>
 	<data name="Language" xml:space="preserve"><value>Taal</value></data>
-	<data name="Dutch" xml:space="preserve"><value>Nederlands</value></data>
-	<data name="English" xml:space="preserve"><value>Engels</value></data>
 	<data name="LoggedInAs" xml:space="preserve"><value>Ingelogd als {0}</value></data>
 
 	<!-- COMMON (buttons/links/headings) -->
@@ -40,6 +40,15 @@
 	<data name="Common_Details" xml:space="preserve"><value>Details</value></data>
 	<data name="Common_BackToList" xml:space="preserve"><value>Terug naar lijst</value></data>
 	<data name="Common_Cancel" xml:space="preserve"><value>Annuleren</value></data>
+
+	<!-- SEARCH / FILTER -->
+	<data name="Common_Search" xml:space="preserve"><value>Zoeken</value></data>
+	<data name="Common_Sort" xml:space="preserve"><value>Sorteren</value></data>
+	<data name="Common_From" xml:space="preserve"><value>Van</value></data>
+	<data name="Common_To" xml:space="preserve"><value>Tot</value></data>
+	<data name="Common_Apply" xml:space="preserve"><value>Toepassen</value></data>
+	<data name="Common_Reset" xml:space="preserve"><value>Reset</value></data>
+	<data name="Common_All" xml:space="preserve"><value>Alles</value></data>
 
 	<!-- EXERCISES -->
 	<data name="Ex_Create_Title" xml:space="preserve"><value>Aanmaken</value></data>
@@ -183,22 +192,22 @@
 	<data name="St_Overall_Title" xml:space="preserve"><value>Overzicht (alle oefeningen)</value></data>
 	<data name="St_NoDataForFilter" xml:space="preserve"><value>Geen data gevonden voor deze filter.</value></data>
 	<data name="St_TopExercisesByVolume" xml:space="preserve"><value>Top oefeningen (op volume)</value></data>
-<!-- ADMIN -->
-<data name="Ad_Index_Title" xml:space="preserve"><value>Admin</value></data>
-<data name="Ad_Index_H1" xml:space="preserve"><value>Admin</value></data>
-<data name="Ad_Col_Email" xml:space="preserve"><value>E-mail</value></data>
-<data name="Ad_Col_DisplayName" xml:space="preserve"><value>Weergavenaam</value></data>
-<data name="Ad_Col_Roles" xml:space="preserve"><value>Rollen</value></data>
-<data name="Ad_Col_Status" xml:space="preserve"><value>Status</value></data>
-<data name="Ad_Status_Blocked" xml:space="preserve"><value>Geblokkeerd</value></data>
-<data name="Ad_Status_Active" xml:space="preserve"><value>Actief</value></data>
-<data name="Ad_Btn_Block" xml:space="preserve"><value>Blokkeren</value></data>
-<data name="Ad_Btn_Unblock" xml:space="preserve"><value>Deblokkeren</value></data>
-<data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Admin wisselen</value></data>
-<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
-<data name="Ad_Btn_ToggleModerator" xml:space="preserve"><value>Moderator wisselen</value></data>
+	<data name="St_AllExercises" xml:space="preserve"><value>Alle oefeningen</value></data>
 
-
+	<!-- ADMIN -->
+	<data name="Ad_Index_Title" xml:space="preserve"><value>Admin</value></data>
+	<data name="Ad_Index_H1" xml:space="preserve"><value>Admin</value></data>
+	<data name="Ad_Col_Email" xml:space="preserve"><value>E-mail</value></data>
+	<data name="Ad_Col_DisplayName" xml:space="preserve"><value>Weergavenaam</value></data>
+	<data name="Ad_Col_Roles" xml:space="preserve"><value>Rollen</value></data>
+	<data name="Ad_Col_Status" xml:space="preserve"><value>Status</value></data>
+	<data name="Ad_Status_Blocked" xml:space="preserve"><value>Geblokkeerd</value></data>
+	<data name="Ad_Status_Active" xml:space="preserve"><value>Actief</value></data>
+	<data name="Ad_Btn_Block" xml:space="preserve"><value>Blokkeren</value></data>
+	<data name="Ad_Btn_Unblock" xml:space="preserve"><value>Deblokkeren</value></data>
+	<data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Admin wisselen</value></data>
+	<data name="Ad_Btn_ToggleModerator" xml:space="preserve"><value>Moderator wisselen</value></data>
+	<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
 
 	<!-- HOME / PRIVACY -->
 	<data name="Ho_Title" xml:space="preserve"><value>Startpagina</value></data>
@@ -225,7 +234,6 @@
 	<data name="Lo_Btn_Register" xml:space="preserve"><value>Registreren</value></data>
 	<data name="Lo_BlockedMessage" xml:space="preserve"><value>Deze gebruiker is geblokkeerd. Je bent automatisch uitgelogd.</value></data>
 
-
 	<!-- REGISTER -->
 	<data name="Re_Title" xml:space="preserve"><value>Registreren</value></data>
 	<data name="Re_H1" xml:space="preserve"><value>Registreren</value></data>
@@ -236,14 +244,36 @@
 	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Account aanmaken</value></data>
 	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Terug naar inloggen</value></data>
 
+	<!-- NEW: COMMON ERRORS -->
+	<data name="Common_Error_SaveDb" xml:space="preserve"><value>Er ging iets mis bij het opslaan in de databank.</value></data>
+	<data name="Common_Error_Save" xml:space="preserve"><value>Er ging iets mis bij het opslaan.</value></data>
+	<data name="Common_Error_DeleteDb" xml:space="preserve"><value>Er ging iets mis bij het verwijderen in de databank.</value></data>
+	<data name="Common_Error_Delete" xml:space="preserve"><value>Er ging iets mis bij het verwijderen.</value></data>
+	<data name="Common_Error_LoadStats" xml:space="preserve"><value>Er ging iets mis bij het laden van de statistieken.</value></data>
+	<data name="Common_Error_LoadUsers" xml:space="preserve"><value>Er ging iets mis bij het laden van de gebruikerslijst.</value></data>
+	<data name="Common_UserNotFound" xml:space="preserve"><value>Gebruiker niet gevonden.</value></data>
 
-	<!-- ZOEKVELDEN -->
-	<data name="Common_Search" xml:space="preserve"><value>Zoeken</value></data>
-	<data name="Common_Sort" xml:space="preserve"><value>Sorteren</value></data>
-	<data name="Common_From" xml:space="preserve"><value>Van</value></data>
-	<data name="Common_To" xml:space="preserve"><value>Tot</value></data>
-	<data name="Common_Apply" xml:space="preserve"><value>Toepassen</value></data>
-	<data name="Common_Reset" xml:space="preserve"><value>Reset</value></data>
-	<data name="Common_All" xml:space="preserve"><value>Alles</value></data>
+	<!-- NEW: ACCOUNT ERRORS -->
+	<data name="Ac_Error_UserBlocked" xml:space="preserve"><value>Deze gebruiker is geblokkeerd.</value></data>
+	<data name="Ac_Error_InvalidLogin" xml:space="preserve"><value>Ongeldige login.</value></data>
 
+	<!-- NEW: ADMIN MESSAGES -->
+	<data name="Ad_Error_CannotBlockSelf" xml:space="preserve"><value>Je kan jezelf niet blokkeren.</value></data>
+	<data name="Ad_Error_CannotChangeOwnRole" xml:space="preserve"><value>Je kan je eigen rol niet via deze knop aanpassen.</value></data>
+	<data name="Ad_Error_BlockToggle" xml:space="preserve"><value>Er ging iets mis bij het blokkeren/deblokkeren.</value></data>
+	<data name="Ad_Error_RoleToggle" xml:space="preserve"><value>Er ging iets mis bij het aanpassen van de rol.</value></data>
+	<data name="Ad_Success_UserBlocked" xml:space="preserve"><value>Gebruiker '{0}' is geblokkeerd.</value></data>
+	<data name="Ad_Success_UserUnblocked" xml:space="preserve"><value>Gebruiker '{0}' is gedeblokkeerd.</value></data>
+	<data name="Ad_Success_RoleAdded" xml:space="preserve"><value>Rol '{0}' toegekend aan '{1}'.</value></data>
+	<data name="Ad_Success_RoleRemoved" xml:space="preserve"><value>Rol '{0}' verwijderd van '{1}'.</value></data>
+
+	<!-- NEW: IDENTITY ERRORS (ErrorDescriber) -->
+	<data name="Id_DuplicateEmail" xml:space="preserve"><value>E-mail '{0}' is al in gebruik.</value></data>
+	<data name="Id_DuplicateUserName" xml:space="preserve"><value>Gebruikersnaam '{0}' is al in gebruik.</value></data>
+	<data name="Id_PasswordTooShort" xml:space="preserve"><value>Het wachtwoord moet minstens {0} tekens bevatten.</value></data>
+	<data name="Id_PasswordRequiresDigit" xml:space="preserve"><value>Het wachtwoord moet minstens één cijfer bevatten.</value></data>
+	<data name="Id_PasswordRequiresLower" xml:space="preserve"><value>Het wachtwoord moet minstens één kleine letter bevatten.</value></data>
+	<data name="Id_PasswordRequiresUpper" xml:space="preserve"><value>Het wachtwoord moet minstens één hoofdletter bevatten.</value></data>
+	<data name="Id_PasswordRequiresNonAlphanumeric" xml:space="preserve"><value>Het wachtwoord moet minstens één speciaal teken bevatten.</value></data>
+	<data name="Id_InvalidEmail" xml:space="preserve"><value>E-mail '{0}' is ongeldig.</value></data>
 </root>

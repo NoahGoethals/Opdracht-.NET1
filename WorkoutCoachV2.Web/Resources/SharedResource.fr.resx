@@ -13,6 +13,11 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
 
+	<!-- LANGUAGE NAMES -->
+	<data name="Dutch" xml:space="preserve"><value>Néerlandais</value></data>
+	<data name="English" xml:space="preserve"><value>Anglais</value></data>
+	<data name="French" xml:space="preserve"><value>Français</value></data>
+
 	<!-- NAV / HEADER -->
 	<data name="Home" xml:space="preserve"><value>Accueil</value></data>
 	<data name="Exercises" xml:space="preserve"><value>Exercices</value></data>
@@ -25,9 +30,6 @@
 	<data name="Register" xml:space="preserve"><value>Inscription</value></data>
 	<data name="Logout" xml:space="preserve"><value>Déconnexion</value></data>
 	<data name="Language" xml:space="preserve"><value>Langue</value></data>
-	<data name="Dutch" xml:space="preserve"><value>Néerlandais</value></data>
-	<data name="English" xml:space="preserve"><value>Anglais</value></data>
-	<data name="French" xml:space="preserve"><value>Français</value></data>
 	<data name="LoggedInAs" xml:space="preserve"><value>Connecté en tant que {0}</value></data>
 
 	<!-- COMMON (buttons/links/headings) -->
@@ -38,6 +40,15 @@
 	<data name="Common_Details" xml:space="preserve"><value>Détails</value></data>
 	<data name="Common_BackToList" xml:space="preserve"><value>Retour à la liste</value></data>
 	<data name="Common_Cancel" xml:space="preserve"><value>Annuler</value></data>
+
+	<!-- SEARCH / FILTER -->
+	<data name="Common_Search" xml:space="preserve"><value>Rechercher</value></data>
+	<data name="Common_Sort" xml:space="preserve"><value>Trier</value></data>
+	<data name="Common_From" xml:space="preserve"><value>Du</value></data>
+	<data name="Common_To" xml:space="preserve"><value>Au</value></data>
+	<data name="Common_Apply" xml:space="preserve"><value>Appliquer</value></data>
+	<data name="Common_Reset" xml:space="preserve"><value>Réinitialiser</value></data>
+	<data name="Common_All" xml:space="preserve"><value>Tous</value></data>
 
 	<!-- EXERCISES -->
 	<data name="Ex_Create_Title" xml:space="preserve"><value>Créer</value></data>
@@ -181,6 +192,8 @@
 	<data name="St_Overall_Title" xml:space="preserve"><value>Statistiques globales (tous les exercices)</value></data>
 	<data name="St_NoDataForFilter" xml:space="preserve"><value>Aucune donnée trouvée pour ce filtre.</value></data>
 	<data name="St_TopExercisesByVolume" xml:space="preserve"><value>Top exercices (par volume)</value></data>
+	<data name="St_AllExercises" xml:space="preserve"><value>Tous les exercices</value></data>
+
 
 	<!-- ADMIN -->
 	<data name="Ad_Index_Title" xml:space="preserve"><value>Admin</value></data>
@@ -194,17 +207,15 @@
 	<data name="Ad_Btn_Block" xml:space="preserve"><value>Bloquer</value></data>
 	<data name="Ad_Btn_Unblock" xml:space="preserve"><value>Débloquer</value></data>
 	<data name="Ad_Btn_ToggleAdmin" xml:space="preserve"><value>Basculer admin</value></data>
-	<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
 	<data name="Ad_Btn_ToggleModerator" xml:space="preserve"><value>Basculer modérateur</value></data>
+	<data name="Ad_Roles_None" xml:space="preserve"><value>-</value></data>
 
-
-	<!-- HOME -->
+	<!-- HOME / PRIVACY -->
 	<data name="Ho_Title" xml:space="preserve"><value>Accueil</value></data>
 	<data name="Ho_Welcome" xml:space="preserve"><value>Bienvenue</value></data>
-	<data name="Ho_LearnAboutPrefix" xml:space="preserve"><value>En savoir plus sur </value></data>
+	<data name="Ho_LearnAboutPrefix" xml:space="preserve"><value>En savoir plus sur</value></data>
 	<data name="Ho_LearnAboutLinkText" xml:space="preserve"><value>la création d’applications Web avec ASP.NET Core</value></data>
 
-	<!-- PRIVACY -->
 	<data name="Pr_Title" xml:space="preserve"><value>Politique de confidentialité</value></data>
 	<data name="Pr_Text" xml:space="preserve"><value>Utilisez cette page pour décrire la politique de confidentialité de votre site.</value></data>
 
@@ -214,37 +225,56 @@
 	<data name="Ac_Text" xml:space="preserve"><value>Vous n’avez pas les droits pour consulter cette page.</value></data>
 	<data name="Ac_Btn_Home" xml:space="preserve"><value>Accueil</value></data>
 
-	<!-- LOGIN / REGISTER -->
+	<!-- LOGIN -->
 	<data name="Lo_Title" xml:space="preserve"><value>Connexion</value></data>
 	<data name="Lo_H1" xml:space="preserve"><value>Connexion</value></data>
-	<data name="Lo_Btn_Login" xml:space="preserve"><value>Connexion</value></data>
-	<data name="Lo_Btn_Register" xml:space="preserve"><value>Inscription</value></data>
-
-	<data name="Re_Title" xml:space="preserve"><value>Inscription</value></data>
-	<data name="Re_H1" xml:space="preserve"><value>Inscription</value></data>
-	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Créer un compte</value></data>
-	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Retour à la connexion</value></data>
-	<data name="Lo_BlockedMessage" xml:space="preserve"><value>Cet utilisateur est bloqué. Vous avez été déconnecté automatiquement.</value></data>
-
-
-	<!-- Kleine details bij login en registratie die ik had vergeten -->
 	<data name="Lo_Field_Email" xml:space="preserve"><value>E-mail</value></data>
 	<data name="Lo_Field_Password" xml:space="preserve"><value>Mot de passe</value></data>
 	<data name="Lo_Field_RememberMe" xml:space="preserve"><value>Se souvenir de moi</value></data>
+	<data name="Lo_Btn_Login" xml:space="preserve"><value>Connexion</value></data>
+	<data name="Lo_Btn_Register" xml:space="preserve"><value>Inscription</value></data>
+	<data name="Lo_BlockedMessage" xml:space="preserve"><value>Cet utilisateur est bloqué. Vous avez été déconnecté automatiquement.</value></data>
 
+	<!-- REGISTER -->
+	<data name="Re_Title" xml:space="preserve"><value>Inscription</value></data>
+	<data name="Re_H1" xml:space="preserve"><value>Inscription</value></data>
 	<data name="Re_Field_DisplayName" xml:space="preserve"><value>Nom affiché</value></data>
 	<data name="Re_Field_Email" xml:space="preserve"><value>E-mail</value></data>
 	<data name="Re_Field_Password" xml:space="preserve"><value>Mot de passe</value></data>
 	<data name="Re_Field_ConfirmPassword" xml:space="preserve"><value>Confirmer le mot de passe</value></data>
+	<data name="Re_Btn_CreateAccount" xml:space="preserve"><value>Créer un compte</value></data>
+	<data name="Re_Btn_BackToLogin" xml:space="preserve"><value>Retour à la connexion</value></data>
 
-	<!-- ZOEKVELDEN -->
+	<!-- NEW: COMMON ERRORS -->
+	<data name="Common_Error_SaveDb" xml:space="preserve"><value>Une erreur s’est produite lors de l’enregistrement dans la base de données.</value></data>
+	<data name="Common_Error_Save" xml:space="preserve"><value>Une erreur s’est produite lors de l’enregistrement.</value></data>
+	<data name="Common_Error_DeleteDb" xml:space="preserve"><value>Une erreur s’est produite lors de la suppression dans la base de données.</value></data>
+	<data name="Common_Error_Delete" xml:space="preserve"><value>Une erreur s’est produite lors de la suppression.</value></data>
+	<data name="Common_Error_LoadStats" xml:space="preserve"><value>Une erreur s’est produite lors du chargement des statistiques.</value></data>
+	<data name="Common_Error_LoadUsers" xml:space="preserve"><value>Une erreur s’est produite lors du chargement de la liste des utilisateurs.</value></data>
+	<data name="Common_UserNotFound" xml:space="preserve"><value>Utilisateur introuvable.</value></data>
 
-	<data name="Common_Search" xml:space="preserve"><value>Rechercher</value></data>
-	<data name="Common_Sort" xml:space="preserve"><value>Trier</value></data>
-	<data name="Common_From" xml:space="preserve"><value>Du</value></data>
-	<data name="Common_To" xml:space="preserve"><value>Au</value></data>
-	<data name="Common_Apply" xml:space="preserve"><value>Appliquer</value></data>
-	<data name="Common_Reset" xml:space="preserve"><value>Réinitialiser</value></data>
-	<data name="Common_All" xml:space="preserve"><value>Tous</value></data>
+	<!-- NEW: ACCOUNT ERRORS -->
+	<data name="Ac_Error_UserBlocked" xml:space="preserve"><value>Cet utilisateur est bloqué.</value></data>
+	<data name="Ac_Error_InvalidLogin" xml:space="preserve"><value>Connexion invalide.</value></data>
 
+	<!-- NEW: ADMIN MESSAGES -->
+	<data name="Ad_Error_CannotBlockSelf" xml:space="preserve"><value>Vous ne pouvez pas vous bloquer vous-même.</value></data>
+	<data name="Ad_Error_CannotChangeOwnRole" xml:space="preserve"><value>Vous ne pouvez pas modifier votre propre rôle avec ce bouton.</value></data>
+	<data name="Ad_Error_BlockToggle" xml:space="preserve"><value>Une erreur s’est produite lors du blocage/déblocage.</value></data>
+	<data name="Ad_Error_RoleToggle" xml:space="preserve"><value>Une erreur s’est produite lors de la mise à jour du rôle.</value></data>
+	<data name="Ad_Success_UserBlocked" xml:space="preserve"><value>L’utilisateur '{0}' a été bloqué.</value></data>
+	<data name="Ad_Success_UserUnblocked" xml:space="preserve"><value>L’utilisateur '{0}' a été débloqué.</value></data>
+	<data name="Ad_Success_RoleAdded" xml:space="preserve"><value>Le rôle '{0}' a été attribué à '{1}'.</value></data>
+	<data name="Ad_Success_RoleRemoved" xml:space="preserve"><value>Le rôle '{0}' a été retiré de '{1}'.</value></data>
+
+	<!-- NEW: IDENTITY ERRORS (ErrorDescriber) -->
+	<data name="Id_DuplicateEmail" xml:space="preserve"><value>L’e-mail '{0}' est déjà utilisée.</value></data>
+	<data name="Id_DuplicateUserName" xml:space="preserve"><value>Le nom d’utilisateur '{0}' est déjà utilisé.</value></data>
+	<data name="Id_PasswordTooShort" xml:space="preserve"><value>Le mot de passe doit contenir au moins {0} caractères.</value></data>
+	<data name="Id_PasswordRequiresDigit" xml:space="preserve"><value>Le mot de passe doit contenir au moins un chiffre.</value></data>
+	<data name="Id_PasswordRequiresLower" xml:space="preserve"><value>Le mot de passe doit contenir au moins une lettre minuscule.</value></data>
+	<data name="Id_PasswordRequiresUpper" xml:space="preserve"><value>Le mot de passe doit contenir au moins une lettre majuscule.</value></data>
+	<data name="Id_PasswordRequiresNonAlphanumeric" xml:space="preserve"><value>Le mot de passe doit contenir au moins un caractère spécial.</value></data>
+	<data name="Id_InvalidEmail" xml:space="preserve"><value>L’e-mail '{0}' est invalide.</value></data>
 </root>
