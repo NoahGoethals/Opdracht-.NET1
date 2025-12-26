@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.Web.Middleware
@@ -21,7 +23,7 @@ namespace WorkoutCoachV2.Web.Middleware
         {
             if (context.User?.Identity?.IsAuthenticated == true)
             {
-                var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
+                var path = (context.Request.Path.Value ?? string.Empty).ToLowerInvariant();
 
                 if (!path.StartsWith("/account") && !path.StartsWith("/language"))
                 {
@@ -33,7 +35,21 @@ namespace WorkoutCoachV2.Web.Middleware
 
                         if (user == null || user.IsBlocked)
                         {
-                            logger.LogInformation("BlockedUserMiddleware: user {UserId} is blocked or missing => signing out.", userId);
+                            logger.LogInformation(
+                                "BlockedUserMiddleware: user {UserId} is blocked or missing. Path={Path}",
+                                userId,
+                                context.Request.Path.Value);
+
+                            if (path.StartsWith("/api"))
+                            {
+                                await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+
+                                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                                context.Response.ContentType = "application/json";
+
+                                await context.Response.WriteAsync("{\"error\":\"blocked\"}");
+                                return;
+                            }
 
                             await context.SignOutAsync(IdentityConstants.ApplicationScheme);
 

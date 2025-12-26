@@ -14,10 +14,15 @@ namespace WorkoutCoachV2.Model.Data.Seed
 {
     public static class DbSeeder
     {
+        // Hou rol-namen consistent overal in je project
+        private const string RoleAdmin = "Admin";
+        private const string RoleModerator = "Moderator";
+        private const string RoleUser = "User";
+
         public static async Task SeedAsync(IServiceProvider services)
         {
-            // Scope uit DI halen (DbContext + Identity managers)
             using var scope = services.CreateScope();
+
             var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -29,42 +34,65 @@ namespace WorkoutCoachV2.Model.Data.Seed
             async Task EnsureRoleAsync(string roleName)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))
+                {
                     await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
             }
-            await EnsureRoleAsync("Admin");
-            await EnsureRoleAsync("Member");
 
-            // Standaard users (admin/member) + rollen koppelen
+            await EnsureRoleAsync(RoleAdmin);
+            await EnsureRoleAsync(RoleModerator);
+            await EnsureRoleAsync(RoleUser);
+
+            // Helpers
+            async Task<ApplicationUser> EnsureUserAsync(string email, string displayName, string password)
+            {
+                var user = await userManager.FindByNameAsync(email);
+                if (user == null)
+                {
+                    user = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        DisplayName = displayName
+                    };
+
+                    var createResult = await userManager.CreateAsync(user, password);
+                    if (!createResult.Succeeded)
+                    {
+                        var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                        throw new InvalidOperationException($"DbSeeder: could not create user '{email}': {msg}");
+                    }
+                }
+
+                return user;
+            }
+
+            async Task EnsureUserInRoleAsync(ApplicationUser user, string role)
+            {
+                if (!await userManager.IsInRoleAsync(user, role))
+                {
+                    var addResult = await userManager.AddToRoleAsync(user, role);
+                    if (!addResult.Succeeded)
+                    {
+                        var msg = string.Join("; ", addResult.Errors.Select(e => e.Description));
+                        throw new InvalidOperationException($"DbSeeder: could not add user '{user.UserName}' to role '{role}': {msg}");
+                    }
+                }
+            }
+
+            // Standaard users + rollen koppelen
             var adminEmail = "admin@local";
-            var memberEmail = "member@local";
+            var moderatorEmail = "moderator@local";
+            var userEmail = "user@local";
 
-            var admin = await userManager.FindByNameAsync(adminEmail);
-            if (admin == null)
-            {
-                admin = new ApplicationUser
-                {
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    DisplayName = "Administrator"
-                };
-                await userManager.CreateAsync(admin, "Admin!123");
-            }
-            if (!await userManager.IsInRoleAsync(admin, "Admin"))
-                await userManager.AddToRoleAsync(admin, "Admin");
+            var admin = await EnsureUserAsync(adminEmail, "Administrator", "Admin!123");
+            await EnsureUserInRoleAsync(admin, RoleAdmin);
 
-            var member = await userManager.FindByNameAsync(memberEmail);
-            if (member == null)
-            {
-                member = new ApplicationUser
-                {
-                    UserName = memberEmail,
-                    Email = memberEmail,
-                    DisplayName = "Member"
-                };
-                await userManager.CreateAsync(member, "Member!123");
-            }
-            if (!await userManager.IsInRoleAsync(member, "Member"))
-                await userManager.AddToRoleAsync(member, "Member");
+            var moderator = await EnsureUserAsync(moderatorEmail, "Moderator", "Moderator!123");
+            await EnsureUserInRoleAsync(moderator, RoleModerator);
+
+            var user = await EnsureUserAsync(userEmail, "User", "User!123");
+            await EnsureUserInRoleAsync(user, RoleUser);
 
             // Sets naar DbSets (kortere namen)
             var exercises = ctx.Set<Exercise>();
@@ -122,16 +150,21 @@ namespace WorkoutCoachV2.Model.Data.Seed
 
             if (untitled.Count > 0)
             {
-                var orphanSets = await sessionSets.Where(ss => untitled.Contains(ss.SessionId)).ToListAsync();
+                var orphanSets = await sessionSets
+                    .Where(ss => untitled.Contains(ss.SessionId))
+                    .ToListAsync();
+
                 if (orphanSets.Count > 0)
                     sessionSets.RemoveRange(orphanSets);
 
-                var toRemove = await sessions.Where(s => untitled.Contains(s.Id)).ToListAsync();
+                var toRemove = await sessions
+                    .Where(s => untitled.Contains(s.Id))
+                    .ToListAsync();
+
                 sessions.RemoveRange(toRemove);
 
                 await ctx.SaveChangesAsync();
             }
-
         }
     }
 }
