@@ -12,41 +12,41 @@ using WorkoutCoachV2.Model.Models;
 
 namespace WorkoutCoachV2.Web.Controllers
 {
-    [Authorize]
+    // UI controller voor oefeningen: lijst met filters/sort + CRUD met soft delete.
+    [Authorize] // Alleen ingelogde gebruikers.
     public class ExercisesController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<ExercisesController> _logger;
+        private readonly AppDbContext _context; // Databank via EF Core.
+        private readonly ILogger<ExercisesController> _logger; // Logging voor create/edit/delete.
 
         public ExercisesController(AppDbContext context, ILogger<ExercisesController> logger)
         {
-            _context = context;
-            _logger = logger;
+            _context = context; // DI DbContext.
+            _logger = logger; // DI logger.
         }
 
-        private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!; // OwnerId uit cookie/claims.
 
-        
         public async Task<IActionResult> Index(string? search, string? category, string? sort)
         {
-            var userId = CurrentUserId;
+            var userId = CurrentUserId; // Alles is per gebruiker.
 
             var query = _context.Exercises
                 .Where(e => e.OwnerId == userId && !e.IsDeleted)
-                .AsQueryable();
+                .AsQueryable(); // Basis: enkel eigen oefeningen, niet verwijderd.
 
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var pattern = $"%{search.Trim()}%";
-                query = query.Where(e => EF.Functions.Like(e.Name, pattern));
+                query = query.Where(e => EF.Functions.Like(e.Name, pattern)); // Zoeken op naam (SQL LIKE).
             }
 
             if (!string.IsNullOrWhiteSpace(category))
             {
-                query = query.Where(e => e.Category == category);
+                query = query.Where(e => e.Category == category); // Filter op categorie.
             }
 
-            sort = string.IsNullOrWhiteSpace(sort) ? "name_asc" : sort;
+            sort = string.IsNullOrWhiteSpace(sort) ? "name_asc" : sort; // Default sort.
 
             query = sort switch
             {
@@ -54,72 +54,72 @@ namespace WorkoutCoachV2.Web.Controllers
                 "cat_asc" => query.OrderBy(e => e.Category).ThenBy(e => e.Name),
                 "cat_desc" => query.OrderByDescending(e => e.Category).ThenBy(e => e.Name),
                 _ => query.OrderBy(e => e.Name),
-            };
+            }; // Sorteert lijst.
 
             var categories = await _context.Exercises
                 .Where(e => e.OwnerId == userId && !e.IsDeleted && e.Category != null && e.Category != "")
                 .Select(e => e.Category!)
                 .Distinct()
                 .OrderBy(c => c)
-                .ToListAsync();
+                .ToListAsync(); // Bouwt dropdown met beschikbare categorieën.
 
-            ViewData["Search"] = search ?? "";
+            ViewData["Search"] = search ?? ""; // Houdt filterwaarden vast in UI.
             ViewData["Category"] = category ?? "";
             ViewData["Sort"] = sort;
-            ViewBag.CategoryOptions = categories;
+            ViewBag.CategoryOptions = categories; // Dropdown opties.
 
-            var exercises = await query.ToListAsync();
-            return View(exercises);
+            var exercises = await query.ToListAsync(); // Haalt lijst op.
+            return View(exercises); // Toont index view.
         }
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null) return NotFound(); // Geen id => 404.
 
-            var userId = CurrentUserId;
+            var userId = CurrentUserId; // Ownership check.
 
             var exercise = await _context.Exercises
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted);
+                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted); // Enkel eigen item.
 
-            if (exercise == null) return NotFound();
+            if (exercise == null) return NotFound(); // Niet gevonden/geen rechten.
 
-            return View(exercise);
+            return View(exercise); // Toont details.
         }
 
         public IActionResult Create()
         {
-            return View();
+            return View(); // Toont create formulier.
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Category,Notes")] Exercise exercise)
         {
-            if (!ModelState.IsValid) return View(exercise);
+            if (!ModelState.IsValid) return View(exercise); // Validatie via data annotations.
 
-            exercise.OwnerId = CurrentUserId;
-            exercise.CreatedAt = DateTime.UtcNow;
+            exercise.OwnerId = CurrentUserId; // Koppelt oefening aan ingelogde user.
+            exercise.CreatedAt = DateTime.UtcNow; // Timestamps.
             exercise.UpdatedAt = DateTime.UtcNow;
-            exercise.IsDeleted = false;
+            exercise.IsDeleted = false; // Soft delete flag.
 
-            _context.Exercises.Add(exercise);
+            _context.Exercises.Add(exercise); // Insert.
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Opslaan.
                 _logger.LogInformation("Exercise aangemaakt. ExerciseId={ExerciseId} OwnerId={OwnerId}", exercise.Id, exercise.OwnerId);
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "DbUpdateException bij Exercise Create. OwnerId={OwnerId}", exercise.OwnerId);
+                _logger.LogError(ex, "DbUpdateException bij Exercise Create. OwnerId={OwnerId}", exercise.OwnerId); // DB fout loggen.
                 ModelState.AddModelError("", "Er ging iets mis bij het opslaan in de databank.");
                 return View(exercise);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Onverwachte fout bij Exercise Create. OwnerId={OwnerId}", exercise.OwnerId);
+                _logger.LogError(ex, "Onverwachte fout bij Exercise Create. OwnerId={OwnerId}", exercise.OwnerId); // Algemene fout loggen.
                 ModelState.AddModelError("", "Er ging iets mis bij het opslaan.");
                 return View(exercise);
             }
@@ -127,40 +127,40 @@ namespace WorkoutCoachV2.Web.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null) return NotFound(); // Geen id => 404.
 
             var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
-                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId && !e.IsDeleted);
+                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId && !e.IsDeleted); // Enkel eigen item.
 
             if (exercise == null) return NotFound();
 
-            return View(exercise);
+            return View(exercise); // Toont edit formulier.
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Category,Notes")] Exercise formExercise)
         {
-            if (id != formExercise.Id) return NotFound();
-            if (!ModelState.IsValid) return View(formExercise);
+            if (id != formExercise.Id) return NotFound(); // Anti-tamper check.
+            if (!ModelState.IsValid) return View(formExercise); // Validatie.
 
             var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
-                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId && !e.IsDeleted);
+                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId && !e.IsDeleted); // Echte entity ophalen.
 
             if (exercise == null) return NotFound();
 
-            exercise.Name = formExercise.Name;
+            exercise.Name = formExercise.Name; // Velden updaten.
             exercise.Category = formExercise.Category;
             exercise.Notes = formExercise.Notes;
             exercise.UpdatedAt = DateTime.UtcNow;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Opslaan.
                 _logger.LogInformation("Exercise aangepast. ExerciseId={ExerciseId} OwnerId={OwnerId}", exercise.Id, exercise.OwnerId);
                 return RedirectToAction(nameof(Index));
             }
@@ -180,17 +180,17 @@ namespace WorkoutCoachV2.Web.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null) return NotFound(); // Geen id => 404.
 
             var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted);
+                .FirstOrDefaultAsync(m => m.Id == id && m.OwnerId == userId && !m.IsDeleted); // Enkel eigen item.
 
             if (exercise == null) return NotFound();
 
-            return View(exercise);
+            return View(exercise); // Toont delete confirm page.
         }
 
         [HttpPost, ActionName("Delete")]
@@ -200,7 +200,7 @@ namespace WorkoutCoachV2.Web.Controllers
             var userId = CurrentUserId;
 
             var exercise = await _context.Exercises
-                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId && !e.IsDeleted);
+                .FirstOrDefaultAsync(e => e.Id == id && e.OwnerId == userId && !e.IsDeleted); // Enkel eigen item.
 
             if (exercise == null) return NotFound();
 
@@ -208,22 +208,22 @@ namespace WorkoutCoachV2.Web.Controllers
             {
                 var workoutLinks = await _context.WorkoutExercises
                     .Where(we => we.ExerciseId == id)
-                    .ToListAsync();
+                    .ToListAsync(); // Koppelingen met workouts opruimen.
 
                 if (workoutLinks.Count > 0)
                     _context.WorkoutExercises.RemoveRange(workoutLinks);
 
                 var sessionSets = await _context.SessionSets
                     .Where(ss => ss.ExerciseId == id)
-                    .ToListAsync();
+                    .ToListAsync(); // Sets in sessies opruimen.
 
                 if (sessionSets.Count > 0)
                     _context.SessionSets.RemoveRange(sessionSets);
 
-                exercise.IsDeleted = true;
+                exercise.IsDeleted = true; // Soft delete i.p.v. echt verwijderen.
                 exercise.UpdatedAt = DateTime.UtcNow;
 
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Alles in 1 save.
 
                 _logger.LogInformation(
                     "Exercise verwijderd (soft). ExerciseId={ExerciseId} OwnerId={OwnerId} RemovedWorkoutLinks={WorkoutLinks} RemovedSessionSets={SessionSets}",

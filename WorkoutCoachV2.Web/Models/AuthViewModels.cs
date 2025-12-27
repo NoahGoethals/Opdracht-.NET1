@@ -2,6 +2,7 @@
 
 namespace WorkoutCoachV2.Web.Models
 {
+    // ViewModel voor login-form: valideert email + wachtwoord en bevat optional ReturnUrl.
     public class LoginViewModel
     {
         [Required]
@@ -20,6 +21,7 @@ namespace WorkoutCoachV2.Web.Models
         public string? ReturnUrl { get; set; }
     }
 
+    // ViewModel voor registratie-form: vraagt display name + email + wachtwoord + bevestiging met compare-validatie.
     public class RegisterViewModel
     {
         [Required]

@@ -2,6 +2,7 @@
 
 namespace WorkoutCoachV2.Web.Models
 {
+    // 1 rij in het “workout oefeningen aanpassen” scherm: checkbox + reps/gewicht per oefening.
     public class WorkoutExerciseRowViewModel
     {
         public int ExerciseId { get; set; }
@@ -14,6 +15,7 @@ namespace WorkoutCoachV2.Web.Models
         public int Order { get; set; }
     }
 
+    // ViewModel voor het aanpassen van oefeningen in een workout: titel + lijst met alle oefeningen als rows.
     public class WorkoutExercisesEditViewModel
     {
         public int WorkoutId { get; set; }

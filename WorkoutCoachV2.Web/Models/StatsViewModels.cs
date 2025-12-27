@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace WorkoutCoachV2.Web.Models
 {
+    // ViewModel voor de stats pagina: filter (oefening + periode) + dropdown opties + resultaatblok.
     public class StatsIndexViewModel
     {
         public int? ExerciseId { get; set; }
@@ -15,6 +16,7 @@ namespace WorkoutCoachV2.Web.Models
         public StatsResultsViewModel? Results { get; set; }
     }
 
+    // Resultaten van de stats berekening: totals + (per sessie) of (top oefeningen) afhankelijk van gekozen filter.
     public class StatsResultsViewModel
     {
         public int? ExerciseId { get; set; }
@@ -36,6 +38,7 @@ namespace WorkoutCoachV2.Web.Models
         public List<StatsTopExerciseRowViewModel> TopExercises { get; set; } = new();
     }
 
+    // 1 rij in “per sessie”: toont wat er in een sessie is gebeurd (reps, volume, max weight).
     public class StatsSessionRowViewModel
     {
         public DateTime Date { get; set; }
@@ -47,6 +50,7 @@ namespace WorkoutCoachV2.Web.Models
         public double MaxWeight { get; set; }
     }
 
+    // 1 rij in “top oefeningen”: rangschikt oefeningen op basis van volume/reps/sets/max weight.
     public class StatsTopExerciseRowViewModel
     {
         public int ExerciseId { get; set; }
