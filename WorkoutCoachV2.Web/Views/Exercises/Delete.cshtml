@@ -2,7 +2,6 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    // Delete view: bevestigingspagina om een oefening te verwijderen (soft delete via controller), met vertalingen via SharedResource.
     ViewData["Title"] = L["Ex_Delete_Title"];
 }
 
@@ -12,7 +11,6 @@
 
 <div>
     <dl class="row">
-        // Overzicht van de oefening zodat duidelijk is wat er verwijderd wordt.
         <dt class="col-sm-2">@L["Ex_Field_Name"]</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
 
@@ -27,9 +25,9 @@
     </dl>
 
     <form asp-action="Delete">
-        // POST naar ExercisesController.DeleteConfirmed (via ActionName "Delete") om de oefening effectief te verwijderen.
         <input type="hidden" asp-for="Id" />
         <input type="submit" value="@L["Common_Delete"]" class="btn btn-danger" />
         <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_BackToList"]</a>
     </form>
 </div>
+

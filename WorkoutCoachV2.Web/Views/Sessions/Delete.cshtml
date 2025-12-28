@@ -2,19 +2,15 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    // Zet de paginatitel via vertalingen.
     ViewData["Title"] = L["Se_Delete_Title"];
 }
 
 <h1>@L["Se_Delete_H1"]</h1>
 
-<!-- Bevestigingstekst dat je echt wil verwijderen. -->
 <h3>@L["Se_Delete_Confirm"]</h3>
 <div>
-    <!-- Extra kopje (vertaald). -->
     <h4>@L["Sessions"]</h4>
     <hr />
-    <!-- Toon de belangrijkste velden van de sessie. -->
     <dl class="row">
         <dt class="col-sm-2">@L["Se_Field_Title"]</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.Title)</dd>
@@ -26,10 +22,11 @@
         <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
     </dl>
 
-    <!-- Formulier dat de delete POST uitvoert (met Id hidden). -->
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
         <input type="submit" value="@L["Common_Delete"]" class="btn btn-danger" />
         <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_BackToList"]</a>
     </form>
 </div>
+
+

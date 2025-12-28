@@ -3,7 +3,6 @@
 @model WorkoutCoachV2.Web.Models.LoginViewModel
 
 @{
-    // Login pagina: gebruikt LoginViewModel en vertaalt alle labels/knoppen via SharedResource keys.
     ViewData["Title"] = L["Lo_Title"];
 }
 
@@ -11,38 +10,32 @@
 
 @if (Context.Request.Query.ContainsKey("blocked"))
 {
-    // Extra melding wanneer de middleware iemand doorstuurt naar login met ?blocked=1.
     <div class="alert alert-danger">
         @L["Lo_BlockedMessage"]
     </div>
 }
 
 <form asp-action="Login" method="post" class="mt-3">
-    // CSRF bescherming + ReturnUrl om na login terug te keren naar de oorspronkelijke pagina.
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ReturnUrl" />
 
     <div class="mb-3">
-        // Email veld met validatie-uitvoer.
         <label asp-for="Email" class="form-label">@L["Lo_Field_Email"]</label>
         <input asp-for="Email" class="form-control" />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        // Password veld met validatie-uitvoer.
         <label asp-for="Password" class="form-label">@L["Lo_Field_Password"]</label>
         <input asp-for="Password" class="form-control" />
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
     <div class="form-check mb-3">
-        // RememberMe bepaalt of de auth-cookie langer geldig blijft.
         <input asp-for="RememberMe" class="form-check-input" />
         <label asp-for="RememberMe" class="form-check-label">@L["Lo_Field_RememberMe"]</label>
     </div>
 
-    // Toont model-errors (bv. ongeldige login) boven de knoppen.
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     <button type="submit" class="btn btn-primary">@L["Lo_Btn_Login"]</button>
@@ -50,6 +43,6 @@
 </form>
 
 @section Scripts {
-        // Activeert client-side validatie (jQuery validation) voor de data-annotations.
     <partial name="_ValidationScriptsPartial" />
 }
+

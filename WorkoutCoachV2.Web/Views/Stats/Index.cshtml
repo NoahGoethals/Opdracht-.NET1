@@ -1,48 +1,43 @@
-﻿@model WorkoutCoachV2.Web.Models.StatsIndexViewModel   // ViewModel met filters + resultaten + dropdown list
+﻿@model WorkoutCoachV2.Web.Models.StatsIndexViewModel
 
 @using Microsoft.Extensions.Localization
 @using WorkoutCoachV2.Web
-@inject IStringLocalizer<SharedResource> L            
+@inject IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = L["St_Index_Title"];          // Paginatitel voor layout
+    ViewData["Title"] = L["St_Index_Title"];
 }
 
 <h1>@L["St_Index_H1"]</h1>
 
-<!-- Form: filters (oefening + van/tot) -->
 <form id="statsForm" class="row g-3 mb-3" method="get" asp-controller="Stats" asp-action="Index">
     <div class="col-md-4">
         <label class="form-label">@L["St_Filter_Exercise"]</label>
-        <!-- Dropdown met oefeningen (komt uit controller: Model.Exercises) -->
         <select class="form-select" asp-for="ExerciseId" asp-items="Model.Exercises"></select>
     </div>
 
     <div class="col-md-3">
         <label class="form-label">@L["St_Filter_From"]</label>
-        <input class="form-control" asp-for="From" type="date" />  <!-- Date filter vanaf -->
+        <input class="form-control" asp-for="From" type="date" />
     </div>
 
     <div class="col-md-3">
         <label class="form-label">@L["St_Filter_To"]</label>
-        <input class="form-control" asp-for="To" type="date" />    <!-- Date filter tot -->
+        <input class="form-control" asp-for="To" type="date" />
     </div>
 
     <div class="col-md-2 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100">@L["St_Filter_Apply"]</button> <!-- Apply -->
+        <button type="submit" class="btn btn-primary w-100">@L["St_Filter_Apply"]</button>
     </div>
 </form>
 
-<!-- Hier komen de resultaten -->
 <div id="statsResults">
     @if (Model.Results != null)
     {
-        <!-- Render partial view met results -->
         @await Html.PartialAsync("_StatsResults", Model.Results)
     }
     else
     {
-        <!-- Als er nog geen results zijn -->
         <div class="alert alert-secondary">
             @L["St_NoStats"]
         </div>
@@ -51,33 +46,26 @@
 
 @section Scripts {
     <script>
-        // Intercept de form submit (dus geen volledige page refresh)
         document.getElementById("statsForm").addEventListener("submit", async function (e) {
             e.preventDefault();
 
             const form = e.target;
-            const data = new FormData(form); // haalt alle fields uit het form
+            const data = new FormData(form);
 
-            // Zet enkel niet-lege values in de querystring
             const params = new URLSearchParams();
             for (const [k, v] of data.entries()) {
                 if (v !== null && v !== "") params.append(k, v);
             }
 
-            // URL naar Stats/Results action (die returnt partial html)
             const resultsUrl = '@Url.Action("Results", "Stats")';
             const url = resultsUrl + (params.toString() ? ("?" + params.toString()) : "");
 
             try {
-                // Fetch de partial HTML (AJAX)
                 const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 const html = await res.text();
-
-                // Injecteer de nieuwe HTML in de pagina
                 document.getElementById("statsResults").innerHTML = html;
             } catch (err) {
-                // Als fetch faalt: fallback naar normale submit (full refresh)
                 form.submit();
             }
         });

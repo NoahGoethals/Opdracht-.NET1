@@ -2,7 +2,6 @@
 @model IEnumerable<WorkoutCoachV2.Model.Models.Session>
 
 @{
-    // Titel + huidige filterwaarden uit ViewData (gezet in controller).
     ViewData["Title"] = L["Se_Index_Title"];
 
     var currentSearch = ViewData["Search"]?.ToString() ?? "";
@@ -14,11 +13,9 @@
 <h1>@L["Se_Index_H1"]</h1>
 
 <p>
-    <!-- Knop om nieuwe sessie te maken. -->
     <a asp-action="Create" class="btn btn-primary">@L["Common_Create"]</a>
 </p>
 
-<!-- Filter/sort formulier via querystring (GET). -->
 <form method="get" class="row g-2 align-items-end mb-3">
     <div class="col-md-4">
         <label class="form-label">@L["Common_Search"]</label>
@@ -46,7 +43,6 @@
     </div>
 
     <div class="col-md-2 d-flex gap-2">
-        <!-- Apply: verzendt filters; Reset: terug naar Index zonder querystring. -->
         <button type="submit" class="btn btn-outline-primary w-100">@L["Common_Apply"]</button>
         <a asp-action="Index" class="btn btn-outline-secondary w-100">@L["Common_Reset"]</a>
     </div>
@@ -54,12 +50,10 @@
 
 @if (Model == null || !Model.Any())
 {
-    <!-- Als er geen sessies zijn, toon een melding. -->
     <p class="text-muted">@L["Se_NoSessions"]</p>
 }
 else
 {
-    <!-- Tabel met sessies + acties. -->
     <table class="table">
         <thead>
             <tr>
@@ -77,7 +71,6 @@ else
                     <td>@s.Date.ToString("d")</td>
                     <td>@(s.Sets?.Count ?? 0)</td>
                     <td>
-                        <!-- Navigatie-links naar details/edit/delete. -->
                         <a asp-action="Details" asp-route-id="@s.Id">@L["Common_Details"]</a> |
                         <a asp-action="Edit" asp-route-id="@s.Id">@L["Common_Edit"]</a> |
                         <a asp-action="Delete" asp-route-id="@s.Id">@L["Common_Delete"]</a>

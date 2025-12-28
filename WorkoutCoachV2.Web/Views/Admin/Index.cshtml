@@ -3,7 +3,6 @@
 @inject IStringLocalizer<WorkoutCoachV2.Web.SharedResource> SR
 
 @{
-    // Admin-overzicht: toont alle gebruikers met status/rollen en admin-acties (block/unblock + rol toggles) met vertalingen via SharedResource.
     ViewData["Title"] = SR["Ad_Index_Title"];
 }
 
@@ -11,12 +10,10 @@
 
 @if (TempData["Error"] != null)
 {
-    // Foutmelding vanuit AdminController (bv. user niet gevonden / update faalt).
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 @if (TempData["Success"] != null)
 {
-    // Succesmelding vanuit AdminController (bv. geblokkeerd/gedeblokkeerd of rol aangepast).
     <div class="alert alert-success">@TempData["Success"]</div>
 }
 
@@ -33,7 +30,6 @@
     <tbody>
         @foreach (var u in Model.Users)
         {
-            // Rolweergave: toont rollen of een “geen rollen” tekst via vertaling.
             var rolesText = (u.Roles != null && u.Roles.Any())
             ? string.Join(", ", u.Roles)
             : SR["Ad_Roles_None"].ToString();
@@ -43,7 +39,6 @@
                 <td>@u.DisplayName</td>
                 <td>@rolesText</td>
                 <td>
-                    // Status badge: blocked = rood, actief = groen.
                     @if (u.IsBlocked)
                     {
                         <span class="badge bg-danger">@SR["Ad_Status_Blocked"]</span>
@@ -54,7 +49,6 @@
                     }
                 </td>
                 <td class="text-end">
-                    // POST-form met CSRF: toggelt de blocked-status via AdminController/ToggleBlock.
                     <form asp-controller="Admin" asp-action="ToggleBlock" method="post" class="d-inline">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@u.Id" />
@@ -68,14 +62,12 @@
                         }
                     </form>
 
-                    // POST-form: voegt Admin-role toe of verwijdert die (via AdminController/ToggleAdminRole).
                     <form asp-controller="Admin" asp-action="ToggleAdminRole" method="post" class="d-inline ms-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@u.Id" />
                         <button type="submit" class="btn btn-sm btn-outline-primary">@SR["Ad_Btn_ToggleAdmin"]</button>
                     </form>
 
-                    // POST-form: voegt Moderator-role toe of verwijdert die (via AdminController/ToggleModeratorRole).
                     <form asp-controller="Admin" asp-action="ToggleModeratorRole" method="post" class="d-inline ms-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@u.Id" />
@@ -86,3 +78,4 @@
         }
     </tbody>
 </table>
+

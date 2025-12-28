@@ -3,7 +3,6 @@
 @model WorkoutCoachV2.Model.Models.Session
 
 @{
-    // Zet de paginatitel via vertalingen.
     ViewData["Title"] = L["Se_Details_Title"];
 }
 
@@ -11,7 +10,6 @@
 
 <hr />
 
-<!-- Basisinfo van de sessie tonen. -->
 <dl class="row">
     <dt class="col-sm-2">@L["Se_Field_Title"]</dt>
     <dd class="col-sm-10">@Model.Title</dd>
@@ -25,17 +23,14 @@
 
 <hr />
 
-<!-- Sets-sectie. -->
 <h3>@L["Se_Details_Sets"]</h3>
 
 @if (Model.Sets == null || !Model.Sets.Any())
 {
-    <!-- Als er geen sets zijn, toon een melding. -->
     <p class="text-muted">@L["Se_Details_NoSets"]</p>
 }
 else
 {
-    <!-- Tabel met sets, gesorteerd op SetNumber. -->
     <table class="table">
         <thead>
             <tr>
@@ -59,7 +54,6 @@ else
     </table>
 }
 
-<!-- Links naar edit en terug naar lijst. -->
 <div class="mt-3">
     <a asp-action="Edit" asp-route-id="@Model.Id">@L["Common_Edit"]</a>
     |

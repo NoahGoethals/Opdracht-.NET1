@@ -1,23 +1,21 @@
-﻿@model WorkoutCoachV2.Web.Models.StatsResultsViewModel  // Dit is het "resultaatmodel" met alle statistieken
+﻿@model WorkoutCoachV2.Web.Models.StatsResultsViewModel
 
 @using Microsoft.Extensions.Localization
 @using WorkoutCoachV2.Web
-@inject IStringLocalizer<SharedResource> L              // Vertalingen (labels/teksten)
+@inject IStringLocalizer<SharedResource> L
 
 @{
-    // Tekst die het datumbereik toont (van → tot). Leeg als er geen filter is.
     string rangeText = "";
     if (Model.From.HasValue || Model.To.HasValue)
     {
-        var from = Model.From?.ToString("yyyy-MM-dd") ?? "..."; // Als geen from: "..."
-        var to = Model.To?.ToString("yyyy-MM-dd") ?? "...";     // Als geen to: "..."
+        var from = Model.From?.ToString("yyyy-MM-dd") ?? "...";
+        var to = Model.To?.ToString("yyyy-MM-dd") ?? "...";
         rangeText = $"{from} → {to}";
     }
 }
 
 @if (!string.IsNullOrWhiteSpace(rangeText))
 {
-    <!-- Toon het datumbereik enkel als het bestaat -->
     <div class="mb-2 text-muted">
         @L["St_Range"]: <strong>@rangeText</strong>
     </div>
@@ -25,10 +23,8 @@
 
 @if (Model.ExerciseId.HasValue)
 {
-    // CASE 1: er is een specifieke oefening gekozen → toon detail stats per sessie
     <h5>@L["St_Exercise"]: @(!string.IsNullOrWhiteSpace(Model.ExerciseName) ? Model.ExerciseName : $"#{Model.ExerciseId}")</h5>
 
-    <!-- Kleine "cards" met kerncijfers -->
     <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="border rounded p-2">
@@ -51,7 +47,7 @@
         <div class="col-md-3">
             <div class="border rounded p-2">
                 <div class="text-muted small">@L["St_Card_TotalVolumeKg"]</div>
-                <div class="fw-bold">@Model.TotalVolumeKg.ToString("0.##")</div> <!-- afronden -->
+                <div class="fw-bold">@Model.TotalVolumeKg.ToString("0.##")</div>
             </div>
         </div>
         <div class="col-md-3">
@@ -70,12 +66,10 @@
 
     @if (Model.PerSession.Count == 0)
     {
-        <!-- Geen sets gevonden met deze filters -->
         <div class="alert alert-warning">@L["St_NoSetsForFilter"]</div>
     }
     else
     {
-        <!-- Tabel: per sessie (datum/title) hoeveel sets/reps/volume/max -->
         <table class="table table-sm">
             <thead>
                 <tr>
@@ -91,8 +85,8 @@
                 @foreach (var row in Model.PerSession)
                 {
                     <tr>
-                        <td>@row.Date.ToShortDateString()</td>               <!-- datum -->
-                        <td>@row.SessionTitle</td>                           <!-- sessienaam -->
+                        <td>@row.Date.ToShortDateString()</td>
+                        <td>@row.SessionTitle</td>
                         <td class="text-end">@row.SetsCount</td>
                         <td class="text-end">@row.TotalReps</td>
                         <td class="text-end">@row.TotalVolumeKg.ToString("0.##")</td>
@@ -105,10 +99,8 @@
 }
 else
 {
-    // CASE 2: geen oefening gekozen → toon algemene stats + top oefeningen
     <h5>@L["St_Overall_Title"]</h5>
 
-    <!-- Algemene kerncijfers -->
     <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="border rounded p-2">
@@ -138,14 +130,12 @@ else
 
     @if (Model.TopExercises.Count == 0)
     {
-        <!-- Geen data gevonden voor deze filters -->
         <div class="alert alert-warning">@L["St_NoDataForFilter"]</div>
     }
     else
     {
         <h6 class="mt-3">@L["St_TopExercisesByVolume"]</h6>
 
-        <!-- Tabel: top 10 oefeningen op volume -->
         <table class="table table-sm">
             <thead>
                 <tr>
@@ -161,7 +151,6 @@ else
                 {
                     <tr>
                         <td>
-                            <!-- Klik op oefening = open Stats/Index met exerciseId filter -->
                             <a asp-controller="Stats" asp-action="Index" asp-route-exerciseId="@row.ExerciseId">
                                 @row.ExerciseName
                             </a>

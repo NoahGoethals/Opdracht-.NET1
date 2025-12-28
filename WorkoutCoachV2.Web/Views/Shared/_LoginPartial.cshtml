@@ -1,22 +1,19 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using WorkoutCoachV2.Model.Models
-@inject SignInManager<ApplicationUser> SignInManager    
-@inject UserManager<ApplicationUser> UserManager         
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
-        // Haal huidige user op, kies DisplayName → Identity.Name → "User"
         var me = await UserManager.GetUserAsync(User);
         var display = me?.DisplayName ?? User.Identity?.Name ?? "User";
 
         <li class="nav-item">
-            <!-- Simpele begroeting -->
             <span class="nav-link text-dark">Hi, @display</span>
         </li>
 
         <li class="nav-item">
-            <!-- Logout via POST -->
             <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-link nav-link text-dark p-0">Logout</button>
@@ -25,7 +22,6 @@
     }
     else
     {
-        <!-- Als niet ingelogd: links naar login + register -->
         <li class="nav-item">
             <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
         </li>
