@@ -2,13 +2,16 @@
 @inject IStringLocalizer<SharedResource> L
 
 @{
+    // Zet de paginatitel via vertalingen.
     ViewData["Title"] = L["Ho_Title"];
 }
 
 <div class="text-center">
+    <!-- Grote welkomstitel (vertaald). -->
     <h1 class="display-4">@L["Ho_Welcome"]</h1>
 
     <p>
+        <!-- Korte uitleg + link naar Microsoft docs (tekst vertaald). -->
         @L["Ho_LearnAboutPrefix"]
         <a href="https://learn.microsoft.com/aspnet/core">@L["Ho_LearnAboutLinkText"]</a>.
     </p>

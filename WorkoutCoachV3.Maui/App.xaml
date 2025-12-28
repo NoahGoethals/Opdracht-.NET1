@@ -5,11 +5,14 @@
              x:Class="WorkoutCoachV3.Maui.App">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Globale converters zodat pages ze kunnen gebruiken via {StaticResource ...}. -->
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter" />
 
             <ResourceDictionary.MergedDictionaries>
+                <!-- Kleur-definities (light/dark theme) voor AppThemeBinding. -->
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <!-- Algemene styles (buttons/labels/etc) voor consistente UI. -->
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

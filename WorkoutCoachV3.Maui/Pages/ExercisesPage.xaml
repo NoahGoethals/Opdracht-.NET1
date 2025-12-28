@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Exercises overzicht: navigatie + zoeken/filter + swipe acties -->
 <ContentPage
     x:Class="WorkoutCoachV3.Maui.Pages.ExercisesPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -6,10 +7,12 @@
     x:Name="PageRoot"
     Title="Exercises">
 
+    <!-- Hoofdlayout: header, search, content -->
     <Grid RowDefinitions="Auto,Auto,*"
           Padding="16"
           RowSpacing="12">
 
+        <!-- Header + horizontale menu knoppen -->
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
             <Label
                 Text="Exercises"
@@ -19,12 +22,14 @@
             <ScrollView Grid.Column="1"
                         Orientation="Horizontal"
                         HorizontalScrollBarVisibility="Never">
+                <!-- Navigatie via ViewModel commands -->
                 <HorizontalStackLayout Spacing="8">
                     <Button Text="Exercises" IsEnabled="False" />
                     <Button Text="Workouts" Command="{Binding GoWorkoutsCommand}" />
                     <Button Text="Sessions" Command="{Binding GoSessionsCommand}" />
                     <Button Text="Stats" Command="{Binding GoToStatsCommand}" />
 
+                    <!-- Admin enkel zichtbaar met rechten -->
                     <Button Text="Admin"
                             Command="{Binding GoToAdminCommand}"
                             IsVisible="{Binding CanAccessAdmin}" />
@@ -35,6 +40,7 @@
             </ScrollView>
         </Grid>
 
+        <!-- Search balk: Enter of knop triggert LoadLocalCommand -->
         <Grid Grid.Row="1"
               ColumnDefinitions="*,Auto"
               ColumnSpacing="10">
@@ -48,22 +54,26 @@
                     Command="{Binding LoadLocalCommand}" />
         </Grid>
 
+        <!-- Filter + lijst -->
         <Grid Grid.Row="2"
               RowDefinitions="Auto,*"
               RowSpacing="12">
 
+            <!-- Category filter -->
             <VerticalStackLayout Grid.Row="0" Spacing="6">
                 <Label Text="Category:" FontAttributes="Bold" />
                 <Picker ItemsSource="{Binding Categories}"
                         SelectedItem="{Binding SelectedCategory}" />
             </VerticalStackLayout>
 
+            <!-- Items lijst met swipe acties -->
             <CollectionView Grid.Row="1"
                             ItemsSource="{Binding Items}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <SwipeView>
 
+                            <!-- Swipe rechts: Edit/Delete via PageRoot commands -->
                             <SwipeView.RightItems>
                                 <SwipeItems Mode="Reveal">
                                     <SwipeItem Text="Edit"
@@ -78,6 +88,7 @@
                                 </SwipeItems>
                             </SwipeView.RightItems>
 
+                            <!-- Kaart met oefening info -->
                             <Frame Margin="0,0,0,10"
                                    Padding="14"
                                    CornerRadius="12"

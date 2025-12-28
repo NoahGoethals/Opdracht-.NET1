@@ -1,5 +1,6 @@
 ﻿namespace WorkoutCoachV2.Web.Services
 {
+    // Config-model voor SMTP mail: host/poort/SSL + login + afzendergegevens .
     public class EmailSettings
     {
         public string SmtpHost { get; set; } = "";

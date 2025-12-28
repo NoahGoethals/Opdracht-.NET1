@@ -1,12 +1,14 @@
-﻿@model WorkoutCoachV2.Model.Models.Workout
+﻿@model WorkoutCoachV2.Model.Models.Workout                        // Workout die je bekijkt
 @using WorkoutCoachV2.Model.Models
 @using System.Linq
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = L["Wk_Details_Title"];
+    ViewData["Title"] = L["Wk_Details_Title"];                    // Paginatitel
+
+    // Controller stopt de gekoppelde oefeningen in ViewBag.WorkoutExercises
     var workoutExercises = ViewBag.WorkoutExercises as IEnumerable<WorkoutExercise>
-                           ?? Enumerable.Empty<WorkoutExercise>();
+                           ?? Enumerable.Empty<WorkoutExercise>(); // Als null: lege lijst
 }
 
 <h1>@L["Wk_Details_H1"]</h1>
@@ -16,10 +18,10 @@
     <hr />
     <dl class="row">
         <dt class="col-sm-2">@L["Wk_Field_Title"]</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(m => m.Title)</dd>
+        <dd class="col-sm-10">@Html.DisplayFor(m => m.Title)</dd>         <!-- Workout titel -->
 
         <dt class="col-sm-2">@L["Wk_Field_ScheduledOn"]</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(m => m.ScheduledOn)</dd>
+        <dd class="col-sm-10">@Html.DisplayFor(m => m.ScheduledOn)</dd>   <!-- Datum -->
     </dl>
 </div>
 
@@ -28,7 +30,7 @@
 
 @if (!workoutExercises.Any())
 {
-    <p>@L["Wk_Details_NoExercisesLinked"]</p>
+    <p>@L["Wk_Details_NoExercisesLinked"]</p>                      <!-- Geen oefeningen gelinkt -->
 }
 else
 {
@@ -44,9 +46,9 @@ else
             @foreach (var x in workoutExercises)
             {
                 <tr>
-                    <td>@x.Exercise?.Name</td>
-                    <td>@x.Reps</td>
-                    <td>@x.WeightKg</td>
+                    <td>@x.Exercise?.Name</td>                     <!-- Naam van oefening -->
+                    <td>@x.Reps</td>                               <!-- Reps -->
+                    <td>@x.WeightKg</td>                           <!-- Gewicht -->
                 </tr>
             }
         </tbody>
@@ -54,7 +56,7 @@ else
 }
 
 <div class="mt-3">
-    <a asp-action="Exercises" asp-route-id="@Model.Id" class="btn btn-secondary">@L["Wk_Details_ManageExercises"]</a>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">@L["Wk_Details_EditWorkout"]</a>
-    <a asp-action="Index" class="btn btn-link">@L["Common_BackToList"]</a>
+    <a asp-action="Exercises" asp-route-id="@Model.Id" class="btn btn-secondary">@L["Wk_Details_ManageExercises"]</a> <!-- Beheer oefeningen -->
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">@L["Wk_Details_EditWorkout"]</a>            <!-- Edit workout -->
+    <a asp-action="Index" class="btn btn-link">@L["Common_BackToList"]</a>                                            <!-- Terug naar lijst -->
 </div>

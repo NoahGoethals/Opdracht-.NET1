@@ -1,15 +1,19 @@
 ﻿using Microsoft.Maui.Networking;
 using System.Diagnostics;
 
+// :contentReference[oaicite:1]{index=1} // Sync service: start sync bij internet connectie (debounced + gated).
 namespace WorkoutCoachV3.Maui.Services;
 
 public sealed class ConnectivitySyncService : IDisposable
 {
+    // Sync engine + token check om enkel te syncen wanneer ingelogd.
     private readonly ISyncService _sync;
     private readonly ITokenStore _tokenStore;
 
+    // Gate om te voorkomen dat meerdere syncs tegelijk lopen.
     private readonly SemaphoreSlim _syncGate = new(1, 1);
 
+    // Debounce token source om snelle connectiviteit-events te bundelen.
     private CancellationTokenSource? _debounceCts;
     private bool _started;
 
@@ -19,6 +23,7 @@ public sealed class ConnectivitySyncService : IDisposable
         _tokenStore = tokenStore;
     }
 
+    // Start: subscribe op ConnectivityChanged + trigger init sync (debounced).
     public void Start()
     {
         if (_started) return;
@@ -29,6 +34,7 @@ public sealed class ConnectivitySyncService : IDisposable
         _ = TriggerSyncDebouncedAsync();
     }
 
+    // Stop: unsubscribe + cancel debounce zodat er niets meer loopt.
     public void Stop()
     {
         if (!_started) return;
@@ -40,6 +46,7 @@ public sealed class ConnectivitySyncService : IDisposable
         _debounceCts = null;
     }
 
+    // Callback: alleen syncen wanneer internet effectief beschikbaar is.
     private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
     {
         if (e.NetworkAccess == NetworkAccess.Internet)
@@ -48,6 +55,7 @@ public sealed class ConnectivitySyncService : IDisposable
         }
     }
 
+    // Debounce: wacht even zodat connect/disconnect bursts niet meerdere syncs starten.
     private async Task TriggerSyncDebouncedAsync()
     {
         try
@@ -66,10 +74,12 @@ public sealed class ConnectivitySyncService : IDisposable
         }
         catch (Exception ex)
         {
+            // Catch-all logging zodat connectivity events nooit de app breken.
             Debug.WriteLine("[ConnectivitySync][DEBOUNCE] " + ex);
         }
     }
 
+    // Effectieve sync: vereist internet + geldig token + geen lopende sync.
     public async Task TriggerSyncAsync(CancellationToken ct = default)
     {
         if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
@@ -88,6 +98,7 @@ public sealed class ConnectivitySyncService : IDisposable
         }
         catch (Exception ex)
         {
+            // Sync errors loggen (server/down/validatie) zonder crash.
             Debug.WriteLine("[ConnectivitySync][SYNC] " + ex);
         }
         finally
@@ -96,5 +107,6 @@ public sealed class ConnectivitySyncService : IDisposable
         }
     }
 
+    // Dispose: netjes unsubscribe zodat er geen leaks zijn.
     public void Dispose() => Stop();
 }

@@ -9,11 +9,13 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class LoginViewModel : ObservableObject
 {
+    // Auth API + opslag voor token en user session + DI voor navigatie naar pages.
     private readonly IAuthApi _authApi;
     private readonly ITokenStore _tokenStore;
     private readonly IUserSessionStore _sessionStore;
     private readonly IServiceProvider _services;
 
+    // Form fields + UI state (busy + foutmelding).
     [ObservableProperty] private string email = "";
     [ObservableProperty] private string password = "";
     [ObservableProperty] private bool isBusy;
@@ -30,6 +32,7 @@ public partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async Task LoginAsync()
     {
+        // Voorkom dubbele login requests (knop spam).
         if (IsBusy) return;
 
         ErrorMessage = null;
@@ -37,16 +40,20 @@ public partial class LoginViewModel : ObservableObject
 
         try
         {
+            // Login request bouwen en uitvoeren.
             var req = new LoginRequest(Email.Trim(), Password);
             var res = await _authApi.LoginAsync(req);
 
+            // Token + user info bewaren zodat auth header later gezet kan worden.
             await _tokenStore.SetAsync(res.Token, res.ExpiresUtc);
             await _sessionStore.SetAsync(res.UserId, res.Email, res.DisplayName, res.Roles);
 
+            // Na login: reset root naar de startpagina (Exercises).
             Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<ExercisesPage>());
         }
         catch (Exception ex)
         {
+            // Toon API/validation errors in de UI.
             ErrorMessage = ex.Message;
         }
         finally
@@ -58,6 +65,7 @@ public partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async Task GoToRegisterAsync()
     {
+        // Navigatie blokkeren zolang er een request bezig is.
         if (IsBusy) return;
 
         var page = _services.GetRequiredService<RegisterPage>();
@@ -67,6 +75,7 @@ public partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async Task GoToSettingsAsync()
     {
+        // Navigatie naar API Settings om BaseUrl in te stellen.
         if (IsBusy) return;
 
         var page = _services.GetRequiredService<SettingsPage>();

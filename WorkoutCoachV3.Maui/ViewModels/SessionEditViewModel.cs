@@ -8,27 +8,34 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class SessionEditViewModel : ObservableObject
 {
+    // Local DB service voor create/update + sync na save.
     private readonly LocalDatabaseService _local;
     private readonly ISyncService _sync;
 
+    // Null = create, anders edit van bestaande session.
     private Guid? _editingSessionLocalId;
 
+    // Page title + form fields.
     [ObservableProperty] private string title = "New Session";
     [ObservableProperty] private string sessionTitle = "";
     [ObservableProperty] private DateTime sessionDate = DateTime.Today;
     [ObservableProperty] private string? description;
 
+    // Checkbox lijst met workouts waaruit een session wordt opgebouwd.
     public ObservableCollection<WorkoutPickRowVm> Workouts { get; } = new();
 
+    // UI state: create/edit mode + busy + foutmelding.
     [ObservableProperty] private bool isCreate;
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
     public class WorkoutPickRowVm : ObservableObject
     {
+        // Workout id + title voor de UI rij.
         public Guid WorkoutLocalId { get; init; }
         public string WorkoutTitle { get; init; } = "";
 
+        // Checkbox binding voor selectie.
         private bool _isSelected;
         public bool IsSelected
         {
@@ -45,6 +52,7 @@ public partial class SessionEditViewModel : ObservableObject
 
     public async Task InitForCreateAsync()
     {
+        // Setup voor nieuwe session.
         _editingSessionLocalId = null;
         IsCreate = true;
 
@@ -54,11 +62,13 @@ public partial class SessionEditViewModel : ObservableObject
         Description = null;
         Error = null;
 
+        // Laad workouts zonder preselectie.
         await LoadWorkoutsAsync(preselectWorkoutLocalIds: null, preselectExerciseLocalIds: null);
     }
 
     public async Task InitForEditAsync(Guid sessionLocalId)
     {
+        // Setup voor edit flow.
         _editingSessionLocalId = sessionLocalId;
         IsCreate = false;
 
@@ -72,10 +82,12 @@ public partial class SessionEditViewModel : ObservableObject
             return;
         }
 
+        // Form velden invullen met bestaande data.
         SessionTitle = session.Title;
         SessionDate = session.Date;
         Description = session.Description;
 
+        // Als notes de bron-workouts bevat, kan je exact dezelfde workouts preselecten.
         var preselectWorkoutIds = ParseSourceWorkoutIdsFromNotes(session.Notes);
 
         if (preselectWorkoutIds.Count > 0)
@@ -84,6 +96,7 @@ public partial class SessionEditViewModel : ObservableObject
             return;
         }
 
+        // Fallback: probeer workouts te preselecten op basis van exercises in de session sets.
         var sets = await _local.GetSessionSetsEntitiesAsync(sessionLocalId, includeDeleted: false);
         var exerciseIdsInSession = sets
             .Select(x => x.ExerciseLocalId)
@@ -95,6 +108,7 @@ public partial class SessionEditViewModel : ObservableObject
 
     private static HashSet<Guid> ParseSourceWorkoutIdsFromNotes(string? notes)
     {
+        // Notes format: "__src_workouts:" + "guid;guid;guid".
         var result = new HashSet<Guid>();
 
         if (string.IsNullOrWhiteSpace(notes)) return result;
@@ -114,6 +128,7 @@ public partial class SessionEditViewModel : ObservableObject
 
     private async Task LoadWorkoutsAsync(HashSet<Guid>? preselectWorkoutLocalIds, HashSet<Guid>? preselectExerciseLocalIds)
     {
+        // Reset lijst telkens opnieuw zodat selections correct reflecteren.
         Workouts.Clear();
 
         var workouts = await _local.GetWorkoutsAsync(search: null);
@@ -124,10 +139,12 @@ public partial class SessionEditViewModel : ObservableObject
 
             if (preselectWorkoutLocalIds is not null && preselectWorkoutLocalIds.Count > 0)
             {
+                // Exact preselectie van workouts (uit notes).
                 isSelected = preselectWorkoutLocalIds.Contains(w.LocalId);
             }
             else if (preselectExerciseLocalIds is not null && preselectExerciseLocalIds.Count > 0)
             {
+                // Fallback preselectie: workout is selected als alle actieve links binnen exercise set zitten.
                 var links = await _local.GetWorkoutExercisesAllStatesAsync(w.LocalId);
                 var activeLinks = links.Where(l => !l.IsDeleted).ToList();
 
@@ -148,18 +165,21 @@ public partial class SessionEditViewModel : ObservableObject
     [RelayCommand]
     public async Task SaveAsync()
     {
+        // Single-flight voor save.
         if (IsBusy) return;
         IsBusy = true;
         Error = null;
 
         try
         {
+            // Basis validatie.
             if (string.IsNullOrWhiteSpace(SessionTitle))
             {
                 Error = "Title is required.";
                 return;
             }
 
+            // Geselecteerde workouts verzamelen (distinct om duplicates te vermijden).
             var selected = Workouts
                 .Where(x => x.IsSelected)
                 .Select(x => x.WorkoutLocalId)
@@ -172,6 +192,7 @@ public partial class SessionEditViewModel : ObservableObject
                 return;
             }
 
+            // Create/update session + herbouw sets op basis van workout exercises.
             if (IsCreate)
             {
                 await _local.CreateSessionFromWorkoutsAsync(SessionTitle, SessionDate, Description, selected);
@@ -192,12 +213,14 @@ public partial class SessionEditViewModel : ObservableObject
                     selected);
             }
 
+            // Best effort sync: UI mag verder ook als sync faalt.
             try { await _sync.SyncAllAsync(); } catch { }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }
         catch (DbUpdateException dbEx)
         {
+            // EF/SQLite fouten (unique index, foreign key, etc).
             Error = dbEx.InnerException?.Message ?? dbEx.Message;
         }
         catch (Exception ex)
@@ -213,6 +236,7 @@ public partial class SessionEditViewModel : ObservableObject
     [RelayCommand]
     public async Task CancelAsync()
     {
+        // Sluit edit page zonder save.
         await Application.Current!.MainPage!.Navigation.PopAsync();
     }
 }

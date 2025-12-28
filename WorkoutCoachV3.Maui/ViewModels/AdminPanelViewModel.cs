@@ -9,16 +9,20 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class AdminPanelViewModel : ObservableObject
 {
+    // API + session helpers om users te beheren en rollen/blok te togglen.
     private readonly IAdminApi _adminApi;
     private readonly IUserSessionStore _sessionStore;
     private readonly ITokenStore _tokenStore;
     private readonly IServiceProvider _services;
 
+    // Keuzelijst voor roles in de Picker.
     public ObservableCollection<string> RoleOptions { get; } =
         new(new[] { "User", "Moderator", "Admin" });
 
+    // UI-lijst met users (observable zodat CollectionView live updatet).
     public ObservableCollection<AdminUserRow> Users { get; } = new();
 
+    // UI-state: busy + foutmelding + admin toegang (voor knop/visibility).
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
     [ObservableProperty] private bool canAccessAdmin;
@@ -34,6 +38,7 @@ public partial class AdminPanelViewModel : ObservableObject
         _tokenStore = tokenStore;
         _services = services;
 
+        // Zet CanAccessAdmin meteen op basis van opgeslagen roles.
         _ = LoadRoleFlagsAsync();
     }
 
@@ -42,6 +47,7 @@ public partial class AdminPanelViewModel : ObservableObject
         CanAccessAdmin = await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator");
     }
 
+    // Laadt users van de server en vult de observable lijst voor de UI.
     public async Task LoadAsync()
     {
         if (IsBusy) return;
@@ -51,6 +57,7 @@ public partial class AdminPanelViewModel : ObservableObject
 
         try
         {
+            // Extra check: zonder Admin/Moderator terug naar vorige pagina.
             if (!await _sessionStore.IsInAnyRoleAsync("Admin", "Moderator"))
             {
                 ErrorMessage = "Not authorized.";
@@ -63,6 +70,7 @@ public partial class AdminPanelViewModel : ObservableObject
             Users.Clear();
             foreach (var u in list)
             {
+                // Neem de eerste role als “primary”, anders default naar User.
                 var role = (u.Roles != null && u.Roles.Length > 0) ? u.Roles[0] : "User";
                 Users.Add(new AdminUserRow(u.Id, u.Email, u.DisplayName, u.IsBlocked, role));
             }
@@ -87,6 +95,7 @@ public partial class AdminPanelViewModel : ObservableObject
 
         try
         {
+            // Persist role wijziging naar de API.
             await _adminApi.SetRoleAsync(row.Id, row.SelectedRole);
         }
         catch (Exception ex)
@@ -109,6 +118,7 @@ public partial class AdminPanelViewModel : ObservableObject
 
         try
         {
+            // Server toggle + lokale UI update voor direct feedback.
             await _adminApi.ToggleBlockAsync(row.Id);
             row.IsBlocked = !row.IsBlocked;
         }
@@ -122,6 +132,7 @@ public partial class AdminPanelViewModel : ObservableObject
         }
     }
 
+    // Navigatie knoppen bovenaan (tabs).
     [RelayCommand]
     private async Task GoToExercisesAsync()
         => await Application.Current!.MainPage!.Navigation.PushAsync(_services.GetRequiredService<ExercisesPage>());
@@ -141,6 +152,7 @@ public partial class AdminPanelViewModel : ObservableObject
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        // Logout = token + session wissen en terug naar LoginPage.
         await _tokenStore.ClearAsync();
         await _sessionStore.ClearAsync();
         Application.Current!.MainPage = new NavigationPage(_services.GetRequiredService<LoginPage>());

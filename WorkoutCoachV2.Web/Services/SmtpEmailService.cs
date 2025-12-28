@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace WorkoutCoachV2.Web.Services
 {
+    // SMTP-implementatie van IEmailService: verstuurt HTML mails via SmtpClient met credentials uit EmailSettings.
     public class SmtpEmailService : IEmailService
     {
         private readonly EmailSettings _settings;

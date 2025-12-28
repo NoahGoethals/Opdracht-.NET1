@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Manage oefeningen in een workout: selecteer + reps/weight invullen -->
 <ContentPage
     x:Class="WorkoutCoachV3.Maui.Pages.WorkoutExercisesManagePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -6,14 +7,17 @@
     x:Name="PageRoot"
     Title="{Binding Title}">
 
+    <!-- Layout: error, lijst, acties -->
     <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
 
+        <!-- Error bovenaan (enkel zichtbaar als niet leeg) -->
         <Label
             Grid.Row="0"
             Text="{Binding Error}"
             TextColor="Red"
             IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
 
+        <!-- Lijst met alle oefeningen als "rows" om in/out + waarden te beheren -->
         <CollectionView
             Grid.Row="1"
             ItemsSource="{Binding Rows}"
@@ -31,6 +35,7 @@
                         BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
                         BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
 
+                        <!-- Item: checkbox + naam + input reps/weight -->
                         <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
 
                             <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
@@ -77,6 +82,7 @@
 
                             </Grid>
 
+                            <!-- Kleine hint onderaan -->
                             <Label
                                 Grid.Row="2"
                                 Text="Select the checkbox to include this exercise in the workout."
@@ -89,6 +95,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
+        <!-- Save/Cancel onderaan -->
         <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
             <Button
                 Grid.Column="0"

@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Login scherm: email/password + navigatie naar register/settings -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:WorkoutCoachV3.Maui.Converters"
              x:Class="WorkoutCoachV3.Maui.Pages.LoginPage"
              Title="Login">
 
+    <!-- Resources: converter om IsBusy om te keren voor IsEnabled -->
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
+    <!-- Scrollable layout voor kleine schermen -->
     <ScrollView>
         <VerticalStackLayout Spacing="14" Padding="24">
 
@@ -26,6 +29,7 @@
                    IsPassword="True"
                    Text="{Binding Password}" />
 
+            <!-- Login actie; disabled tijdens busy -->
             <Button Text="Login"
                     Command="{Binding LoginCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
@@ -38,9 +42,11 @@
                     Command="{Binding GoToSettingsCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
 
+            <!-- Busy indicator tijdens login -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}" />
 
+            <!-- Foutmelding (bv. invalid credentials / network) -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Red" />
 

@@ -2,6 +2,7 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
+    // Create Exercise view: formulier om een nieuwe oefening te maken, met vertaalde labels/knoppen via SharedResource.
     ViewData["Title"] = L["Ex_Create_Title"];
 }
 
@@ -11,27 +12,32 @@
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Create">
+            // Toont model-validatie errors (server-side + client-side).
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group mb-3">
+                // Naam van de oefening.
                 <label asp-for="Name" class="control-label">@L["Ex_Field_Name"]</label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
+                // Categorie (bv. Chest/Legs) om later te filteren/sorteren.
                 <label asp-for="Category" class="control-label">@L["Ex_Field_Category"]</label>
                 <input asp-for="Category" class="form-control" />
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
+                // Notities voor extra info (bv. “Barbell”, “tempo”, ...).
                 <label asp-for="Notes" class="control-label">@L["Ex_Field_Notes"]</label>
                 <textarea asp-for="Notes" class="form-control"></textarea>
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
 
             <div class="form-group">
+                // Submit maakt de oefening aan; link gaat terug naar de lijst.
                 <input type="submit" value="@L["Common_Create"]" class="btn btn-primary" />
                 <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_BackToList"]</a>
             </div>
@@ -41,6 +47,7 @@
 
 @section Scripts {
     @{
+        // Laadt de scripts voor client-side validatie.
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui.Networking;
+﻿// Sync engine: pusht lokale "dirty" data naar API en pullt daarna remote naar lokaal.
+using Microsoft.Maui.Networking;
 using System.Diagnostics;
 using Api = WorkoutCoachV2.Model.ApiContracts;
 
@@ -6,6 +7,7 @@ namespace WorkoutCoachV3.Maui.Services;
 
 public class SyncService : ISyncService
 {
+    // Local DB + API clients per domein.
     private readonly LocalDatabaseService _local;
     private readonly IExercisesApi _exercisesApi;
     private readonly IWorkoutsApi _workoutsApi;
@@ -26,6 +28,7 @@ public class SyncService : ISyncService
         _sessionsApi = sessionsApi;
     }
 
+    // Hoofdflow: eerst push, daarna pull (enkel met internet).
     public async Task SyncAllAsync(CancellationToken ct = default)
     {
         if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
@@ -42,6 +45,7 @@ public class SyncService : ISyncService
         await SyncSessionsPullAsync(ct);
     }
 
+    // Push lokale exercises: create/update/delete op basis van RemoteId/IsDeleted.
     private async Task SyncExercisesPushAsync(CancellationToken ct)
     {
         var dirty = await _local.GetDirtyExercisesAsync();
@@ -86,6 +90,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Push lokale workouts: create/update/delete.
     private async Task SyncWorkoutsPushAsync(CancellationToken ct)
     {
         var dirty = await _local.GetDirtyWorkoutsAsync();
@@ -130,6 +135,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Push workout-exercise links: bulk replace per workout.
     private async Task SyncWorkoutExercisesPushAsync(CancellationToken ct)
     {
         var dirtyLinks = await _local.GetDirtyWorkoutExercisesAsync();
@@ -178,6 +184,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Push sessions + sets: mapping local exercise -> remote exercise id.
     private async Task SyncSessionsPushAsync(CancellationToken ct)
     {
         var dirty = await _local.GetDirtySessionsAsync();
@@ -244,6 +251,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Pull exercises en merge naar lokaal (match op RemoteId).
     private async Task SyncExercisesPullAsync(CancellationToken ct)
     {
         try
@@ -259,6 +267,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Pull workouts en merge naar lokaal.
     private async Task SyncWorkoutsPullAsync(CancellationToken ct)
     {
         try
@@ -274,6 +283,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Pull workout-exercises per workout en map remote exercise id -> local id.
     private async Task SyncWorkoutExercisesPullAsync(CancellationToken ct)
     {
         try
@@ -318,6 +328,7 @@ public class SyncService : ISyncService
         }
     }
 
+    // Pull sessions incl sets en merge naar lokaal.
     private async Task SyncSessionsPullAsync(CancellationToken ct)
     {
         try

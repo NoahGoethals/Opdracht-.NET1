@@ -1,5 +1,6 @@
 ﻿@model ErrorViewModel
 @{
+    // Statische titel "Error"
     ViewData["Title"] = "Error";
 }
 
@@ -8,6 +9,7 @@
 
 @if (Model.ShowRequestId)
 {
+    <!-- Als er een RequestId is, toon die (handig voor debugging/logs). -->
     <p>
         <strong>Request ID:</strong> <code>@Model.RequestId</code>
     </p>

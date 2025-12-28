@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Register scherm: account aanmaken + terug naar login -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:WorkoutCoachV3.Maui.Converters"
              x:Class="WorkoutCoachV3.Maui.Pages.RegisterPage"
              Title="Register">
 
+    <!-- Converter om IsBusy om te keren voor IsEnabled -->
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
+    <!-- Scrollbaar formulier voor kleine schermen -->
     <ScrollView>
         <VerticalStackLayout Spacing="14" Padding="24">
 
@@ -18,6 +21,7 @@
                    FontSize="28"
                    FontAttributes="Bold" />
 
+            <!-- Display name + credentials -->
             <Entry Placeholder="Display name"
                    Text="{Binding DisplayName}" />
 
@@ -33,17 +37,21 @@
                    IsPassword="True"
                    Text="{Binding ConfirmPassword}" />
 
+            <!-- Register actie; disabled tijdens busy -->
             <Button Text="Register"
                     Command="{Binding RegisterCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
 
+            <!-- Navigatie terug naar login -->
             <Button Text="Back to login"
                     Command="{Binding BackCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
 
+            <!-- Busy indicator tijdens register -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}" />
 
+            <!-- Foutmelding (validatie/API) -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Red" />
 

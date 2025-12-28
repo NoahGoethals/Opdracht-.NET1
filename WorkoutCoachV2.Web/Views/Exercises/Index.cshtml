@@ -2,6 +2,7 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
+    // Index view: overzicht van oefeningen met zoek-, filter- en sorteeropties (via querystring), alles vertaald via SharedResource.
     ViewData["Title"] = L["Ex_Index_Title"];
 
     var categories = ViewBag.CategoryOptions as List<string> ?? new List<string>();
@@ -13,16 +14,19 @@
 <h1>@L["Ex_Index_H1"]</h1>
 
 <div class="mb-3">
+    // Knop naar create-pagina.
     <a asp-action="Create" class="btn btn-primary">@L["Ex_CreateNew"]</a>
 </div>
 
 <form method="get" class="row g-2 align-items-end mb-3">
     <div class="col-md-4">
+        // Zoekveld op naam.
         <label class="form-label">@L["Common_Search"]</label>
         <input name="search" value="@currentSearch" class="form-control" />
     </div>
 
     <div class="col-md-3">
+        // Dropdown filter op categorie; opties komen uit ViewBag (opgebouwd in controller).
         <label class="form-label">@L["Ex_Field_Category"]</label>
         <select name="category" class="form-select">
             <option value="">@L["Common_All"]</option>
@@ -34,6 +38,7 @@
     </div>
 
     <div class="col-md-3">
+        // Dropdown sortering (naam/categorie, asc/desc).
         <label class="form-label">@L["Common_Sort"]</label>
         <select name="sort" class="form-select">
             <option value="name_asc" selected="@(currentSort == "name_asc" ? "selected" : null)">@L["Ex_Field_Name"] (A→Z)</option>
@@ -44,6 +49,7 @@
     </div>
 
     <div class="col-md-2 d-flex gap-2">
+        // Apply stuurt filters mee; reset gaat terug naar index zonder querystring.
         <button type="submit" class="btn btn-outline-primary w-100">@L["Common_Apply"]</button>
         <a asp-action="Index" class="btn btn-outline-secondary w-100">@L["Common_Reset"]</a>
     </div>
@@ -51,6 +57,7 @@
 
 @if (Model == null || !Model.Any())
 {
+    // Lege state wanneer er geen oefeningen zijn.
     <p class="text-muted">@L["Ex_NoExercises"]</p>
 }
 else
@@ -67,6 +74,7 @@ else
             @foreach (var item in Model)
             {
                 <tr>
+                    // Tabel toont naam + categorie en links naar details/edit/delete.
                     <td>@Html.DisplayFor(_ => item.Name)</td>
                     <td>@Html.DisplayFor(_ => item.Category)</td>
                     <td class="text-end">

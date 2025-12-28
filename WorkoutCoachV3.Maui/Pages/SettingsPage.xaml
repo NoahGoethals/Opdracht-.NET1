@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Settings: API Base URL instellen + save/reset/test -->
 <ContentPage
     x:Class="WorkoutCoachV3.Maui.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -6,36 +7,44 @@
     xmlns:converters="clr-namespace:WorkoutCoachV3.Maui.Converters"
     Title="Settings">
 
+    <!-- Converter om IsBusy om te keren voor IsEnabled -->
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
+    <!-- Scrollbaar scherm -->
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="14">
 
+            <!-- Titel van instellingen -->
             <Label Text="API Base URL"
                    FontAttributes="Bold"
                    FontSize="22" />
 
+            <!-- Platform info (bv. Android/Windows + hints) -->
             <Label Text="{Binding PlatformInfo}"
                    Opacity="0.7" />
 
+            <!-- Korte uitleg voor gebruiker -->
             <Label Text="Hier stel je de API in die je MAUI app gebruikt."
                    LineBreakMode="WordWrap"
                    Opacity="0.9" />
 
+            <!-- Invoer voor BaseUrl -->
             <Label Text="Base URL" FontAttributes="Bold" />
             <Entry Text="{Binding BaseUrl}"
                    Placeholder="https://jouwapp.azurewebsites.net/"
                    Keyboard="Url" />
 
+            <!-- Toon default URL als referentie -->
             <Label Text="Standaard Base URL" FontAttributes="Bold" />
             <Label Text="{Binding DefaultBaseUrl}"
                    FontFamily="Courier New"
                    Opacity="0.85" />
 
+            <!-- Acties: save/reset/test (disabled tijdens busy) -->
             <HorizontalStackLayout Spacing="10">
                 <Button Text="Save"
                         Command="{Binding SaveCommand}"
@@ -50,12 +59,15 @@
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
             </HorizontalStackLayout>
 
+            <!-- Busy indicator tijdens save/test -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}" />
 
+            <!-- Statusbericht (bv. "Saved", "Connection OK", error) -->
             <Label Text="{Binding Status}"
                    LineBreakMode="WordWrap" />
 
+            <!-- Tips blok voor emulator/phone/windows base-url situaties -->
             <Frame Padding="12" CornerRadius="12" HasShadow="False"
                    BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#1E1E1E}">
                 <VerticalStackLayout Spacing="6">

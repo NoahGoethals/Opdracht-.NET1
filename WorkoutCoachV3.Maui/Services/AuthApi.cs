@@ -1,12 +1,16 @@
-﻿using System.Net;
+﻿// Statuscodes gebruiken voor duidelijke error handling.
+using System.Net;
+// JSON helpers voor PostAsJsonAsync / ReadFromJsonAsync.
 using System.Net.Http.Json;
 using WorkoutCoachV2.Model.ApiContracts;
 
 namespace WorkoutCoachV3.Maui.Services;
 
 
+// Auth endpoints wrapper (login/register/me).
 public class AuthApi : IAuthApi
 {
+    // Factory levert clients met/zonder auth header.
     private readonly IHttpClientFactory _factory;
 
     public AuthApi(IHttpClientFactory factory)
@@ -14,9 +18,12 @@ public class AuthApi : IAuthApi
         _factory = factory;
     }
 
+    // Client zonder auth (login/register).
     private HttpClient NoAuthClient => _factory.CreateClient("ApiNoAuth");
+    // Client met auth (me).
     private HttpClient AuthClient => _factory.CreateClient("Api");
 
+    // Login: geeft tokens/user info terug of gooit exception met juiste boodschap.
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
         var res = await NoAuthClient.PostAsJsonAsync("api/auth/login", request, ct);
@@ -40,6 +47,7 @@ public class AuthApi : IAuthApi
         return data ?? throw new Exception("Login response was empty.");
     }
 
+    // Register: maakt account aan en verwacht AuthResponse terug.
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
         var res = await NoAuthClient.PostAsJsonAsync("api/auth/register", request, ct);
@@ -56,6 +64,7 @@ public class AuthApi : IAuthApi
         return data ?? throw new Exception("Register response was empty.");
     }
 
+    // Me: haalt huidige user op met token; behandelt verlopen sessie/blocked expliciet.
     public async Task<CurrentUserDto> MeAsync(CancellationToken ct = default)
     {
         var res = await AuthClient.GetAsync("api/auth/me", ct);

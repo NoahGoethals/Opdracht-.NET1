@@ -2,8 +2,10 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
+    // Pagina titel (gelokaliseerd)
     ViewData["Title"] = L["Wk_Index_Title"];
 
+    // Huidige filters/sort uit ViewData om de form inputs “sticky” te maken
     var currentSearch = ViewData["Search"]?.ToString() ?? "";
     var currentFrom = ViewData["From"]?.ToString() ?? "";
     var currentTo = ViewData["To"]?.ToString() ?? "";
@@ -13,10 +15,12 @@
 <h1>@L["Wk_Index_H1"]</h1>
 
 <p>
+    // Link naar Create (nieuwe workout aanmaken)
     <a asp-action="Create" class="btn btn-primary">@L["Wk_CreateNew"]</a>
 </p>
 
 <form method="get" class="row g-2 align-items-end mb-3">
+    // GET filterform: controller leest query parameters (search/from/to/sort)
     <div class="col-md-4">
         <label class="form-label">@L["Common_Search"]</label>
         <input name="search" value="@currentSearch" class="form-control" />
@@ -35,6 +39,7 @@
     <div class="col-md-2">
         <label class="form-label">@L["Common_Sort"]</label>
         <select name="sort" class="form-select">
+            // selected=... zorgt dat gekozen sort zichtbaar blijft na submit
             <option value="date_desc" selected="@(currentSort == "date_desc" ? "selected" : null)">@L["Wk_Field_ScheduledOn"] (nieuwste)</option>
             <option value="date_asc" selected="@(currentSort == "date_asc" ? "selected" : null)">@L["Wk_Field_ScheduledOn"] (oudste)</option>
             <option value="title_asc" selected="@(currentSort == "title_asc" ? "selected" : null)">@L["Wk_Field_Title"] (A→Z)</option>
@@ -43,6 +48,7 @@
     </div>
 
     <div class="col-md-2 d-flex gap-2">
+        // Apply = submit GET, Reset = terug naar Index zonder querystring
         <button type="submit" class="btn btn-outline-primary w-100">@L["Common_Apply"]</button>
         <a asp-action="Index" class="btn btn-outline-secondary w-100">@L["Common_Reset"]</a>
     </div>
@@ -50,10 +56,12 @@
 
 @if (Model == null || !Model.Any())
 {
+    // Geen workouts om te tonen
     <p class="text-muted">@L["Wk_NoWorkouts"]</p>
 }
 else
 {
+    // Tabel met alle workouts (titel, datum, aantal gekoppelde oefeningen + acties)
     <table class="table">
         <thead>
             <tr>
@@ -71,6 +79,7 @@ else
                     <td>@Html.DisplayFor(_ => item.ScheduledOn)</td>
                     <td>@(item.Exercises?.Count ?? 0)</td>
                     <td>
+                        // CRUD acties per workout
                         <a asp-action="Details" asp-route-id="@item.Id">@L["Common_Details"]</a> |
                         <a asp-action="Edit" asp-route-id="@item.Id">@L["Common_Edit"]</a> |
                         <a asp-action="Delete" asp-route-id="@item.Id">@L["Common_Delete"]</a>

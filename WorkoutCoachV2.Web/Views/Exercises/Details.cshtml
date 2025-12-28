@@ -2,6 +2,7 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
+    // Details view: toont alle details van één oefening, met knoppen om te bewerken of terug te gaan.
     ViewData["Title"] = L["Ex_Details_Title"];
 }
 
@@ -11,6 +12,7 @@
 
 <div>
     <dl class="row">
+        // Read-only overzicht van de oefening.
         <dt class="col-sm-2">@L["Ex_Field_Name"]</dt>
         <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
 
@@ -26,6 +28,7 @@
 </div>
 
 <div>
+    // Navigatie: naar edit of terug naar index.
     <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-primary">@L["Common_Edit"]</a>
     <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_BackToList"]</a>
 </div>

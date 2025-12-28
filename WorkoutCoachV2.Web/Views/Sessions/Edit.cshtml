@@ -3,29 +3,34 @@
 @model WorkoutCoachV2.Model.Models.Session
 
 @{
+    // Titel + workouts uit ViewBag om eventueel sets te vervangen op basis van workouts.
     ViewData["Title"] = L["Se_Edit_Title"];
     var workouts = ViewBag.Workouts as List<WorkoutCoachV2.Model.Models.Workout>;
 }
 
 <h1>@L["Se_Edit_H1"]</h1>
 
+<!-- Formulier om sessie te updaten (POST naar Edit action). -->
 <form asp-action="Edit" method="post" class="mt-3">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
+    @Html.AntiForgeryToken() <!-- CSRF-bescherming. -->
+    <input type="hidden" asp-for="Id" /> <!-- Nodig om te weten welke sessie je update. -->
 
     <div class="mb-3">
+        <!-- Titel aanpassen + validatie. -->
         <label asp-for="Title" class="form-label">@L["Se_Field_Title"]</label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        <!-- Datum aanpassen + validatie. -->
         <label asp-for="Date" class="form-label">@L["Se_Field_Date"]</label>
         <input asp-for="Date" type="date" class="form-control" />
         <span asp-validation-for="Date" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        <!-- Beschrijving aanpassen + validatie. -->
         <label asp-for="Description" class="form-label">@L["Se_Field_Description"]</label>
         <textarea asp-for="Description" class="form-control"></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
@@ -33,11 +38,13 @@
 
     <hr />
 
+    <!-- Optie om sets te vervangen op basis van geselecteerde workouts. -->
     <h4>@L["Se_Edit_FromWorkouts"]</h4>
     <p class="text-muted">@L["Se_Edit_FromWorkouts_Help"]</p>
 
     @if (workouts == null || workouts.Count == 0)
     {
+        <!-- Geen workouts om uit te kiezen. -->
         <p class="text-muted">@L["Se_Edit_NoWorkouts"]</p>
     }
     else
@@ -45,6 +52,7 @@
         <div class="mb-3">
             @foreach (var w in workouts)
             {
+                <!-- Checkbox per workout (naam = selectedWorkoutIds voor int[] in controller). -->
                 <div class="form-check">
                     <input class="form-check-input"
                            type="checkbox"
@@ -55,6 +63,7 @@
                         @w.Title
                         @if (w.ScheduledOn != null)
                         {
+                            <!-- Toon geplande datum als extra context. -->
                             <span class="text-muted">(@w.ScheduledOn?.ToString("d"))</span>
                         }
                     </label>
@@ -63,12 +72,15 @@
         </div>
     }
 
+    <!-- Algemene modelvalidatie fouten. -->
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+    <!-- Opslaan of annuleren. -->
     <button type="submit" class="btn btn-primary">@L["Common_Save"]</button>
     <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_Cancel"]</a>
 </form>
 
 @section Scripts {
+    <!-- Client-side validatie scripts. -->
     <partial name="_ValidationScriptsPartial" />
 }

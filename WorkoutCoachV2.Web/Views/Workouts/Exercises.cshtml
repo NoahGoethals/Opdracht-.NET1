@@ -2,47 +2,57 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
+    // Pagina titel (gelokaliseerd)
     ViewData["Title"] = L["Wk_Manage_Title"];
 }
 
-<h1>@L["Wk_Manage_H1"]</h1>
-<h4>@Model.WorkoutTitle</h4>
+<h1>@L["Wk_Manage_H1"]</h1>      // Hoofdtitel: “Beheer oefeningen”
+<h4>@Model.WorkoutTitle</h4>     // Subtitel: titel van de gekozen workout
 <hr />
 
 <form asp-action="Exercises" method="post">
-    @Html.AntiForgeryToken()
+    // POST naar WorkoutsController.Exercises (om koppelingen + reps/gewicht op te slaan)
+    @Html.AntiForgeryToken() // CSRF-bescherming
 
+    // Hidden fields zodat WorkoutId/Title terug meekomen in POST (model binding)
     <input type="hidden" asp-for="WorkoutId" />
     <input type="hidden" asp-for="WorkoutTitle" />
 
+    // Toont server-side validatiefouten (ModelState)
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+    // Tabel met alle oefeningen die je kan linken aan deze workout
     <table class="table">
         <thead>
             <tr>
-                <th>@L["Wk_Manage_InWorkout"]</th>
-                <th>@L["Wk_Manage_Exercise"]</th>
-                <th>@L["Wk_Manage_Reps"]</th>
-                <th>@L["Wk_Manage_WeightKg"]</th>
+                <th>@L["Wk_Manage_InWorkout"]</th>   // Checkbox: zit de oefening in de workout?
+                <th>@L["Wk_Manage_Exercise"]</th>    // Naam van de oefening
+                <th>@L["Wk_Manage_Reps"]</th>        // Reps input (per oefening)
+                <th>@L["Wk_Manage_WeightKg"]</th>    // Gewicht input (per oefening)
             </tr>
         </thead>
         <tbody>
             @for (var i = 0; i < Model.Items.Count; i++)
             {
+                // For-loop is belangrijk voor correcte model binding van lists: Items[0]...., Items[1]...
                 <tr>
                     <td>
+                        // Checkbox die bepaalt of deze oefening gekoppeld wordt
                         <input asp-for="Items[@i].IsSelected" />
                     </td>
                     <td>
+                        // Toon oefeningnaam + stuur Id/Name mee terug via hidden inputs
                         @Model.Items[i].ExerciseName
                         <input type="hidden" asp-for="Items[@i].ExerciseId" />
                         <input type="hidden" asp-for="Items[@i].ExerciseName" />
                     </td>
                     <td>
+                        // Reps input + validatie message
                         <input asp-for="Items[@i].Reps" class="form-control" />
                         <span asp-validation-for="Items[@i].Reps" class="text-danger"></span>
                     </td>
                     <td>
+                        // Gewicht input + validatie message
                         <input asp-for="Items[@i].WeightKg" class="form-control" />
                         <span asp-validation-for="Items[@i].WeightKg" class="text-danger"></span>
                     </td>
@@ -52,6 +62,7 @@
     </table>
 
     <div class="form-group mt-3">
+        // Opslaan (POST) of annuleren terug naar details
         <input type="submit" value="@L["Common_Save"]" class="btn btn-primary" />
         <a asp-action="Details" asp-route-id="@Model.WorkoutId" class="btn btn-secondary">@L["Common_Cancel"]</a>
     </div>
@@ -59,6 +70,7 @@
 
 @section Scripts {
     @{
+        // Client-side validation scripts (jquery validate unobtrusive)
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }

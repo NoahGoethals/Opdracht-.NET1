@@ -2,7 +2,7 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = L["Wk_Edit_Title"];
+    ViewData["Title"] = L["Wk_Edit_Title"];                // Paginatitel
 }
 
 <h1>@L["Wk_Edit_H1"]</h1>
@@ -11,9 +11,10 @@
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <!-- Post naar WorkoutsController.Edit (POST) -->
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div> <!-- Errors -->
 
-            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Id" />           <!-- Belangrijk: welke workout edit je -->
 
             <div class="form-group">
                 <label asp-for="Title" class="control-label">@L["Wk_Field_Title"]</label>
@@ -28,19 +29,19 @@
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="@L["Common_Save"]" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">@L["Common_Cancel"]</a>
+                <input type="submit" value="@L["Common_Save"]" class="btn btn-primary" />   <!-- Opslaan -->
+                <a asp-action="Index" class="btn btn-secondary">@L["Common_Cancel"]</a>     <!-- Annuleren -->
             </div>
         </form>
     </div>
 </div>
 
 <div class="mt-3">
-    <a asp-action="Index">@L["Common_BackToList"]</a>
+    <a asp-action="Index">@L["Common_BackToList"]</a>       <!-- Terug naar lijst -->
 </div>
 
 @section Scripts {
     @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");  // Client-side validation
     }
 }

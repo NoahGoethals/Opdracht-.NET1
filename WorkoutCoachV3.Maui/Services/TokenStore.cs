@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿// TokenStore: bewaart JWT + expiry in SecureStorage en als fallback in Preferences.
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Maui.Storage;
@@ -7,10 +8,13 @@ namespace WorkoutCoachV3.Maui.Services;
 
 public class TokenStore : ITokenStore
 {
+    // Keys voor token en expiry opslag.
     private const string TokenKey = "auth_token";
     private const string ExpiresKey = "auth_expires_utc";
+    // Kleine marge om net-verlopen tokens te vermijden.
     private static readonly TimeSpan ExpirySkew = TimeSpan.FromSeconds(30);
 
+    // Slaat token + expiry op (UTC) in secure storage en preferences.
     public async Task SetAsync(string token, DateTime expiresUtc)
     {
         var utc = expiresUtc.Kind switch
@@ -29,6 +33,7 @@ public class TokenStore : ITokenStore
         Preferences.Set(ExpiresKey, expiresString);
     }
 
+    // Geeft token terug of null (en wist als hij (bijna) verlopen is).
     public async Task<string?> GetTokenAsync()
     {
         var secure = await TrySecureGetAsync(TokenKey);
@@ -49,6 +54,7 @@ public class TokenStore : ITokenStore
         return token;
     }
 
+    // Haalt expiry op; probeert ook uit JWT "exp" te lezen als nodig.
     public async Task<DateTime?> GetExpiresUtcAsync()
     {
         var secure = await TrySecureGetAsync(ExpiresKey);
@@ -81,6 +87,7 @@ public class TokenStore : ITokenStore
         return fromJwt;
     }
 
+    // True als token bestaat en expiry nog niet (bijna) bereikt is.
     public async Task<bool> HasValidTokenAsync()
     {
         var token = await GetTokenAsync();
@@ -94,6 +101,7 @@ public class TokenStore : ITokenStore
         return DateTime.UtcNow < (expires.Value - ExpirySkew);
     }
 
+    // Verwijdert token + expiry uit SecureStorage en Preferences.
     public async Task ClearAsync()
     {
         await TrySecureRemoveAsync(TokenKey);
@@ -103,6 +111,7 @@ public class TokenStore : ITokenStore
         Preferences.Remove(ExpiresKey);
     }
 
+    // Probeert expiry te lezen uit JWT payload claim "exp".
     private static DateTime? TryGetExpiryFromJwt(string? jwt)
     {
         if (string.IsNullOrWhiteSpace(jwt))
@@ -128,6 +137,7 @@ public class TokenStore : ITokenStore
         }
     }
 
+    // Base64Url decode (JWT payload gebruikt -/_ i.p.v. +/).
     private static byte[] Base64UrlDecode(string input)
     {
         var s = input.Replace('-', '+').Replace('_', '/');
@@ -138,6 +148,7 @@ public class TokenStore : ITokenStore
         return Convert.FromBase64String(s);
     }
 
+    // SecureStorage set met swallow van platform exceptions.
     private static async Task<bool> TrySecureSetAsync(string key, string value)
     {
         try
@@ -151,6 +162,7 @@ public class TokenStore : ITokenStore
         }
     }
 
+    // SecureStorage get met swallow van platform exceptions.
     private static async Task<string?> TrySecureGetAsync(string key)
     {
         try
@@ -163,6 +175,7 @@ public class TokenStore : ITokenStore
         }
     }
 
+    // SecureStorage remove (best effort).
     private static Task TrySecureRemoveAsync(string key)
     {
         try { SecureStorage.Remove(key); } catch { }

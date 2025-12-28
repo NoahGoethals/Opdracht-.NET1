@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Stats: filters + overall stats + top exercises tabel -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.StatsPage"
              x:Name="PageRoot"
              Title="Stats">
 
+    <!-- Layout: header + content -->
     <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
 
+        <!-- Header + navigatie -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12">
             <Label Text="Stats"
                    FontSize="{OnIdiom Phone=20, Default=28}"
@@ -21,6 +24,7 @@
                     <Button Text="Sessions"  Command="{Binding GoToSessionsCommand}" />
                     <Button Text="Stats" IsEnabled="False" />
 
+                    <!-- Admin enkel zichtbaar voor admins -->
                     <Button Text="Admin"
                             Command="{Binding GoToAdminCommand}"
                             IsVisible="{Binding CanAccessAdmin}" />
@@ -31,6 +35,7 @@
             </ScrollView>
         </Grid>
 
+        <!-- Pull-to-refresh voor stats -->
         <RefreshView Grid.Row="1"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding RefreshCommand}">
@@ -38,6 +43,7 @@
             <ScrollView>
                 <VerticalStackLayout Spacing="16">
 
+                    <!-- Filters: oefening + date range + apply -->
                     <Grid ColumnDefinitions="{OnIdiom Phone='*,*', Default='2*,*,*,Auto'}"
                           RowDefinitions="{OnIdiom Phone='Auto,Auto,Auto', Default='Auto'}"
                           ColumnSpacing="12"
@@ -77,13 +83,14 @@
                             Command="{Binding ApplyCommand}" />
                     </Grid>
 
+                    <!-- Manueel herladen (naast pull-to-refresh) -->
                     <Button Text="Reload"
                             Command="{Binding LoadCommand}"
                             HorizontalOptions="Start" />
 
                     <Label Text="Overall stats" FontAttributes="Bold" FontSize="18" />
 
-                    <!-- Overall stats: desktop 4 kolommen / phone 2x2 -->
+                    <!-- Overall stats cards (responsive via OnIdiom) -->
                     <Grid ColumnDefinitions="{OnIdiom Phone='*,*', Default='*,*,*,*'}"
                           RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
                           ColumnSpacing="12"
@@ -135,6 +142,7 @@
 
                     <Label Text="Top exercises (by volume)" FontAttributes="Bold" FontSize="18" />
 
+                    <!-- Horizontale tabel voor desktop/phone (scroll) -->
                     <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Always">
                         <VerticalStackLayout Spacing="6" MinimumWidthRequest="{OnIdiom Phone=520, Default=0}">
 
@@ -146,6 +154,7 @@
                                 <Label Grid.Column="4" Text="Max (kg)" FontAttributes="Bold" HorizontalTextAlignment="End"/>
                             </Grid>
 
+                            <!-- Rows via BindableLayout (lichte tabel zonder CollectionView overhead) -->
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopExercises}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
@@ -163,6 +172,7 @@
                         </VerticalStackLayout>
                     </ScrollView>
 
+                    <!-- Busy + error onderaan -->
                     <ActivityIndicator IsRunning="{Binding IsBusy}"
                                        IsVisible="{Binding IsBusy}"
                                        HorizontalOptions="Center" />

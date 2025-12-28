@@ -3,38 +3,45 @@
 @model WorkoutCoachV2.Web.Models.RegisterViewModel
 
 @{
+    // Register pagina: maakt een nieuwe account aan via RegisterViewModel en toont vertaalde velden/knoppen.
     ViewData["Title"] = L["Re_Title"];
 }
 
 <h1>@L["Re_H1"]</h1>
 
 <form asp-action="Register" method="post" class="mt-3">
+    // CSRF bescherming bij registratie.
     @Html.AntiForgeryToken()
 
     <div class="mb-3">
+        // DisplayName is de naam die in de UI getoond wordt (los van email/username).
         <label asp-for="DisplayName" class="form-label">@L["Re_Field_DisplayName"]</label>
         <input asp-for="DisplayName" class="form-control" />
         <span asp-validation-for="DisplayName" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        // Email wordt ook gebruikt als username bij Identity.
         <label asp-for="Email" class="form-label">@L["Re_Field_Email"]</label>
         <input asp-for="Email" class="form-control" />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        // Password veld met server/client-side validatie via data-annotations.
         <label asp-for="Password" class="form-label">@L["Re_Field_Password"]</label>
         <input asp-for="Password" class="form-control" />
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        // ConfirmPassword moet matchen met Password (Compare-attribute).
         <label asp-for="ConfirmPassword" class="form-label">@L["Re_Field_ConfirmPassword"]</label>
         <input asp-for="ConfirmPassword" class="form-control" />
         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
     </div>
 
+    // Toont model-errors (bv. email bestaat al, password policy) boven de knoppen.
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     <button type="submit" class="btn btn-primary">@L["Re_Btn_CreateAccount"]</button>
@@ -42,5 +49,6 @@
 </form>
 
 @section Scripts {
+        // Activeert client-side validatie (jQuery validation) voor de data-annotations.
     <partial name="_ValidationScriptsPartial" />
 }

@@ -2,9 +2,12 @@
 @inject IStringLocalizer<SharedResource> L
 
 @{
+    // Zet de paginatitel via vertalingen.
     ViewData["Title"] = L["Pr_Title"];
 }
 
+<!-- Toon de titel die in ViewData staat. -->
 <h1>@ViewData["Title"]</h1>
 
+<!-- Toon de privacy-tekst via vertalingen. -->
 <p>@L["Pr_Text"]</p>

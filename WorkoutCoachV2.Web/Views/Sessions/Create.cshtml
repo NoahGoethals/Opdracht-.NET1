@@ -3,28 +3,33 @@
 @model WorkoutCoachV2.Model.Models.Session
 
 @{
+    // Titel van de pagina + lijst met workouts uit de controller (ViewBag).
     ViewData["Title"] = L["Se_Create_Title"];
     var workouts = ViewBag.Workouts as List<WorkoutCoachV2.Model.Models.Workout>;
 }
 
 <h1>@L["Se_Create_H1"]</h1>
 
+<!-- Formulier om een nieuwe sessie aan te maken (POST naar Create action). -->
 <form asp-action="Create" method="post" class="mt-3">
-    @Html.AntiForgeryToken()
+    @Html.AntiForgeryToken() <!-- CSRF-bescherming. -->
 
     <div class="mb-3">
+        <!-- Titel input + validatie. -->
         <label asp-for="Title" class="form-label">@L["Se_Field_Title"]</label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        <!-- Datum input (date picker) + validatie. -->
         <label asp-for="Date" class="form-label">@L["Se_Field_Date"]</label>
         <input asp-for="Date" type="date" class="form-control" />
         <span asp-validation-for="Date" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+        <!-- Beschrijving (optioneel) + validatie. -->
         <label asp-for="Description" class="form-label">@L["Se_Field_Description"]</label>
         <textarea asp-for="Description" class="form-control"></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
@@ -32,11 +37,13 @@
 
     <hr />
 
+    <!-- Extra: sets laten invullen door workouts te selecteren. -->
     <h4>@L["Se_Create_FromWorkouts"]</h4>
     <p class="text-muted">@L["Se_Create_FromWorkouts_Help"]</p>
 
     @if (workouts == null || workouts.Count == 0)
     {
+        <!-- Geen workouts beschikbaar om sets uit te kopiëren. -->
         <p class="text-muted">@L["Se_Create_NoWorkouts"]</p>
     }
     else
@@ -44,6 +51,7 @@
         <div class="mb-3">
             @foreach (var w in workouts)
             {
+                <!-- Checkbox per workout (naam = selectedWorkoutIds zodat controller een int[] kan ontvangen). -->
                 <div class="form-check">
                     <input class="form-check-input"
                            type="checkbox"
@@ -54,6 +62,7 @@
                         @w.Title
                         @if (w.ScheduledOn != null)
                         {
+                            <!-- Toon geplande datum van workout als extra info. -->
                             <span class="text-muted">(@w.ScheduledOn?.ToString("d"))</span>
                         }
                     </label>
@@ -62,12 +71,15 @@
         </div>
     }
 
+    <!-- Algemene modelvalidatie fouten. -->
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+    <!-- Opslaan of annuleren (terug naar Index). -->
     <button type="submit" class="btn btn-primary">@L["Common_Save"]</button>
     <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_Cancel"]</a>
 </form>
 
 @section Scripts {
+    <!-- Client-side validatie scripts. -->
     <partial name="_ValidationScriptsPartial" />
 }

@@ -8,17 +8,22 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class WorkoutDetailViewModel : ObservableObject
 {
+    // Services: detail data uit lokale DB + sync + DI voor manage page.
     private readonly LocalDatabaseService _local;
     private readonly IServiceProvider _services;
     private readonly ISyncService _sync;
 
+    // Huidige workout die deze detail page toont.
     private Guid _workoutLocalId;
 
+    // Header fields voor de UI.
     [ObservableProperty] private string workoutTitle = "";
     [ObservableProperty] private string? notes;
 
+    // Datasource voor "exercises in workout" lijst.
     public ObservableCollection<LocalDatabaseService.WorkoutExerciseDisplay> Items { get; } = new();
 
+    // UI state: busy + foutmelding.
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? error;
 
@@ -31,8 +36,10 @@ public partial class WorkoutDetailViewModel : ObservableObject
 
     public async Task InitAsync(Guid workoutLocalId)
     {
+        // Init met LocalId (meestal doorgegeven vanuit WorkoutsPage).
         _workoutLocalId = workoutLocalId;
 
+        // Best effort sync zodat details zo recent mogelijk zijn.
         try { await _sync.SyncAllAsync(); } catch { }
 
         await LoadAsync();
@@ -41,6 +48,7 @@ public partial class WorkoutDetailViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadAsync()
     {
+        // Laadt header + lijst van workout-exercises uit de lokale DB.
         if (IsBusy) return;
         IsBusy = true;
         Error = null;
@@ -77,6 +85,7 @@ public partial class WorkoutDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task ManageAsync()
     {
+        // Manage page: checkbox lijst om oefeningen toe te voegen/verwijderen + reps/weight aanpassen.
         var page = _services.GetRequiredService<WorkoutExercisesManagePage>();
         var vm = (WorkoutExercisesManageViewModel)page.BindingContext!;
 

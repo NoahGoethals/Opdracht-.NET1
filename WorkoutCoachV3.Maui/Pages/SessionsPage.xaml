@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Sessions overzicht: navigatie + zoeken + swipe (edit/delete) + tap (open) -->
 <ContentPage
     x:Class="WorkoutCoachV3.Maui.Pages.SessionsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -6,8 +7,10 @@
     x:Name="PageRoot"
     Title="Sessions">
 
+    <!-- Layout: header, search, lijst -->
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
+        <!-- Header + menu knoppen -->
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
             <Label Text="Sessions"
                    FontSize="{OnIdiom Phone=20, Default=28}"
@@ -22,6 +25,7 @@
                     <Button Text="Sessions" IsEnabled="False" />
                     <Button Text="Stats" Command="{Binding GoToStatsCommand}" />
 
+                    <!-- Admin enkel zichtbaar voor admins -->
                     <Button Text="Admin"
                             Command="{Binding GoToAdminCommand}"
                             IsVisible="{Binding CanAccessAdmin}" />
@@ -32,6 +36,7 @@
             </ScrollView>
         </Grid>
 
+        <!-- Search: Enter of knop triggert LoadCommand -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Entry Placeholder="Search..."
                    Text="{Binding Search}"
@@ -43,11 +48,13 @@
                     Command="{Binding LoadCommand}" />
         </Grid>
 
+        <!-- Sessions lijst -->
         <CollectionView Grid.Row="2"
                         ItemsSource="{Binding Items}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <SwipeView>
+                        <!-- Swipe rechts: edit/delete via PageRoot commands -->
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
                                 <SwipeItem Text="Edit"
@@ -62,6 +69,7 @@
                             </SwipeItems>
                         </SwipeView.RightItems>
 
+                        <!-- Card: tap om details te openen -->
                         <Frame Margin="0,0,0,10"
                                Padding="14"
                                CornerRadius="12"

@@ -2,27 +2,28 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = L["Wk_Delete_Title"];
+    ViewData["Title"] = L["Wk_Delete_Title"];              // Paginatitel
 }
 
 <h1>@L["Wk_Delete_H1"]</h1>
 
-<h3>@L["Wk_Delete_Confirm"]</h3>
+<h3>@L["Wk_Delete_Confirm"]</h3>                           <!-- “Ben je zeker?” -->
 
 <div>
     <h4>@L["Workouts"]</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">@L["Wk_Field_Title"]</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Title)</dd>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Title)</dd>       <!-- Toon titel -->
 
         <dt class="col-sm-2">@L["Wk_Field_ScheduledOn"]</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.ScheduledOn)</dd>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.ScheduledOn)</dd> <!-- Toon datum -->
     </dl>
 
     <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="@L["Common_Delete"]" class="btn btn-danger" />
-        <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_Cancel"]</a>
+        <!-- Post naar WorkoutsController.Delete (POST/confirmed) -->
+        <input type="hidden" asp-for="Id" />               <!-- Id meegeven zodat controller weet welke workout -->
+        <input type="submit" value="@L["Common_Delete"]" class="btn btn-danger" /> <!-- Echt verwijderen (soft delete) -->
+        <a asp-action="Index" class="btn btn-secondary ms-2">@L["Common_Cancel"]</a> <!-- Annuleren -->
     </form>
 </div>

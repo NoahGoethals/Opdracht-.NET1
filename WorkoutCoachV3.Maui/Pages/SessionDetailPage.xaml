@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Session detail: toont sessie info + lijst van sets -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.SessionDetailPage"
              x:Name="PageRoot"
              Title="Session">
 
+    <!-- Layout: header, titel "Sets", collectie -->
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
+        <!-- Bovenaan: sessie metadata + eventuele error -->
         <VerticalStackLayout Grid.Row="0" Spacing="4">
             <Label Text="{Binding Title}"
                    FontSize="{OnIdiom Phone=22, Default=28}"
@@ -20,16 +23,19 @@
                    Opacity="0.8"
                    LineBreakMode="WordWrap" />
 
+            <!-- Error enkel zichtbaar als er tekst is -->
             <Label Text="{Binding Error}"
                    TextColor="Red"
                    IsVisible="{Binding Error, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
         </VerticalStackLayout>
 
+        <!-- Sectietitel -->
         <Label Grid.Row="1"
                Text="Sets"
                FontAttributes="Bold"
                FontSize="16" />
 
+        <!-- Lijst met sets (alle items meten voor correcte hoogte) -->
         <CollectionView Grid.Row="2"
                         ItemsSource="{Binding Sets}"
                         ItemSizingStrategy="MeasureAllItems">
@@ -43,6 +49,7 @@
                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
                            BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
 
+                        <!-- Elke card: oefeningnaam + set/reps/weight -->
                         <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
 
                             <Label Text="{Binding ExerciseName}"

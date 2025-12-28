@@ -1,28 +1,37 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Edit page voor oefening: velden + Save/Cancel via ViewModel -->
 <ContentPage
     x:Class="WorkoutCoachV3.Maui.Pages.ExerciseEditPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="{Binding Title}">
 
+    <!-- Scrollable form zodat het werkt op kleine schermen -->
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="12">
 
+            <!-- Titel uit ViewModel (nieuw/bewerk) -->
             <Label Text="{Binding Title}" FontSize="24" />
 
+            <!-- Naam veld -->
             <Label Text="Name" />
             <Entry Text="{Binding Name}" Placeholder="e.g. Bench Press" />
 
+            <!-- Categorie veld -->
             <Label Text="Category" />
             <Entry Text="{Binding Category}" Placeholder="e.g. Chest" />
 
+            <!-- Optionele notities -->
             <Label Text="Notes" />
             <Editor Text="{Binding Notes}" AutoSize="TextChanges" Placeholder="Optional notes..." />
 
+            <!-- Validatie/API error -->
             <Label Text="{Binding Error}" TextColor="Red" />
 
+            <!-- Busy state tijdens save/load -->
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
 
+            <!-- Actieknoppen: disabled tijdens busy via InverseBoolConverter -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <Button Grid.Column="0"
                         Text="Cancel"

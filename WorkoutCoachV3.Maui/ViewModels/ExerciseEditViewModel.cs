@@ -7,16 +7,20 @@ namespace WorkoutCoachV3.Maui.ViewModels;
 
 public partial class ExerciseEditViewModel : ObservableObject
 {
+    // Local DB + sync service (push/pull) na save.
     private readonly LocalDatabaseService _local;
     private readonly ISyncService _sync;
 
+    // Null = create, anders edit van bestaande LocalId.
     private Guid? _editingLocalId;
 
+    // Form fields + pagina title.
     [ObservableProperty] private string title = "New Exercise";
     [ObservableProperty] private string name = "";
     [ObservableProperty] private string category = "";
     [ObservableProperty] private string? notes;
 
+    // UI-state voor errors en buttons/indicator.
     [ObservableProperty] private string? error;
     [ObservableProperty] private bool isBusy;
 
@@ -26,6 +30,7 @@ public partial class ExerciseEditViewModel : ObservableObject
         _sync = sync;
     }
 
+    // Reset viewmodel voor een nieuwe exercise (lege velden).
     public void InitForCreate()
     {
         _editingLocalId = null;
@@ -36,6 +41,7 @@ public partial class ExerciseEditViewModel : ObservableObject
         Error = null;
     }
 
+    // Laadt bestaande exercise en vult fields voor edit.
     public async Task InitForEditAsync(Guid localId)
     {
         _editingLocalId = localId;
@@ -71,12 +77,14 @@ public partial class ExerciseEditViewModel : ObservableObject
 
         try
         {
+            // Minimale validatie: naam verplicht.
             if (string.IsNullOrWhiteSpace(Name))
             {
                 Error = "Name is required.";
                 return;
             }
 
+            // Entity bouwen en lokaal upserten (markeert Dirty in service).
             var entity = new LocalExercise
             {
                 LocalId = _editingLocalId ?? Guid.NewGuid(),
@@ -88,8 +96,9 @@ public partial class ExerciseEditViewModel : ObservableObject
 
             await _local.UpsertExerciseAsync(entity);
 
+            // Best effort sync: errors worden genegeerd zodat UI niet blokkeert.
             try { await _sync.SyncAllAsync(); }
-            catch {  }
+            catch { }
 
             await Application.Current!.MainPage!.Navigation.PopAsync();
         }
@@ -106,6 +115,7 @@ public partial class ExerciseEditViewModel : ObservableObject
     [RelayCommand]
     public async Task CancelAsync()
     {
+        // Sluit edit page zonder wijzigingen.
         await Application.Current!.MainPage!.Navigation.PopAsync();
     }
 }

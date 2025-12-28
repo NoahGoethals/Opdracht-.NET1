@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Admin overzichtspagina: navigatie + userbeheer (rollen/block) -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkoutCoachV3.Maui.Pages.AdminPanelPage"
              x:Name="PageRoot"
              Title="Admin">
 
+    <!-- Hoofdlayout: header, statusbalk, lijst -->
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
+        <!-- Header: titel + horizontale navigatieknoppen -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12">
             <Label Text="Admin"
                    FontSize="{OnIdiom Phone=20, Default=28}"
@@ -15,12 +18,14 @@
             <ScrollView Grid.Column="1"
                         Orientation="Horizontal"
                         HorizontalScrollBarVisibility="Never">
+                <!-- Navigation via ViewModel commands -->
                 <HorizontalStackLayout Spacing="8">
                     <Button Text="Exercises" Command="{Binding GoToExercisesCommand}" />
                     <Button Text="Workouts"  Command="{Binding GoToWorkoutsCommand}" />
                     <Button Text="Sessions"  Command="{Binding GoToSessionsCommand}" />
                     <Button Text="Stats"     Command="{Binding GoToStatsCommand}" />
 
+                    <!-- Admin-knop: enkel zichtbaar als user admin-rechten heeft -->
                     <Button Text="Admin"
                             IsEnabled="False"
                             IsVisible="{Binding CanAccessAdmin}" />
@@ -30,11 +35,13 @@
             </ScrollView>
         </Grid>
 
+        <!-- Status: busy indicator + foutmelding -->
         <HorizontalStackLayout Grid.Row="1" Spacing="12">
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Label Text="{Binding ErrorMessage}" TextColor="Red" VerticalOptions="Center" />
         </HorizontalStackLayout>
 
+        <!-- Users lijst: per user rol wijzigen en block togglen -->
         <CollectionView Grid.Row="2"
                         ItemsSource="{Binding Users}">
             <CollectionView.ItemTemplate>
@@ -48,12 +55,14 @@
 
                         <VerticalStackLayout Spacing="10">
 
+                            <!-- Basisinfo: email, displayname, blocked status -->
                             <VerticalStackLayout Spacing="2">
                                 <Label FontAttributes="Bold" Text="{Binding Email}" />
                                 <Label Text="{Binding DisplayName}" Opacity="0.8" />
                                 <Label Text="{Binding IsBlocked, StringFormat='Blocked: {0}'}" Opacity="0.7" />
                             </VerticalStackLayout>
 
+                            <!-- Rol picker: opties komen van PageRoot.BindingContext (AdminPanelViewModel) -->
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                 <Label Grid.Column="0" Text="Role:" VerticalOptions="Center" />
                                 <Picker Grid.Column="1"
@@ -61,6 +70,7 @@
                                         SelectedItem="{Binding SelectedRole}" />
                             </Grid>
 
+                            <!-- Acties: rol opslaan of blokkeren/deblokkeren -->
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                 <Button Grid.Column="0"
                                         Text="Save role"
