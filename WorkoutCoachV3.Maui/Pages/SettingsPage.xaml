@@ -74,7 +74,7 @@
                     <Label Text="Tips"
                            FontAttributes="Bold" />
                     <Label Text="• Android emulator → gebruik meestal http://10.0.2.2:5162/ (host PC)" />
-                    <Label Text="• Android fysieke telefoon → gebruik Azure URL of adb reverse (http://127.0.0.1:5162/)" />
+                    <Label Text="• Android fysieke telefoon → gebruik Azure URL of adb reverse (http://127.0.0.1:5162/) of (https://workoutcoachv2-web-noah1-dwdsd5cwajenhwbr.francecentral-01.azurewebsites.net/) " />
                     <Label Text="• Windows → gebruik Azure URL of je lokale https://127.0.0.1:7289/" />
                 </VerticalStackLayout>
             </Frame>
